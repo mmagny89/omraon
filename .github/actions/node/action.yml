@@ -1,0 +1,16 @@
+# Préparation commune des portes qui ont besoin de Node : une action, appelée en une ligne
+# (skill ci-pipeline-standards : « le coût du découpage »).
+# La version de Node vient de .nvmrc : une seule source, pas une troisième copie qui dérive.
+name: Préparer Node
+description: Node (version de .nvmrc), cache npm, dépendances installées sans scripts.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+    # npm ci échoue si package.json et le lockfile divergent ; --ignore-scripts réduit la surface d'une dépendance compromise.
+    - name: Installer les dépendances
+      shell: bash
+      run: npm ci --ignore-scripts

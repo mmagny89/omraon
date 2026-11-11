@@ -14,7 +14,7 @@
 ## Avant de pousser
 
 ```sh
-outils/ci-local.sh                  # rejoue les portes de la CI en local, environnement vierge
+outils/ci-local.sh                  # rejoue les portes de la CI en local (syntaxe, compose, Three.js, HTML, liens, tests)
 git config core.hooksPath .githooks # une fois par clone : le même contrôle avant chaque push
 ```
 

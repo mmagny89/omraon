@@ -14,3 +14,8 @@
 README.docker.md
 compose*.yml
 
+
+node_modules/
+package-lock.json
+tests/
+docs/

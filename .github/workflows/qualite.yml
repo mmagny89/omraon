@@ -1,17 +1,112 @@
-# Une porte = un job nomme par ce qu'il prouve (section ci/qualite).
-name: Qualité
+# Portes qualité et déploiement.
+#
+# Une porte = un job, nommé par ce qu'il prouve (skill ci-pipeline-standards). Les portes
+# s'enchaînent par coût croissant, et celles qui ne se doivent rien tournent en parallèle.
+# Contraintes d'infrastructure : .claude/rules/stack-conventions.md, §ci/qualite.
+#
+# Le nom du workflow est le texte du badge du README (badges-readme.md) :
+# il est commun à tous les dépôts de l'agence et ne se renomme pas.
+name: Qualité et déploiement
 
 on:
   push:
     branches: [main, develop]
   pull_request:
+    branches: [main, develop]
 
 permissions:
   contents: read
 
+# Les portes qualité se remplacent entre elles ; un déploiement, lui, ne se coupe jamais (voir plus bas).
+concurrency:
+  group: qualite-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  # --- Porte 1 — rien en amont : la moins chère, elle garde les autres.
+  coherence:
+    name: Cohérence du dépôt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/node
+      - name: Syntaxe des modules et des scripts
+        run: |
+          npm run --silent check
+          for f in outils/*.sh .github/scripts/*.sh; do bash -n "$f"; done
+      # La CI ne démarre pas la pile ici : on vérifie seulement que les trois environnements se résolvent.
+      - name: Fichiers compose des trois environnements
+        env:
+          DOMAINE: exemple.test
+        run: |
+          docker compose --env-file .env config -q
+          docker compose -f compose.yml -f compose.staging.yml --env-file .env.staging.local.dist config -q
+          docker compose -f compose.yml -f compose.prod.yml --env-file .env.prod.local.dist config -q
+
+  # --- Porte 2 — ne dépend de rien : une vulnérabilité connue est vraie que le code soit propre ou non,
+  # et c'est la seule porte dont l'échec peut exiger une action le jour même. Three.js est une dépendance de
+  # développement mais sa copie est servie telle quelle : on audite donc aussi les dépendances de développement.
+  securite:
+    name: Audit des dépendances
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/node
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+  # --- Porte 3
+  vendor:
+    name: Three.js local conforme au lockfile
+    needs: coherence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/node
+      # La copie servie (app/vendor/) doit être exactement celle que le lockfile désigne : sans cela, Dependabot
+      # monterait la version du paquet pendant que le site continue de servir l'ancienne.
+      - name: Copie locale identique à node_modules
+        run: |
+          npm run --silent vendor
+          git diff --exit-code -- app/vendor
+
+  # --- Porte 4
+  balisage:
+    name: Validation HTML
+    needs: coherence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/node
+      # La version est épinglée pour que deux exécutions à quinze jours d'écart valident les mêmes règles.
+      - name: html-validate
+        run: npx --yes html-validate@9 "app/index.html"
+
+  # --- Porte 5 — aucune dépendance, aucun appel réseau.
+  liens:
+    name: Liens internes
+    needs: coherence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Vérifier les cibles locales
+        run: ./.github/scripts/check-links.sh app
+
+  # --- Porte 6
+  tests:
+    name: Tests de la physique
+    needs: coherence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/node
+      - name: node --test
+        run: npm test
+
+  # --- Porte 7 — la plus chère, en dernier : une image bâtie sur un code qui ne passe pas n'a aucune raison d'exister.
   image-et-demarrage:
     name: L'image se construit et le site répond
+    needs: [vendor, balisage, liens, tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -22,20 +117,129 @@ jobs:
           TARGET: prod
         run: docker compose --env-file .env up -d --build --wait
       - name: Page d'accueil servie, fichier sensible refusé
+        env:
+          COMPOSE_FILE: compose.yml
+          ENV: ci
+          TARGET: prod
         run: |
           set -eu
           docker compose --env-file .env exec -T web wget -q -O /dev/null --no-check-certificate https://localhost/
           if docker compose --env-file .env exec -T web wget -q -O /dev/null --no-check-certificate https://localhost/.env; then
             echo "::error::/.env est servi"; exit 1
           fi
-        env:
-          COMPOSE_FILE: compose.yml
-          ENV: ci
-          TARGET: prod
       - name: Journaux en cas d'échec
         if: failure()
-        run: docker compose --env-file .env logs --no-color web
         env:
           COMPOSE_FILE: compose.yml
           ENV: ci
           TARGET: prod
+        run: docker compose --env-file .env logs --no-color web
+
+  # --- Agrégateur : le SEUL contrôle requis de la protection de branche (nom stable, §ci/qualite).
+  portes:
+    name: Portes qualité
+    needs: [coherence, securite, vendor, balisage, liens, tests, image-et-demarrage]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verdict des portes
+        env:
+          RESULTATS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          case "$RESULTATS" in
+            *failure*|*cancelled*) echo "Une porte a cédé." >&2; exit 1 ;;
+          esac
+          echo "Toutes les portes passent."
+
+  deploiement-staging:
+    name: Déploiement — pré-production
+    needs: portes
+    # Deux gardes cumulées, jamais une seule : la branche, et jamais une pull request (une PR d'un dépôt tiers
+    # déploierait du code non relu) ; et la variable de dépôt DEPLOIEMENT_STAGING comparée à « oui ». Absente,
+    # elle vaut la chaîne vide : ne rien déployer est le défaut.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && vars.DEPLOIEMENT_STAGING == 'oui'
+    runs-on: ubuntu-latest
+    # Deux déploiements simultanés visent le même stack sur l'hôte : on attend son tour, on ne coupe jamais.
+    concurrency:
+      group: deploiement-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      # GitHub remplace un secret absent par une chaîne vide sans rien signaler : ssh "@" produirait une page d'usage illisible.
+      - name: Contrôler la présence des secrets
+        env:
+          HOTE: ${{ secrets.STAGING_DEPLOIEMENT_HOTE }}
+          UTILISATEUR: ${{ secrets.STAGING_DEPLOIEMENT_UTILISATEUR }}
+          CLE: ${{ secrets.STAGING_DEPLOIEMENT_CLE_PRIVEE }}
+          EMPREINTES: ${{ secrets.STAGING_DEPLOIEMENT_KNOWN_HOSTS }}
+        run: |
+          manquants=""
+          [ -n "$HOTE" ]        || manquants="$manquants STAGING_DEPLOIEMENT_HOTE"
+          [ -n "$UTILISATEUR" ] || manquants="$manquants STAGING_DEPLOIEMENT_UTILISATEUR"
+          [ -n "$CLE" ]         || manquants="$manquants STAGING_DEPLOIEMENT_CLE_PRIVEE"
+          [ -n "$EMPREINTES" ]  || manquants="$manquants STAGING_DEPLOIEMENT_KNOWN_HOSTS"
+          if [ -n "$manquants" ]; then
+            echo "Secrets manquants :$manquants" >&2
+            echo "Les poser avec : sh outils/installer-deploiement.sh projet staging" >&2
+            exit 1
+          fi
+      - name: Préparer SSH
+        env:
+          CLE: ${{ secrets.STAGING_DEPLOIEMENT_CLE_PRIVEE }}
+          EMPREINTES: ${{ secrets.STAGING_DEPLOIEMENT_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/id_deploiement
+          chmod 600 ~/.ssh/id_deploiement
+          # Empreinte épinglée, jamais StrictHostKeyChecking=no : ce serait accepter n'importe quel serveur à cette adresse.
+          printf '%s\n' "$EMPREINTES" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      # La logique vit sur l'hôte : la clé est restreinte à ce seul script par une forced command dans authorized_keys.
+      - name: Déclencher le déploiement
+        env:
+          HOTE: ${{ secrets.STAGING_DEPLOIEMENT_HOTE }}
+          UTILISATEUR: ${{ secrets.STAGING_DEPLOIEMENT_UTILISATEUR }}
+        run: |
+          ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes -o BatchMode=yes "$UTILISATEUR@$HOTE" deployer
+
+  deploiement-prod:
+    name: Déploiement — production
+    needs: portes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOIEMENT_PROD == 'oui'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploiement-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - name: Contrôler la présence des secrets
+        env:
+          HOTE: ${{ secrets.DEPLOIEMENT_HOTE }}
+          UTILISATEUR: ${{ secrets.DEPLOIEMENT_UTILISATEUR }}
+          CLE: ${{ secrets.DEPLOIEMENT_CLE_PRIVEE }}
+          EMPREINTES: ${{ secrets.DEPLOIEMENT_KNOWN_HOSTS }}
+        run: |
+          manquants=""
+          [ -n "$HOTE" ]        || manquants="$manquants DEPLOIEMENT_HOTE"
+          [ -n "$UTILISATEUR" ] || manquants="$manquants DEPLOIEMENT_UTILISATEUR"
+          [ -n "$CLE" ]         || manquants="$manquants DEPLOIEMENT_CLE_PRIVEE"
+          [ -n "$EMPREINTES" ]  || manquants="$manquants DEPLOIEMENT_KNOWN_HOSTS"
+          if [ -n "$manquants" ]; then
+            echo "Secrets manquants :$manquants" >&2
+            echo "Les poser avec : sh outils/installer-deploiement.sh projet prod" >&2
+            exit 1
+          fi
+      - name: Préparer SSH
+        env:
+          CLE: ${{ secrets.DEPLOIEMENT_CLE_PRIVEE }}
+          EMPREINTES: ${{ secrets.DEPLOIEMENT_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/id_deploiement
+          chmod 600 ~/.ssh/id_deploiement
+          printf '%s\n' "$EMPREINTES" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+      - name: Déclencher le déploiement
+        env:
+          HOTE: ${{ secrets.DEPLOIEMENT_HOTE }}
+          UTILISATEUR: ${{ secrets.DEPLOIEMENT_UTILISATEUR }}
+        run: |
+          ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes -o BatchMode=yes "$UTILISATEUR@$HOTE" deployer

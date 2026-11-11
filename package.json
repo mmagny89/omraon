@@ -3,5 +3,14 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": { "test": "node --test tests/" }
+  "description": "Simulation N-corps et visualisation 3D du système d'Omraon",
+  "engines": { "node": ">=26" },
+  "scripts": {
+    "test": "node --test tests/",
+    "check": "find app/src -name '*.js' -exec node --check {} +",
+    "vendor": "cp node_modules/three/build/three.module.js node_modules/three/build/three.core.js app/vendor/ && cp node_modules/three/LICENSE app/vendor/three.LICENSE"
+  },
+  "devDependencies": {
+    "three": "0.187.0"
+  }
 }

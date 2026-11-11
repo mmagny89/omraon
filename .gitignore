@@ -18,3 +18,6 @@
 
 # macOS
 .DS_Store
+
+# Dépendances npm (Three.js est copié dans app/vendor/ par `npm run vendor`)
+node_modules/

@@ -23,12 +23,20 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 - Documentation : `docs/hypotheses.md` (canon et propositions de conception) et README complet.
 - 40 tests (`npm test`) : conservation d'énergie, stabilité des lunes, réversibilité, éphémérides, réseau, population, vol.
 
+- Intégration continue alignée sur les autres dépôts : workflow `Qualité et déploiement` (une porte = un job, agrégateur `Portes qualité`, déploiements gardés par `vars.DEPLOIEMENT_*`) et workflow `Release` (tag → release depuis le CHANGELOG).
+- `outils/` : outillage d'exploitation de l'agence (déploiement, secrets, diagnostic Traefik, sauvegardes, vérification de site, extraction du CHANGELOG), `ci-local.sh` et `deployer.sh` adaptés au stack statique, `audit-scope.conf`.
+- Three.js épinglé en dépendance de développement (`package.json`, `package-lock.json`, `npm run vendor`) : audit des dépendances et Dependabot deviennent effectifs, la copie servie est vérifiée identique au lockfile.
+- Portes HTML (`html-validate`) et liens internes (`.github/scripts/check-links.sh`), action composite `.github/actions/node`, `CLAUDE.md` du projet.
+
 ### Modifié
+
+- `GITHUB.md` réécrit (branches, secrets et variables, protection, sécurité) ; Dependabot sans `target-branch` tant que `develop` n'existe pas.
 
 - Données calées sur les documents 00–13 : propulsions, populations, atmosphère ténue de Sethis, orbites des planètes internes et de Kebet (jour de 1,28 j, rayonnement et chauffage de marée), Iasha et Astir au-delà de Kebet.
 
 ### Corrigé
 
+- `app/index.html` valide : `type="button"` sur tous les boutons, rôle `img` sur les canvas, étiquette de curseur correctement associée.
 - Ellipses orbitales stables : état exact du dernier pas, coordonnées de Jacobi, barycentre planète + lunes (oscillation de a/a de 3·10⁻² à 5·10⁻⁷ pour Zirkan).
 - Précession parasite de Kalpra ramenée de 3,7 à 0,014 °/an par le schéma d'ordre 4.
 - Hublot des stations : barre de temps visible, champ calé sur la fenêtre circulaire.

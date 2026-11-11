@@ -1,0 +1,52 @@
+# Publication d'une version — crée la release GitHub à partir du CHANGELOG.
+#
+# Déclenché par un tag « v* », jamais par un push de branche : décider qu'une version sort est un geste
+# volontaire, et le tag est cet endroit.
+#
+#   git tag -a v1.1.0 -m "v1.1.0"
+#   git push origin v1.1.0
+#
+# Le corps de la release vient de outils/extraire-changelog.sh — versionné avec le projet, donc jouable en
+# local avant d'étiqueter : une section absente ou mal formée se voit avant la publication et non après.
+# .claude/ n'arrive jamais dans le dépôt (§manifeste/fichiers) : le workflow ne peut pas appeler la bibliothèque.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# Pousser un tag ne redéploie rien, et ne doit rien redéployer (le déploiement se déclenche sur main et develop).
+permissions:
+  contents: write
+
+jobs:
+  publication:
+    name: Créer la release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Un tag posé sur un commit dont le CHANGELOG ne dit rien produirait une release vide, que personne ne
+      # remarquerait avant d'en avoir besoin. Le script échoue en listant les sections qui existent.
+      - name: Extraire la section du CHANGELOG
+        id: changelog
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          {
+            echo 'corps<<FIN_DE_SECTION'
+            sh outils/extraire-changelog.sh "$TAG"
+            echo 'FIN_DE_SECTION'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Créer la release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+          CORPS: ${{ steps.changelog.outputs.corps }}
+        run: |
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "$CORPS" \
+            --verify-tag

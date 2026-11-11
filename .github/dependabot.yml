@@ -1,11 +1,10 @@
 # Montées de version surveillées par Dependabot.
-# target-branch sur CHAQUE entrée : sans lui, les demandes arrivent sur la branche par
-# défaut (main) sans passer par la pré-production (stack-ci-deploiement.md, §ci/dependabot).
+# Dépôt qui n'a que `main` : pas de target-branch (stack-ci-deploiement.md, §ci/dependabot).
+# Dès qu'une `develop` existe, ajouter `target-branch: develop` sur CHAQUE entrée.
 version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
-    target-branch: develop
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
@@ -14,13 +13,11 @@ updates:
         update-types: ["minor", "patch"]
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: develop
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
   - package-ecosystem: "docker"
     directory: "/docker/web"
-    target-branch: develop
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

@@ -53,11 +53,23 @@ et la chronologie. Tout le reste est une **proposition de conception**, marquée
 [`docs/hypotheses.md`](docs/hypotheses.md) avec le fichier où la changer (`app/src/data/`). Les racines égyptiennes (« jamais affichées » dans la bible) sont absentes de l'interface.
 Hors simulation : monde natal tyt, hangar-musée, Terre.
 
+## Intégration continue et outillage
+
+- **Workflow `Qualité et déploiement`** (`.github/workflows/qualite.yml`, même forme que les autres dépôts de l'agence) : une porte = un job — *Cohérence du dépôt*, *Audit des dépendances*
+  (`npm audit`), *Three.js local conforme au lockfile*, *Validation HTML*, *Liens internes*, *Tests de la physique*, *L'image se construit et le site répond* — puis l'agrégateur
+  **`Portes qualité`** (seul contrôle à exiger) et les déploiements de pré-production et de production, gardés par `vars.DEPLOIEMENT_STAGING` / `vars.DEPLOIEMENT_PROD` (éteints par défaut).
+- **Workflow `Release`** : un tag `vX.Y.Z` crée la release à partir de la section du `CHANGELOG.md` (`outils/extraire-changelog.sh`).
+- **`outils/`** (versionné) : `ci-local.sh` (rejoue les portes en local, hook pre-push), `deployer.sh` (exécuté sur le serveur par la *forced command*), `installer-deploiement.sh`,
+  `renseigner-secrets.sh`, `diagnostic-traefik.sh`, `verifier-site.sh`, `extraire-changelog.sh`, `sauvegarder.sh`, `tester-restauration.sh`, `verifier-destination.sh`, `audit-scope.conf`.
+- **Audits** : les scripts de la bibliothèque sont dans `.claude/scripts/` (`audit-securite.sh`, `audit-seo.sh`, `audit-rgaa.sh`, `audit-intrusion.sh`, `test-charge.sh`, `check-stack.sh`,
+  `check-gouvernance.sh`) ; les audits actifs ne visent que les hôtes déclarés dans `outils/audit-scope.conf`.
+- Configuration à faire dans l'interface GitHub : [`GITHUB.md`](GITHUB.md).
+
 ## Arborescence
 
 ```
 app/
-├── index.html, vendor/three.*       page, Three.js local (importmap)
+├── index.html, vendor/three.*       page, Three.js local (importmap) — package.json épingle la version, `npm run vendor` recopie
 └── src/
     ├── data/       omraon.js (étoile, planètes, lunes), sites.js, chronologie.js, ambiances.js
     ├── physics/    simulation, kepler, system, sites, habitability, habitat, habscan, transfers, flight,
@@ -65,6 +77,8 @@ app/
     ├── render/     world, ground (vue au sol), skyView, cameraRig, textures, noise
     └── ui/ui.js    interface (panneaux, frise, fiches, options)
 tests/physics.test.js               node --test
+outils/, .github/, docker/          exploitation, CI, Caddy (stack statique d'agence)
+CLAUDE.md                           mémoire du projet (règles, décisions actées)
 docs/hypotheses.md                  canon / propositions de conception
 ```
 
