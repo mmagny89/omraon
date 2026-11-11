@@ -101,9 +101,9 @@ summary { cursor: pointer; color: var(--mute); padding: 8px 0; min-height: 44px;
 
 
 .site-marker { position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; padding: 0; min-height: 0; border-radius: 50%; border: 0; background: transparent; pointer-events: auto; will-change: transform; display: none; }
-.site-marker::before { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: #ffd27a; box-shadow: 0 0 6px 1px rgba(255,200,100,.9); }
-.site-marker.orbit::before { border-radius: 2px; transform: rotate(45deg); background: #8fd3ff; box-shadow: 0 0 6px 1px rgba(140,210,255,.9); }
-.site-marker.floating::before { background: #b9f0a8; box-shadow: 0 0 6px 1px rgba(170,240,150,.9); }
+.site-marker::before { content: ''; position: absolute; inset: 6px; border-radius: 50%; background: var(--c, #ffd27a); box-shadow: 0 0 6px 1px var(--c, rgba(255,200,100,.9)); }
+.site-marker.orbit::before { border-radius: 2px; transform: rotate(45deg); background: var(--c, #8fd3ff); box-shadow: 0 0 6px 1px var(--c, rgba(140,210,255,.9)); }
+.site-marker.floating::before { background: var(--c, #b9f0a8); box-shadow: 0 0 6px 1px var(--c, rgba(170,240,150,.9)); }
 .site-marker.sel::before { inset: 4px; background: #fff; }
 .site-marker span { position: absolute; left: 14px; top: -2px; white-space: nowrap; font-size: 11px; color: #ffe2b0; text-shadow: 0 0 4px #000, 0 0 2px #000; display: none; pointer-events: none; }
 .site-marker.sel span, .site-marker:hover span, .site-marker:focus-visible span { display: block; }
@@ -171,3 +171,12 @@ summary { cursor: pointer; color: var(--mute); padding: 8px 0; min-height: 44px;
 #ground-hud.porthole::after { content: ''; position: absolute; left: 50%; top: 50%; width: calc(min(36vh, 40vw) * 2 + 6px); height: calc(min(36vh, 40vw) * 2 + 6px); transform: translate(-50%, -50%); border-radius: 50%; border: 5px solid #3a4150; box-shadow: inset 0 0 18px rgba(0,0,0,.7); }
 body.ground #bodies, body.ground #info, body.ground #top, body.ground .lbl, body.ground .site-marker, body.ground .ship-marker { display: none !important; }
 body.ground #bar { opacity: .92; }
+
+#reseau .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; padding-bottom: 6px; }
+#reseau label { display: flex; align-items: center; gap: 8px; min-height: 36px; color: var(--mute); }
+#reseau select, #reseau input[type=number] { min-height: 36px; background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; max-width: 100%; min-width: 0; }
+#net-chart { width: 100%; height: 150px; display: block; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.25); margin: 6px 0; }
+#net-tab-wrap { max-height: 190px; overflow: auto; } #net-tab { width: 100%; border-collapse: collapse; font-size: 12px; }
+#net-tab th, #net-tab td { text-align: right; padding: 3px 5px; border-bottom: 1px solid var(--line); white-space: nowrap; } #net-tab td:first-child, #net-tab th:first-child { text-align: left; white-space: normal; }
+#net-tab .ok { color: var(--ok); } #net-tab .bad { color: #ff6b7a; } #net-tab .warn { color: var(--warn); }
+@media (max-width: 860px) { #reseau .grid { grid-template-columns: 1fr; } #reseau label, #reseau select, #reseau input[type=number] { min-height: 44px; } }

@@ -12,6 +12,7 @@ import { drawSky } from '../render/skyView.js';
 import { runEphemeris } from '../physics/ephemeris.js';
 import { buildScene } from '../physics/scene.js';
 import { habitabilityScan } from '../physics/habscan.js';
+import { simulateSpread } from '../physics/network.js';
 import { planVoyage } from '../physics/flight.js';
 import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
@@ -22,6 +23,7 @@ const SPEEDS = [
   [DAYS_PER_YEAR, '1 an/s'], [DAYS_PER_YEAR * 10, '10 ans/s'], [DAYS_PER_YEAR * 100, '100 ans/s'], [DAYS_PER_YEAR * 1000, '1000 ans/s'],
 ];
 const $ = (s) => document.querySelector(s);
+const mixHex = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`; };
 const f = (x, d = 3) => (d === 0 ? Math.round(x).toLocaleString('fr-FR') : Math.abs(x) >= 1e5 || (Math.abs(x) < 1e-2 && x !== 0) ? x.toExponential(2) : x.toFixed(d));
 const fmtDur = (d) => (d < 2 ? `${(d * 24).toFixed(1)} h` : d < 400 ? `${d.toFixed(2)} j` : `${(d / DAYS_PER_YEAR).toFixed(2)} ans`);
 const row = (k, v, cls = '') => `<dt>${k}</dt><dd class="${cls}">${v}</dd>`;
@@ -38,6 +40,7 @@ export class UI {
     this.bindSiteTools();
     this.bindVoyage();
     this.bindGround();
+    this.buildNet();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
@@ -107,6 +110,61 @@ export class UI {
       this.sim.computeRender(this.target);
       this.calculating = false;
     }, 30);
+  }
+
+  // ---------- Réseau de communication ----------
+  buildNet() {
+    $('#net-origin').innerHTML = SITES.map((x) => `<option value="${x.id}" ${x.id === 'roushan-cites' ? 'selected' : ''}>${x.name}</option>`).join('');
+    $('#net-go').addEventListener('click', () => this.runNet());
+    $('#net-stop').addEventListener('click', () => this.stopNet());
+  }
+
+  stopNet() { this.net = null; $('#net-stop').hidden = true; this.world.siteEls?.forEach((r) => r.el.style.removeProperty('--c')); }
+
+  runNet() {
+    const w = this.world, pos = new Map(); this.sim.computeRender(this.target);
+    const sctx = w.siteCtx(); for (const x of SITES) pos.set(x.id, (w.siteEls.get(x.id)?.st || siteState(sctx, x, this.target)).pos.slice());
+    const horizon = +$('#net-h').value, mode = $('#net-mode').value;
+    const res = simulateSpread({ sites: SITES, pos, origin: $('#net-origin').value, mode, topology: $('#net-topo').value, hopMin: +$('#net-hop').value || 0, detectMin: +$('#net-det').value || 0, horizonDays: horizon });
+    this.net = { res, t0: this.target, horizon };
+    $('#net-stop').hidden = false;
+    this.renderNet(res);
+    // lecture : l'horizon défile en ~30 s
+    const need = horizon / 30; let best = 0, gap = Infinity; SPEEDS.forEach(([d], i) => { const g = Math.abs(Math.log(d / need)); if (g < gap) { gap = g; best = i; } });
+    this.speedIdx = best; $('#speed').value = best; $('#speed-out').textContent = SPEEDS[best][1]; this.playing = true; $('#play').textContent = '❚❚';
+  }
+
+  renderNet(res) {
+    const dur = (d) => (d < 1 / 24 ? `${(d * 1440).toFixed(0)} min` : d < 2 ? `${(d * 24).toFixed(1)} h` : `${d.toFixed(1)} j`), pc = (x) => `${(x * 100).toFixed(x < 0.1 ? 1 : 0)} %`, sm = res.summary;
+    const hubName = SITES.find((x) => x.id === res.hub).name;
+    $('#net-sum').innerHTML = `Le Consortium (${hubName}) reçoit le message ${dur(res.tHub)} après l'envoi et ordonne la coupure ${dur(res.killAtHub - res.tHub)} plus tard ; l'ordre voyage à la lumière.<br>` +
+      `<b>${sm.reached}/${sm.total}</b> sites reçoivent le message avant l'ordre de coupure. Humains informés : ${sm.h10 != null ? '10 % en ' + dur(sm.h10) : '10 % jamais'}, ${sm.h50 != null ? '50 % en ' + dur(sm.h50) : '50 % jamais'} ; à l'horizon <b>${pc(sm.finalH)}</b> des humains et <b>${pc(sm.finalT)}</b> des Tyts.`;
+    const rows = [...res.nodes].sort((a, b) => a.tReceive - b.tReceive).map((n) => `<tr><td>${n.name}</td><td>${dur(n.tReceive)}</td><td>${dur(n.tKill)}</td><td class="${n.beforeKill ? 'ok' : 'warn'}">${n.beforeKill ? 'avant' : 'après'}</td><td>${pc(n.finalH)}</td><td>${n.tyts ? pc(n.finalT) : '—'}</td></tr>`).join('');
+    $('#net-tab').innerHTML = `<tr><th>Site</th><th>Reçu</th><th>Coupure</th><th>Msg/coupure</th><th>Humains</th><th>Tyts</th></tr>${rows}`;
+    this.drawNetChart(res);
+  }
+
+  drawNetChart(res) {
+    const cv = $('#net-chart'), dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth || 320, H = 150;
+    cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    const L = 34, R = 8, T = 8, B = 20, tmin = Math.log10(1 / 1440), tmax = Math.log10(res.horizonDays), X = (t) => L + (Math.log10(Math.max(t, 1 / 1440)) - tmin) / (tmax - tmin) * (W - L - R), Y = (f) => T + (1 - f) * (H - T - B);
+    g.strokeStyle = 'rgba(160,185,230,.2)'; g.fillStyle = '#8d9bb8'; g.font = '10px system-ui'; g.lineWidth = 1;
+    for (const f of [0, 0.5, 1]) { g.beginPath(); g.moveTo(L, Y(f)); g.lineTo(W - R, Y(f)); g.stroke(); g.fillText(`${f * 100}%`, 2, Y(f) + 3); }
+    for (const [t, lab] of [[1 / 1440, '1 min'], [1 / 24, '1 h'], [1, '1 j'], [7, '7 j'], [30, '30 j'], [365, '1 an']]) if (t <= res.horizonDays) { g.beginPath(); g.moveTo(X(t), T); g.lineTo(X(t), H - B); g.stroke(); g.fillText(lab, X(t) - 8, H - 6); }
+    g.strokeStyle = '#ff6b7a'; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(X(res.killAtHub), T); g.lineTo(X(res.killAtHub), H - B); g.stroke(); g.setLineDash([]); g.fillStyle = '#ff6b7a'; g.fillText('ordre de coupure', Math.min(W - 80, X(res.killAtHub) + 3), T + 9);
+    for (const [key, col] of [['humans', '#ffbf6b'], ['tyts', '#6fd3a0']]) { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); res.curve.forEach((c, i) => { const x = X(c.t), y = Y(c[key]); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); }
+    g.fillStyle = '#ffbf6b'; g.fillText('humains', W - 90, T + 22); g.fillStyle = '#6fd3a0'; g.fillText('Tyts', W - 90, T + 34);
+  }
+
+  updateNetMarkers() {
+    const n = this.net; if (!n) return; const tau = this.target - n.t0;
+    for (const node of n.res.nodes) {
+      const rec = this.world.siteEls.get(node.id); if (!rec) continue;
+      let c;
+      if (tau < node.tReceive) c = '#5a6070'; // pas encore atteint
+      else { const f = node.f(tau); c = node.beforeKill || tau < node.tKill ? mixHex('#ffd27a', '#9ff0ff', Math.min(1, f * 2)) : f < 0.05 ? '#ff6b7a' : mixHex('#ff9a6b', '#9ff0ff', Math.min(1, f * 1.5)); }
+      rec.el.style.setProperty('--c', c);
+    }
   }
 
   // ---------- Vue à hauteur d'yeux ----------
@@ -527,6 +585,7 @@ export class UI {
     if (y !== this.lastYear) { this.lastYear = y; const r = $('#chrono-range'); if (r && document.activeElement !== r) { r.value = Math.max(-960, Math.min(60, y)); this.chronoLabel(y); } }
     if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }
     if (this.world.ground?.active) this.updateGround(dt);
+    this.netAcc = (this.netAcc || 0) + dt; if (this.net && this.netAcc > 0.2) { this.netAcc = 0; this.updateNetMarkers(); }
     this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
     if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }
     if (this.selectedSite && this.sceneAcc > 2.5) { this.sceneAcc = 0; this.refreshScene(); }

@@ -73,3 +73,16 @@ PRÉVUE de la destination à l'arrivée (point fixe), accélère puis freine ; s
 le moteur est coupé au milieu (repos supposé d'un jour). Panneau : phase, vitesse, distance, poussée continue, délai de message vers l'origine
 et la destination. La caméra peut suivre le vaisseau ; la vitesse de lecture est choisie pour que le trajet dure ~30 s. Profil newtonien
 (vitesses < 0,06 c en système), l'arrivée est recalée sur la position réelle de la destination (`physics/flight.js`).
+
+## Vue à hauteur d'yeux
+Bouton « 👁 Vue à hauteur d'yeux » sur un site : caméra à 1,7 m du sol (ou hublot pour une station), horizon à sa vraie distance (4,5 km sur Kebet,
+360 m sur Sedbou), sol à la vraie courbure du monde, étoile et planètes à leur diamètre angulaire réel avec leurs phases, éclipses, ciel qui suit
+l'étoile et l'atmosphère, lumière de Zirkan sur le sol la nuit. Souris/tactile pour tourner, molette/pincement pour le champ, Échap pour quitter.
+Le panneau « Ciel vu d'ici » est aussi interactif (glisser, molette, double-clic).
+
+## Réseau de communication
+Panneau « Réseau de communication » (`physics/network.js`) : diffusion d'une information (le piratage de Jax) depuis un site, au délai de la lumière +
+routage ; trois topologies (direct, via le Consortium qui filtre ~65 %, réseau pirate chiffré) ; ou bouche-à-oreille par vaisseaux (Dijkstra sur les temps
+de vol). Le Consortium apprend le message, réagit après un délai, et son ordre de coupure voyage à la lumière : chaque site reçoit alors un ralentissement
+de la diffusion locale (répression). Résultats : tableau par site, courbe humains/Tyts, marqueurs 3D qui se colorent au fil du temps.
+Les taux de diffusion, la répression et les graines sont des paramètres de conception (le document ne chiffre rien).
