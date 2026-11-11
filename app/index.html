@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Système d'Omraon — Simulation</title>
+  <meta name="description" content="Simulation N-corps et visualisation 3D du système d'Omraon : une étoile, trois telluriques, une ceinture, deux géantes et six lunes.">
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+  <canvas id="view" aria-label="Vue 3D du système d'Omraon"></canvas>
+  <div id="labels" aria-hidden="true"></div>
+
+  <header id="top">
+    <button id="btn-bodies" class="icon" aria-label="Corps célestes" aria-expanded="false">☰</button>
+    <h1>Système d'<b>Omraon</b></h1>
+    <div id="views" role="group" aria-label="Vues">
+      <button data-view="system">Système</button>
+      <button data-view="inner">Intérieur</button>
+      <button data-view="kebet">Kebet</button>
+    </div>
+    <button id="btn-info" class="icon" aria-label="Fiche du corps" aria-expanded="false">ⓘ</button>
+  </header>
+
+  <aside id="bodies" aria-label="Corps célestes"><div id="list"></div></aside>
+  <aside id="info" aria-label="Fiche du corps sélectionné"><div id="info-live"></div><div id="transfer" hidden><h3>Trajet vers…</h3><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><div id="tr-out"></div></div></aside>
+
+  <footer id="bar">
+    <div class="row">
+      <button id="play" class="icon" aria-label="Pause">❚❚</button>
+      <input id="speed" type="range" min="0" max="7" step="1" value="2" aria-label="Vitesse de simulation">
+      <output id="speed-out">10 j/s</output>
+      <output id="date" aria-label="Date de simulation"></output>
+    </div>
+    <details id="chrono"><summary>Chronologie · âge du système</summary><div id="chrono-body"></div></details>
+    <details id="settings">
+      <summary>Paramètres &amp; diagnostics</summary>
+      <div class="grid">
+        <label><input type="checkbox" id="t-orbits" checked> Orbites</label>
+        <label><input type="checkbox" id="t-labels" checked> Noms</label>
+        <label><input type="checkbox" id="t-belt" checked> Ceinture (Nunzir)</label>
+        <label><input type="checkbox" id="t-edge" checked> Confins (35 UA)</label>
+        <label><input type="checkbox" id="t-gr" checked> Relativité générale (1PN)</label>
+        <label><input type="checkbox" id="t-trojans"> Troyens de Zirkan (ajout)</label>
+        <label class="wide">Astéroïdes : <output id="n-out">4000</output>
+          <input type="range" id="n-ast" min="500" max="20000" step="500" value="4000"></label>
+        <div class="wide diag" id="diag"></div>
+        <button id="reset" class="wide">Réinitialiser la simulation</button>
+      </div>
+    </details>
+  </footer>
+
+  <div id="loader"><div><b>Système d'Omraon</b><span id="loader-msg">Initialisation…</span></div></div>
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

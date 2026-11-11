@@ -1,0 +1,15 @@
+// Unités internes : UA, jour, masse solaire. G = k² de Gauss (valeur exacte de la constante gaussienne).
+export const G = 2.959122082855911e-4; // UA³ / (M☉ · j²)
+export const AU_KM = 149597870.7;
+export const C_AU_DAY = (299792.458 * 86400) / AU_KM; // vitesse de la lumière
+export const M_SUN_KG = 1.98847e30;
+export const M_EARTH = 3.0034896e-6; // M☉
+export const M_JUP = 9.5479194e-4; // M☉
+export const R_EARTH_KM = 6371.0;
+export const R_JUP_KM = 71492.0;
+export const R_SUN_KM = 695700.0;
+export const T_SUN = 5772; // K
+export const TWO_PI = Math.PI * 2;
+export const DEG = Math.PI / 180;
+export const DAYS_PER_YEAR = 365.25;
+export const EARTH_RHO = 5.514; // g/cm³
