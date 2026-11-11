@@ -298,8 +298,18 @@ export class World {
       // éléments osculateurs
       if (b.type !== 'star') {
         const p = b.parent;
-        const r = [rp[3 * i] - rp[3 * p], rp[3 * i + 1] - rp[3 * p + 1], rp[3 * i + 2] - rp[3 * p + 2]];
-        const v = [rv[3 * i] - rv[3 * p], rv[3 * i + 1] - rv[3 * p + 1], rv[3 * i + 2] - rv[3 * p + 2]];
+        let r = [rp[3 * i] - rp[3 * p], rp[3 * i + 1] - rp[3 * p + 1], rp[3 * i + 2] - rp[3 * p + 2]];
+        let v = [rv[3 * i] - rv[3 * p], rv[3 * i + 1] - rv[3 * p + 1], rv[3 * i + 2] - rv[3 * p + 2]];
+        if (b.type === 'planet' && sim.tier === 1 && sim.mEff[i] !== sim.mass[i]) {
+          // éléments du BARYCENTRE planète + lunes : la planète seule oscille autour de lui au rythme de ses lunes
+          // (Zirkan : ±0,015 UA sur a et ±9° sur ϖ à chaque orbite de Kebet), ce qui faisait « bouger » l'ellipse.
+          o.moonIdx ??= sim.bodies.filter((m) => m.type === 'moon' && m.parent === i).map((m) => m.idx);
+          for (let c = 0; c < 3; c++) {
+            let x = sim.mass[i] * rp[3 * i + c], u = sim.mass[i] * rv[3 * i + c];
+            for (const m of o.moonIdx) { x += sim.mass[m] * rp[3 * m + c]; u += sim.mass[m] * rv[3 * m + c]; }
+            r[c] = x / sim.mEff[i] - rp[c]; v[c] = u / sim.mEff[i] - rv[c];
+          }
+        }
         const mu = G * ((p === 0 ? sim.mass[0] : sim.mass[p]) + (b.type === 'planet' ? sim.mEff[i] : sim.mass[i]));
         o.el = stateToElements(mu, r, v);
         // orbite visible si assez grande à l'écran
