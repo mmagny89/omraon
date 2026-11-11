@@ -12,18 +12,22 @@
   <div id="labels" aria-hidden="true"></div>
 
   <header id="top">
-    <button id="btn-bodies" class="icon" aria-label="Corps célestes" aria-expanded="false">☰</button>
+    <button id="btn-bodies" class="tb" aria-pressed="true" title="Liste des corps et des sites"><span class="ic">☰</span><span class="t">Corps</span></button>
     <h1>Système d'<b>Omraon</b></h1>
     <div id="views" role="group" aria-label="Vues">
       <button data-view="system">Système</button>
       <button data-view="inner">Intérieur</button>
       <button data-view="kebet">Kebet</button>
     </div>
-    <button id="btn-info" class="icon" aria-label="Fiche du corps" aria-expanded="false">ⓘ</button>
+    <button id="btn-info" class="tb" aria-pressed="true" title="Fiche du corps ou du site"><span class="ic">ⓘ</span><span class="t">Fiche</span></button>
+    <button id="btn-options" class="tb" aria-pressed="false" title="Options, éphémérides, réseau"><span class="ic">⚙</span><span class="t">Options</span></button>
+    <button id="btn-hide" class="tb" title="Masquer toute l'interface (touche H)"><span class="ic">🙈</span><span class="t">Masquer</span></button>
   </header>
+  <div id="frise" role="group" aria-label="Frise chronologique"></div>
+  <button type="button" id="ui-show" title="Afficher l'interface (touche H)">👁 Interface</button>
 
-  <aside id="bodies" aria-label="Corps célestes"><div id="list"></div></aside>
-  <aside id="info" aria-label="Fiche du corps sélectionné"><div id="voyage" hidden><h3>Le Mai en route</h3><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
+  <aside id="bodies" aria-label="Corps célestes"><button type="button" class="panel-x" data-close="left" aria-label="Fermer la liste">×</button><div id="list"></div></aside>
+  <aside id="info" aria-label="Fiche du corps sélectionné"><button type="button" class="panel-x" data-close="right" aria-label="Fermer la fiche">×</button><div id="voyage" hidden><h3>Le Mai en route</h3><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
   <div id="site-tools" hidden>
     <button type="button" id="ground-btn" class="wide-btn">👁 Vue à hauteur d'yeux (horizon)</button>
     <details id="sky-box" open><summary>Ciel vu d'ici</summary>
@@ -40,7 +44,25 @@
       <input id="speed" type="range" min="0" max="9" step="1" value="0" aria-label="Vitesse de simulation">
       <output id="speed-out">10 j/s</output>
       <output id="date" aria-label="Date de simulation"></output>
+      <button id="btn-options-bar" class="icon" aria-label="Options" aria-pressed="false">⚙</button>
     </div>
+  </footer>
+  <section id="options" aria-label="Options"><button type="button" class="panel-x" data-close="options" aria-label="Fermer les options">×</button><h2>Options</h2>
+    <details id="settings">
+      <summary>Paramètres &amp; diagnostics</summary>
+      <div class="grid">
+        <label><input type="checkbox" id="t-orbits" checked> Orbites</label>
+        <label><input type="checkbox" id="t-labels" checked> Noms</label>
+        <label><input type="checkbox" id="t-belt" checked> Ceinture (Nunzir)</label>
+        <label><input type="checkbox" id="t-edge" checked> Confins (35 UA)</label>
+        <label><input type="checkbox" id="t-gr" checked> Relativité générale (1PN)</label>
+        <label><input type="checkbox" id="t-trojans" checked> Troyens de Zirkan (ajout)</label>
+        <label class="wide">Astéroïdes : <output id="n-out">4000</output>
+          <input type="range" id="n-ast" min="500" max="20000" step="500" value="4000"></label>
+        <div class="wide diag" id="diag"></div>
+        <button id="reset" class="wide">Réinitialiser la simulation</button>
+      </div>
+    </details>
     <details id="reseau"><summary>Réseau de communication</summary>
       <div class="grid">
         <label>Origine <select id="net-origin"></select></label>
@@ -67,28 +89,13 @@
       </div>
       <div id="eph-note" class="note"></div><ol id="eph-list"></ol>
     </details>
-    <details id="chrono"><summary>Chronologie · âge du système</summary><div id="chrono-body"></div></details>
-    <details id="settings">
-      <summary>Paramètres &amp; diagnostics</summary>
-      <div class="grid">
-        <label><input type="checkbox" id="t-orbits" checked> Orbites</label>
-        <label><input type="checkbox" id="t-labels" checked> Noms</label>
-        <label><input type="checkbox" id="t-belt" checked> Ceinture (Nunzir)</label>
-        <label><input type="checkbox" id="t-edge" checked> Confins (35 UA)</label>
-        <label><input type="checkbox" id="t-gr" checked> Relativité générale (1PN)</label>
-        <label><input type="checkbox" id="t-trojans" checked> Troyens de Zirkan (ajout)</label>
-        <label class="wide">Astéroïdes : <output id="n-out">4000</output>
-          <input type="range" id="n-ast" min="500" max="20000" step="500" value="4000"></label>
-        <div class="wide diag" id="diag"></div>
-        <button id="reset" class="wide">Réinitialiser la simulation</button>
-      </div>
-    </details>
-  </footer>
+  </section>
 
   <div id="ground-hud" hidden>
+    <div id="gh-labels"></div>
     <div class="gh-top"><b id="gh-site"></b><span id="gh-info"></span></div>
     <div class="gh-bottom"><span id="gh-heading"></span>
-      <div class="gh-btns"><button type="button" data-look="star">Étoile</button><button type="button" data-look="parent">Planète parente</button><button type="button" data-look="north">Nord</button><button type="button" id="gh-exit">✕ Quitter la vue</button></div></div>
+      <div class="gh-btns"><label class="gh-chk"><input type="checkbox" id="gh-names"> Noms des astres</label><label class="gh-chk"><input type="checkbox" id="gh-cards" checked> Points cardinaux</label><button type="button" data-look="star">Étoile</button><button type="button" data-look="parent">Planète parente</button><button type="button" data-look="north">Nord</button><button type="button" id="gh-exit">✕ Quitter la vue</button></div></div>
   </div>
   <div id="loader"><div><b>Système d'Omraon</b><span id="loader-msg">Initialisation…</span></div></div>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>

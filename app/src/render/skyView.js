@@ -74,7 +74,10 @@ export function drawSky(canvas, sky, opts) {
   g.font = '11px system-ui, sans-serif'; g.fillStyle = '#e6ecf8'; g.shadowColor = '#000'; g.shadowBlur = 3;
   for (const [t, x, y] of labels) if (x < W - 20) g.fillText(t, x, y);
   g.shadowBlur = 0;
-  // repères cardinaux
-  if (opts.surface) { g.fillStyle = 'rgba(255,255,255,.55)'; g.shadowBlur = 0; for (const [t, a] of [['N', 0], ['E', Math.PI / 2], ['S', Math.PI], ['O', -Math.PI / 2]]) { const x = X(a); if (x > 6 && x < W - 6) g.fillText(t, x - 3, Math.min(H - 5, hy + 14)); } }
+  // repères cardinaux : sur l'horizon (sol) ou sur le plan local de la station (hauteur 0)
+  g.fillStyle = 'rgba(255,226,176,.8)'; g.font = '600 11px system-ui, sans-serif';
+  const yc = clamp(Y(0) + 14, 12, H - 4);
+  for (const [t, a] of [['N', 0], ['NE', Math.PI / 4], ['E', Math.PI / 2], ['SE', 3 * Math.PI / 4], ['S', Math.PI], ['SO', -3 * Math.PI / 4], ['O', -Math.PI / 2], ['NO', -Math.PI / 4]]) { const x = X(a); if (x > 8 && x < W - 8) { g.globalAlpha = t.length === 1 ? 0.95 : 0.55; g.fillText(t, x - (t.length === 1 ? 3 : 6), yc); } }
+  g.globalAlpha = 1;
   return { center, ppr, elC };
 }

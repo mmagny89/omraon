@@ -57,7 +57,7 @@ export class UI {
     const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}`, { site: x.id }, () => this.selectSite(x.id));
     const bodyBtn = (parent, b, cls) => {
       const dot = `<span class="dot" style="color:${b.def.color || '#ffe2b0'};background:${b.def.color || '#ffe2b0'}"></span>`;
-      return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); document.body.classList.remove('show-bodies'); });
+      return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); });
     };
     bodyBtn(group(), bodies[0]);
     bodies.filter((b) => b.type === 'planet').forEach((p) => {
@@ -81,24 +81,46 @@ export class UI {
 
   // ---------- Chronologie ----------
   buildChrono() {
-    const box = $('#chrono-body');
-    box.innerHTML = `<div class="chips">${EVENTS.map((e) => `<button type="button" data-year="${e.year}" title="${e.note}">${e.year === 0 ? 'Présent' : 'An ' + String(e.year).replace('-', '−')} · ${e.label}</button>`).join('')}</div>` +
-      `<input id="chrono-range" type="range" min="-960" max="60" step="1" value="0" aria-label="Date en années (An 0 = présent du roman)">` +
-      `<div id="chrono-read"></div>`;
-    box.querySelectorAll('[data-year]').forEach((b) => b.addEventListener('click', () => this.goTo(+b.dataset.year)));
-    const r = $('#chrono-range');
-    r.addEventListener('input', () => this.chronoLabel(+r.value));
-    r.addEventListener('change', () => this.goTo(+r.value));
-    this.chronoLabel(0);
+    const Y0 = -960, Y1 = 60, pct = (y) => ((y - Y0) / (Y1 - Y0)) * 100, fr = $('#frise');
+    const eras = [[-960, -560, 'out', 'Voyage des arches (hors système)'], [-560, -500, 'c1', 'La cohabitation'], [-500, -300, 'c2', 'Les Siècles Sombres'], [-300, 0, 'c3', 'Ère confédérale'], [0, 60, 'c4', 'Après le présent']];
+    const labels = [[-960, 'Départ'], [-560, 'Arrivée'], [-500, 'Basculement'], [-300, 'Fin des Siècles Sombres'], [0, 'Présent']];
+    fr.innerHTML = `<div class="read" id="frise-read"></div>` +
+      `<div class="track" id="frise-track" role="slider" tabindex="0" aria-valuemin="${Y0}" aria-valuemax="${Y1}" aria-valuenow="0" aria-label="Date en années (An 0 = présent du roman) ; flèches : ±1 an, Maj : ±10 ans">` +
+      eras.map(([a, b2, c, t]) => `<div class="seg ${c}" style="width:${pct(b2) - pct(a)}%" title="${t}"></div>`).join('') + '</div>' +
+      EVENTS.map((e) => `<button type="button" class="tick" data-year="${e.year}" style="left:${pct(e.year)}%" title="${e.label} (An ${String(e.year).replace('-', '−')}) : ${e.note}" aria-label="${e.label}"></button>`).join('') +
+      labels.map(([y, t]) => `<span class="lab" style="left:${Math.min(94, Math.max(6, pct(y)))}%">${t}</span>`).join('') + '<div class="cursor" id="frise-cursor"></div>';
+    this.friseDom = { track: $('#frise-track'), cursor: $('#frise-cursor'), read: $('#frise-read'), Y0, Y1, pct };
+    const yearAt = (e) => { const r = this.friseDom.track.getBoundingClientRect(); return Y0 + Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (Y1 - Y0); };
+    let drag = false;
+    this.friseDom.track.addEventListener('pointerdown', (e) => { drag = true; this.friseDragging = true; this.friseDom.track.setPointerCapture(e.pointerId); const y = yearAt(e); this.friseLabel(Math.round(y)); this.friseDom.cursor.style.left = pct(y) + '%'; });
+    this.friseDom.track.addEventListener('pointermove', (e) => { if (!drag) return; const y = yearAt(e); this.friseLabel(Math.round(y)); this.friseDom.cursor.style.left = pct(y) + '%'; });
+    const end = (e) => { if (!drag) return; drag = false; this.friseDragging = false; this.goTo(Math.round(yearAt(e))); };
+    this.friseDom.track.addEventListener('pointerup', end); this.friseDom.track.addEventListener('pointercancel', () => { drag = false; this.friseDragging = false; });
+    this.friseDom.track.addEventListener('keydown', (e) => {
+      const step = e.shiftKey ? 10 : 1, cur = Math.round(this.target / DAYS_PER_YEAR); let y = null;
+      if (e.key === 'ArrowLeft') y = cur - step; else if (e.key === 'ArrowRight') y = cur + step; else if (e.key === 'Home') y = Y0; else if (e.key === 'End') y = Y1;
+      if (y == null) return; e.preventDefault(); y = Math.max(Y0, Math.min(Y1, y)); this.friseLabel(y); clearTimeout(this._friseT); this._friseT = setTimeout(() => this.goTo(y), 350);
+    });
+    fr.querySelectorAll('.tick').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); this.goTo(+b.dataset.year); }));
+    this.friseLabel(0);
   }
 
-  chronoLabel(year) {
+  friseLabel(year) {
     const era = eraAt(year), ev = EVENTS.filter((e) => Math.abs(e.year - year) <= 8).sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year))[0];
-    $('#chrono-read').innerHTML = `<b>An ${String(year).replace('-', '−')}</b> — ${era.label}${ev ? `<br><span class="note">${ev.label} : ${ev.note}</span>` : ''}${era.outside ? '<br><span class="note">Les arches sont encore en route : les positions affichées sont celles du système, sans humains.</span>' : ''}<br><span class="note">Âge du système : ${systemAgeGyr(STAR, year).toFixed(6)} Gyr</span>`;
+    this.friseDom.read.innerHTML = `<b>An ${String(year).replace('-', '−')}</b> — ${era.label}${ev ? ` <span>· ${ev.label}</span>` : ''}${era.outside ? ' <span>· les arches sont en route, pas encore d\'humains</span>' : ''} <span>· âge du système ${systemAgeGyr(STAR, year).toFixed(6)} Gyr</span>`;
+  }
+
+  /** Place le curseur de la frise à la date simulée (appelé à chaque image). */
+  friseUpdate(yearFloat) {
+    if (!this.friseDom || this.friseDragging) return;
+    const { cursor, track, Y0, Y1, pct } = this.friseDom, y = Math.max(Y0, Math.min(Y1, yearFloat));
+    cursor.style.left = pct(y) + '%'; track.setAttribute('aria-valuenow', Math.round(yearFloat));
+    const yi = Math.floor(yearFloat);
+    if (yi !== this._friseYear) { this._friseYear = yi; this.friseLabel(yi); }
   }
 
   /** Va à l'année donnée (An 0 = présent) : recalcule les positions des planètes à cette date. */
-  goTo(year) { $('#chrono-range').value = year; this.chronoLabel(year); this.goToTime(year * DAYS_PER_YEAR); }
+  goTo(year) { this.friseLabel(year); this._friseYear = year; this.goToTime(year * DAYS_PER_YEAR); }
 
   /** Saute à la date t (jours depuis l'An 0). */
   goToTime(t) {
@@ -191,6 +213,7 @@ export class UI {
     const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], az = gi.azimuth;
     $('#gh-heading').textContent = `CAP ${az.toFixed(0).padStart(3, '0')}° ${dirs[Math.round(az / 45) % 8]}`;
     const g = this.world.ground, site = g.site, parts = [`Étoile à ${gi.sunDeg.toFixed(0)}°`];
+    g.showNames = $('#gh-names').checked; g.showCards = $('#gh-cards').checked;
     if (g.horizon) parts.push(`horizon à ${(g.horizon / 1000).toFixed(g.horizon > 10000 ? 0 : 1)} km`);
     if (gi.eclipse) parts.push(`éclipse : ${gi.eclipse.by} masque ${(gi.eclipse.fraction * 100).toFixed(0)} %`);
     parts.push(`champ ${g.fov.toFixed(0)}°`); $('#gh-info').textContent = parts.join(' · ');
@@ -348,7 +371,7 @@ export class UI {
     if (site.type === 'heliocentric') { this.selected = 0; w.focusOn(0, 3 * UNIT); } else { this.selected = w.bodies.find((o) => o.name === site.body).idx; w.focusOn(this.selected); }
     this.markList(); this.buildTransfer(); this.renderInfo();
     $('#site-tools').hidden = false; this.skyAcc = 1; this.sceneAcc = 9;
-    if (window.innerWidth <= 860) document.body.classList.remove('show-bodies');
+    this.closeLeftOnMobile();
   }
 
   buildTransfer() {
@@ -424,16 +447,37 @@ export class UI {
     $('#n-ast').addEventListener('change', regen);
     $('#reset').addEventListener('click', () => this.onReset && this.onReset());
     document.querySelectorAll('#views button').forEach((b) => b.addEventListener('click', () => this.view(b.dataset.view)));
-    $('#btn-bodies').addEventListener('click', () => { document.body.classList.toggle('show-bodies'); document.body.classList.remove('show-info'); this.aria(); });
-    $('#btn-info').addEventListener('click', () => { document.body.classList.toggle('show-info'); document.body.classList.remove('show-bodies'); this.aria(); });
+    this.bindPanels();
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
       if (e.code === 'Space') { e.preventDefault(); $('#play').click(); }
     });
   }
-  aria() {
-    $('#btn-bodies').setAttribute('aria-expanded', document.body.classList.contains('show-bodies'));
-    $('#btn-info').setAttribute('aria-expanded', document.body.classList.contains('show-info'));
+  // ---------- Panneaux repliables, options, interface masquable ----------
+  closeLeftOnMobile() { if (window.innerWidth <= 860) { document.body.classList.add('hide-left'); this.syncPanels?.(); } }
+
+  bindPanels() {
+    const cl = document.body.classList, mobile = () => window.innerWidth <= 860;
+    this.syncPanels = () => {
+      $('#btn-bodies').setAttribute('aria-pressed', !cl.contains('hide-left')); $('#btn-info').setAttribute('aria-pressed', !cl.contains('hide-right'));
+      const o = cl.contains('options-open'); $('#btn-options').setAttribute('aria-pressed', o); $('#btn-options-bar').setAttribute('aria-pressed', o);
+    };
+    if (mobile()) cl.add('hide-left', 'hide-right'); // sur téléphone : carte seule au départ, panneaux à la demande
+    const toggle = (name) => {
+      if (name === 'left') { cl.toggle('hide-left'); if (mobile() && !cl.contains('hide-left')) { cl.add('hide-right'); cl.remove('options-open'); } }
+      else if (name === 'right') { cl.toggle('hide-right'); if (mobile() && !cl.contains('hide-right')) { cl.add('hide-left'); cl.remove('options-open'); } }
+      else { cl.toggle('options-open'); if (mobile() && cl.contains('options-open')) cl.add('hide-left', 'hide-right'); }
+      this.syncPanels();
+    };
+    $('#btn-bodies').addEventListener('click', () => toggle('left')); $('#btn-info').addEventListener('click', () => toggle('right'));
+    $('#btn-options').addEventListener('click', () => toggle('options')); $('#btn-options-bar').addEventListener('click', () => toggle('options'));
+    document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => { const n = b.dataset.close; if (n === 'left') cl.add('hide-left'); else if (n === 'right') cl.add('hide-right'); else cl.remove('options-open'); this.syncPanels(); }));
+    $('#btn-hide').addEventListener('click', () => { cl.add('ui-hidden'); }); $('#ui-show').addEventListener('click', () => cl.remove('ui-hidden'));
+    addEventListener('keydown', (e) => {
+      if (e.target.matches?.('input:not([type=range]), textarea, select') || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === 'h' || e.key === 'H') { cl.toggle('ui-hidden'); }
+    });
+    this.syncPanels();
   }
 
   view(name) {
@@ -450,7 +494,7 @@ export class UI {
     this.markList();
     $('#transfer').hidden = true; $('#site-tools').hidden = true;
     this.renderInfo(true);
-    if (fly && window.innerWidth <= 860) document.body.classList.remove('show-bodies');
+    if (fly) this.closeLeftOnMobile();
   }
 
   ctx() {
@@ -582,7 +626,7 @@ export class UI {
       const clock = this.speedIdx <= 2 ? `${p2(fr * 24)}:${p2((fr * 1440) % 60)}:${p2((fr * 86400) % 60)}` : `${p2(fr * 24)} h`; // secondes seulement aux vitesses lisibles
       $('#date').textContent = `An ${String(y).replace('-', '−')} · jour ${Math.floor(dd)} · ${clock}`;
     }
-    if (y !== this.lastYear) { this.lastYear = y; const r = $('#chrono-range'); if (r && document.activeElement !== r) { r.value = Math.max(-960, Math.min(60, y)); this.chronoLabel(y); } }
+    this.friseUpdate(t / DAYS_PER_YEAR);
     if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }
     if (this.world.ground?.active) this.updateGround(dt);
     this.netAcc = (this.netAcc || 0) + dt; if (this.net && this.netAcc > 0.2) { this.netAcc = 0; this.updateNetMarkers(); }

@@ -44,6 +44,7 @@ export class GroundView {
     this.scene.add(this.stars);
     this.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); this.scene.add(this.glow);
     this.bodyMeshes = new Map(); this.terrain = null; this.extra = [];
+    this.showNames = false; this.showCards = true; this.lbl = new Map(); this.tmpV = new THREE.Vector3(); this.porthole = false;
     this.noise = makeNoise(77);
     // saisie (souris, tactile)
     const cv = world.canvas; this.ptrs = new Map();
@@ -99,10 +100,11 @@ export class GroundView {
     } else this.horizon = null;
     // orientation initiale : vers l'étoile si elle est levée, sinon vers la planète parente
     this.yaw = 0; this.pitch = site.type === 'orbit' ? -0.2 : 0.05; this.initDone = false;
+    this.porthole = site.type === 'orbit';
     this.world.rig.enabled = false;
   }
 
-  exit() { this.active = false; this.clearExtras(); this.world.rig.enabled = true; for (const m of this.bodyMeshes.values()) this.scene.remove(m); this.bodyMeshes.clear(); }
+  exit() { for (const el of this.lbl.values()) el.remove(); this.lbl.clear(); this.active = false; this.clearExtras(); this.world.rig.enabled = true; for (const m of this.bodyMeshes.values()) this.scene.remove(m); this.bodyMeshes.clear(); }
 
   lookAt(kind) { this.pendingLook = kind; }
 
@@ -173,10 +175,36 @@ export class GroundView {
     // brume
     if (atmKind !== 'none' && this.terrain) { const hc = mixC([0.01, 0.012, 0.02], hor, day); const col = new THREE.Color(hc[0], hc[1], hc[2]); this.scene.fog = new THREE.Fog(col, 50, Math.max(this.horizon || 5000, 3000) * (atmKind === 'earth' ? 3 : 2)); } else this.scene.fog = null;
     // caméra
-    this.camera.fov = this.fov; this.camera.aspect = w.w / w.h; this.camera.updateProjectionMatrix();
+    // hublot : le champ choisi s'étend sur le diamètre de la fenêtre circulaire, pas sur tout l'écran
+    const Rpx = this.porthole ? Math.min(0.36 * innerHeight, 0.4 * innerWidth) : 0;
+    this.camera.fov = this.porthole ? (2 * Math.atan(Math.tan(this.fov * Math.PI / 360) * w.h / (2 * Rpx)) * 180) / Math.PI : this.fov;
+    this.camera.aspect = w.w / w.h; this.camera.updateProjectionMatrix();
     const cp = Math.cos(this.pitch); this.camera.position.set(0, 0, 0);
     this.camera.lookAt(Math.sin(this.yaw) * cp, Math.sin(this.pitch), -Math.cos(this.yaw) * cp);
+    this.camera.updateMatrixWorld(); this.placeLabels(sky, toScene);
     return { sky, sunDeg, atmKind, azimuth: ((this.yaw * 180 / Math.PI) % 360 + 360) % 360, eclipse: sky.eclipse };
+  }
+
+  /** Étiquettes HTML : points cardinaux sur l'horizon et noms des astres (à la demande). */
+  placeLabels(sky, toScene) {
+    const host = document.getElementById('gh-labels'); if (!host) return;
+    const w = this.world, W = w.w, H = w.h, cam = this.camera, used = new Set(), v = this.tmpV;
+    const Rp = this.porthole ? Math.min(0.36 * innerHeight, 0.4 * innerWidth) : 0;
+    const put = (key, text, cls, p3, dy = 0) => {
+      let el = this.lbl.get(key);
+      if (!el) { el = document.createElement('div'); el.className = 'gh-lbl ' + cls; el.textContent = text; host.appendChild(el); this.lbl.set(key, el); }
+      v.copy(p3).project(cam); const sx = (v.x * 0.5 + 0.5) * W, sy = (-v.y * 0.5 + 0.5) * H + dy;
+      let ok = v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+      if (ok && this.porthole && Math.hypot(sx - W / 2, sy - H / 2) > Rp - 16) ok = false; // hors de la fenêtre
+      el.style.display = ok ? '' : 'none'; if (ok) el.style.transform = `translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) translate(-50%, 0)`; used.add(key);
+    };
+    if (this.showCards) ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'].forEach((n, i) => { const a = (i * Math.PI) / 4; put('c' + n, n, i % 2 ? 'card minor' : 'card', new THREE.Vector3(Math.sin(a) * 1000, 35, -Math.cos(a) * 1000)); });
+    if (this.showNames) {
+      const ppr = H / (2 * Math.tan((cam.fov * Math.PI) / 360));
+      for (const o of sky.objs) put('b' + o.idx, o.name, 'body', toScene(o.d).normalize().multiplyScalar(D), o.angR * ppr + 6);
+      if (this.porthole && this.body) put('own', this.body.def.name, 'body', new THREE.Vector3(0, -1000, 0), 4);
+    }
+    for (const [k, el] of this.lbl) if (!used.has(k)) el.style.display = 'none';
   }
 
   render() { this.world.renderer.render(this.scene, this.camera); }

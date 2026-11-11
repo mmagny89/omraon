@@ -86,3 +86,10 @@ routage ; trois topologies (direct, via le Consortium qui filtre ~65 %, réseau 
 de vol). Le Consortium apprend le message, réagit après un délai, et son ordre de coupure voyage à la lumière : chaque site reçoit alors un ralentissement
 de la diffusion locale (répression). Résultats : tableau par site, courbe humains/Tyts, marqueurs 3D qui se colorent au fil du temps.
 Les taux de diffusion, la répression et les graines sont des paramètres de conception (le document ne chiffre rien).
+
+## Interface
+- **Panneaux** : boutons ☰ Corps, ⓘ Fiche et ⚙ Options (en-tête) ouvrent/ferment les panneaux (croix dans chaque panneau) ; sur téléphone un seul panneau à la fois, carte seule au départ.
+- **Masquer toute l'interface** : bouton 🙈 ou touche **H** ; le bouton « 👁 Interface » (ou H) la ramène.
+- **Frise chronologique** en haut de l'écran : ères colorées (voyage hors système hachuré), événements cliquables, curseur de la date simulée ; cliquer ou glisser saute à la date (flèches ±1 an, Maj ±10 ans).
+- **Options masquées par défaut** (⚙, aussi dans la barre du bas) : paramètres et diagnostics, réseau de communication, éphémérides.
+- **Vue à hauteur d'yeux** : points cardinaux (N, NE, E…) sur l'horizon et noms des astres, en cases à cocher ; hublot circulaire pour les stations (le champ choisi s'étend sur le diamètre de la fenêtre). Le ciel vu d'ici affiche aussi les points cardinaux.
