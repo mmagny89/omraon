@@ -26,7 +26,7 @@ const row = (k, v, cls = '') => `<dt>${k}</dt><dd class="${cls}">${v}</dd>`;
 export class UI {
   constructor(sim, world) {
     this.sim = sim; this.world = world;
-    this.playing = true; this.speedIdx = 4; this.target = 0; this.selected = 0; this.selectedSite = null;
+    this.playing = true; this.speedIdx = 0; this.target = 0; this.selected = 0; this.selectedSite = null;
     this.hz = habitableZone(sim.bodies[0].def);
     this.L = starLuminosity(sim.bodies[0].def);
     this.buildList();
