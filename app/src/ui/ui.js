@@ -13,6 +13,7 @@ import { runEphemeris } from '../physics/ephemeris.js';
 import { buildScene } from '../physics/scene.js';
 import { habitabilityScan } from '../physics/habscan.js';
 import { simulateSpread } from '../physics/network.js';
+import { simulatePopulation, DEFAULTS as POP_DEFAULTS } from '../physics/population.js';
 import { planVoyage } from '../physics/flight.js';
 import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
@@ -41,6 +42,7 @@ export class UI {
     this.bindVoyage();
     this.bindGround();
     this.buildNet();
+    this.buildPop();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
@@ -116,11 +118,11 @@ export class UI {
     const { cursor, track, Y0, Y1, pct } = this.friseDom, y = Math.max(Y0, Math.min(Y1, yearFloat));
     cursor.style.left = pct(y) + '%'; track.setAttribute('aria-valuenow', Math.round(yearFloat));
     const yi = Math.floor(yearFloat);
-    if (yi !== this._friseYear) { this._friseYear = yi; this.friseLabel(yi); }
+    if (yi !== this._friseYear) { this._friseYear = yi; this.friseLabel(yi); this.popAtDate(yi); this.popCursor(yi); }
   }
 
   /** Va à l'année donnée (An 0 = présent) : recalcule les positions des planètes à cette date. */
-  goTo(year) { this.friseLabel(year); this._friseYear = year; this.goToTime(year * DAYS_PER_YEAR); }
+  goTo(year) { this.friseLabel(year); this._friseYear = year; this.popAtDate(year); this.popCursor(year); this.goToTime(year * DAYS_PER_YEAR); }
 
   /** Saute à la date t (jours depuis l'An 0). */
   goToTime(t) {
@@ -132,6 +134,65 @@ export class UI {
       this.sim.computeRender(this.target);
       this.calculating = false;
     }, 30);
+  }
+
+  // ---------- Population et dégel ----------
+  buildPop() {
+    const ids = { n0: 'N0', h: 'humansNow', t0: 'T0', ratio: 'tytRatio', know: 'knowledgeHalfLife', ctl: 'controlNeeded', dh: 'despairHalfLife', ts: 'truthStrength' };
+    const setInputs = () => { for (const [k, p] of Object.entries(ids)) $('#pop-' + k).value = POP_DEFAULTS[p]; $('#pop-growth').value = POP_DEFAULTS.tytGrowth * 100; $('#pop-mode').value = POP_DEFAULTS.tytMode; $('#pop-ty').value = ''; };
+    let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => this.recomputePop(), 120); };
+    document.querySelectorAll('#pop input, #pop select').forEach((el) => el.addEventListener('input', again));
+    $('#pop-reset').addEventListener('click', () => { setInputs(); this.recomputePop(); });
+    this.recomputePop();
+  }
+
+  readPop() {
+    const g = (id) => parseFloat($(id).value), ty = g('#pop-ty'), v = (x, d) => (Number.isFinite(x) ? x : d);
+    return { N0: v(g('#pop-n0'), 10000), humansNow: v(g('#pop-h'), 500000), T0: v(g('#pop-t0'), 4000), tytMode: $('#pop-mode').value, tytRatio: v(g('#pop-ratio'), 1.2), tytGrowth: v(g('#pop-growth'), 0.8) / 100,
+      knowledgeHalfLife: v(g('#pop-know'), 220), controlNeeded: v(g('#pop-ctl'), 0.6), despairHalfLife: v(g('#pop-dh'), 460), truthYear: Number.isFinite(ty) ? ty : 1e9, truthStrength: v(g('#pop-ts'), 0.6) };
+  }
+
+  recomputePop() {
+    this.pop = simulatePopulation(this.readPop()); this._popYear = null;
+    const m = this.pop, s = m.summary, f = (x) => Math.round(x).toLocaleString('fr-FR'), yr = (y) => (y == null ? 'jamais' : 'An ' + String(Math.round(y)).replace('-', '−'));
+    $('#pop-sum').innerHTML = `Croissance humaine ≈ <b>${(m.growth * 100).toFixed(2)} %/an</b> (canon : 0,6–0,8). Au présent : <b>${f(s.humansNow)}</b> humains ${s.canonHumans ? '✓ (300 000–800 000)' : '✗ hors canon'}, <b>${f(s.tytsNow)}</b> Tyts (${s.ratioNow.toFixed(2)} Tyts par humain ${s.canonRatio ? '✓' : '✗'}).<br>` +
+      `Le contrôle se délite dès <b>${yr(s.thawYear)}</b>, tombe à 50 % en <b>${yr(s.thawHalf)}</b> ; point de bascule (combattants éveillés > gardes) : <b>${yr(s.tippingYear)}</b>.`;
+    this.drawPopCharts(); const yy = Math.floor(this.target / DAYS_PER_YEAR); this.popAtDate(yy); this.popCursor(yy, false);
+  }
+
+  drawPopCharts() {
+    const m = this.pop, S = m.series, y0 = S.year[0], y1 = S.year[S.year.length - 1];
+    const setup = (id) => { const cv = $(id), dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth || 320, H = 130; cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); return { g, W, H }; };
+    const X = (W, y) => 34 + ((y - y0) / (y1 - y0)) * (W - 42);
+    const frame = (g, W, H, ticks) => { g.strokeStyle = 'rgba(160,185,230,.2)'; g.fillStyle = '#8d9bb8'; g.font = '10px system-ui'; g.lineWidth = 1; for (const [y, lab] of [[-500, '−500'], [-300, '−300'], [0, '0'], [60, '60']]) if (y >= y0 && y <= y1) { g.beginPath(); g.moveTo(X(W, y), 6); g.lineTo(X(W, y), H - 16); g.stroke(); g.fillText(lab, X(W, y) - 8, H - 4); } ticks(); };
+    // 1) populations (échelle logarithmique)
+    { const { g, W, H } = setup('#pop-c1'), lo = Math.log10(2000), hi = Math.log10(Math.max(2e6, ...S.H, ...S.T)), Y = (v) => 6 + (1 - (Math.log10(Math.max(v, 2000)) - lo) / (hi - lo)) * (H - 22);
+      frame(g, W, H, () => { for (const v of [1e4, 1e5, 1e6]) { g.beginPath(); g.moveTo(34, Y(v)); g.lineTo(W - 8, Y(v)); g.stroke(); g.fillText(v >= 1e6 ? '1 M' : v >= 1e5 ? '100 k' : '10 k', 2, Y(v) + 3); } });
+      for (const [arr, col] of [[S.H, '#ffbf6b'], [S.T, '#6fd3a0']]) { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); S.year.forEach((y, i) => { const px = X(W, y), py = Y(arr[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); }
+      g.fillStyle = '#ffbf6b'; g.fillText('humains', W - 90, 16); g.fillStyle = '#6fd3a0'; g.fillText('Tyts', W - 90, 28); this._pc1 = { W, H, X }; }
+    // 2) dynamique (0–1)
+    { const { g, W, H } = setup('#pop-c2'), Y = (v) => 6 + (1 - v) * (H - 22);
+      frame(g, W, H, () => { for (const v of [0, 0.5, 1]) { g.beginPath(); g.moveTo(34, Y(v)); g.lineTo(W - 8, Y(v)); g.stroke(); g.fillText(`${v * 100}%`, 2, Y(v) + 3); } });
+      for (const [arr, col, lab, dy] of [[S.C, '#6fb4ff', 'contrôle', 16], [S.D, '#ff6b7a', 'désespoir', 28], [S.A, '#6fd3a0', 'Tyts éveillés', 40]]) { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); S.year.forEach((y, i) => { const px = X(W, y), py = Y(arr[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); g.fillStyle = col; g.fillText(lab, W - 90, dy); }
+      this._pc2 = { W, H, X }; }
+  }
+
+  popCursor(year, redraw = true) {
+    if (!this.pop) return;
+    if (redraw) this.drawPopCharts();
+    for (const [id, key] of [['#pop-c1', '_pc1'], ['#pop-c2', '_pc2']]) {
+      const o = this[key]; if (!o) continue; const cv = $(id), g = cv.getContext('2d'), dpr = cv.width / o.W, ys = this.pop.series.year;
+      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.strokeStyle = '#fff'; g.lineWidth = 1.5; const x = o.X(o.W, Math.max(ys[0], Math.min(ys[ys.length - 1], year))); g.beginPath(); g.moveTo(x, 4); g.lineTo(x, o.H - 16); g.stroke();
+    }
+  }
+
+  /** Valeurs du modèle à la date de la frise + curseur sur les courbes. */
+  popAtDate(year) {
+    if (!this.pop) return;
+    const a = this.pop.at(year), f = (x) => Math.round(x).toLocaleString('fr-FR'), pc = (x) => (x * 100).toFixed(x < 0.1 ? 1 : 0) + ' %', cl = (c) => (c > 0.8 ? 'ok' : c > 0.4 ? 'warn' : 'bad');
+    $('#pop-at').innerHTML = !a.arrived ? `<tr><td colspan="2">An ${String(year).replace('-', '−')} : l'arche est en route, personne dans le système.</td></tr>` :
+      [['Humains', f(a.H)], ['Tyts', f(a.T)], ['Tyts par humain', a.ratio.toFixed(2)], ['Savoir de contrôle', pc(a.K)], ['Contrôle effectif', `<span class="${cl(a.C)}">${pc(a.C)}</span>`], ['Désespoir des Tyts', pc(a.D)], ['Tyts éveillés', pc(a.A)], ['Révoltes par an', a.revolts.toFixed(2)], ['Rapport de force (combattants / gardes)', `<span class="${a.bascule >= 1 ? 'bad' : a.bascule > 0.5 ? 'warn' : 'ok'}">${a.bascule.toFixed(2)}</span>`]].map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+    this._popYear = year;
   }
 
   // ---------- Réseau de communication ----------
@@ -415,7 +476,9 @@ export class UI {
   siteHtml() {
     const site = this.currentSite(), rec = this.world.siteEls?.get(site.id);
     const type = { surface: 'Base au sol', orbit: 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
+    const yy = Math.floor(this.target / DAYS_PER_YEAR), pm = this.pop && yy !== 0 ? this.pop.at(yy) : null, p0 = this.pop?.at(0);
     let h = `<h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''} · ${site.population.toLocaleString('fr-FR')} humains${site.tyts ? ' + ' + site.tyts.toLocaleString('fr-FR') + ' Tyts' : ''}</div><p>${site.role}</p>`;
+    if (pm && p0) h += pm.arrived ? `<p class="note">À l'An ${String(yy).replace('-', '−')} (modèle de population) : ≈ ${Math.round(site.population * pm.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * pm.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>` : `<p class="note">À l'An ${String(yy).replace('-', '−')} : personne n'est encore arrivé dans le système.</p>`;
     if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (données dans app/src/data/sites.js).</p>`;
     if (rec?.st) {
       const rep = siteReport({ sim: this.sim, el: (i) => this.world.bodies[i].el }, site, rec.st, this.target);

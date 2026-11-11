@@ -315,3 +315,29 @@ test('vue à hauteur d\'yeux : horizon de la Terre ≈ 4,7 km, courbure cohéren
   assert.ok(kebet > 4000 && kebet < 5000 && sedbou > 300 && sedbou < 400, `${kebet} ${sedbou}`); // un astéroïde : horizon à 360 m
   assert.ok(horizonDip(6371e3, 400e3) > 15 && horizonDip(6371e3, 400e3) < 25); // ISS : ~19,7°
 });
+
+import { simulatePopulation } from '../app/src/physics/population.js';
+test('population : arrivée, croissance et présent dans le canon', () => {
+  const m = simulatePopulation({}), a0 = m.at(-560), n = m.at(0);
+  assert.equal(Math.round(a0.H), 10000); assert.equal(Math.round(a0.T), 4000);
+  assert.ok(Math.abs(n.H / 500000 - 1) < 0.01, `${n.H}`);
+  assert.ok(m.growth > 0.005 && m.growth < 0.009, `${m.growth}`); // ~0,7 %/an
+  assert.ok(m.summary.canonHumans);
+  assert.ok(n.ratio > 1 && n.ratio < 1.3, `${n.ratio}`); // Tyts plus nombreux que les humains (mode « gestion », ratio visé 1,2)
+});
+test('dégel : contrôle intact jusqu\'à la perte du savoir, puis déclin ; désespoir né du génocide qui s\'estompe', () => {
+  const m = simulatePopulation({});
+  assert.equal(m.at(-400).C, 1); assert.ok(m.summary.thawYear > -300 && m.summary.thawYear < -100, `${m.summary.thawYear}`);
+  assert.ok(m.at(0).C < m.at(-150).C && m.at(0).C > 0.3 && m.at(0).C < 0.8);
+  assert.ok(Math.abs(m.at(-500).D - 0.95) < 0.01 && m.at(0).D < m.at(-400).D && m.at(0).D > 0.3);
+  assert.ok(m.at(0).bascule > 0.5 && m.at(0).bascule < 2, `bascule ${m.at(0).bascule}`); // « le système est à un point de bascule »
+  assert.ok(m.at(0).A > 0.03 && m.at(0).A < 0.2 && m.at(0).revolts > 0.05 && m.at(0).revolts < 2);
+});
+test('dégel : la vérité rapportée accélère l\'éveil ; mode nature ≠ mode gestion', () => {
+  const base = simulatePopulation({}), truth = simulatePopulation({ truthYear: 0, truthStrength: 0.8 });
+  assert.ok(truth.at(30).A > base.at(30).A * 1.5, `${truth.at(30).A} vs ${base.at(30).A}`);
+  assert.ok(truth.at(-1).A === base.at(-1).A || Math.abs(truth.at(-1).A - base.at(-1).A) < 1e-9);
+  const nat = simulatePopulation({ tytMode: 'nature' });
+  assert.ok(Math.abs(nat.at(0).T - base.at(0).T) > 1000);
+  const moreArch = simulatePopulation({ N0: 20000, humansNow: 500000 }); assert.ok(moreArch.growth < base.growth); // plus de passagers → croissance plus faible pour le même présent
+});

@@ -63,6 +63,24 @@
         <button id="reset" class="wide">Réinitialiser la simulation</button>
       </div>
     </details>
+    <details id="pop"><summary>Population et dégel</summary>
+      <div class="grid">
+        <label>Passagers de l'arche <input id="pop-n0" type="number" min="1000" step="500" value="10000" inputmode="numeric"></label>
+        <label>Humains au présent <input id="pop-h" type="number" min="5000" step="10000" value="500000" inputmode="numeric"></label>
+        <label>Tyts à l'arrivée <input id="pop-t0" type="number" min="100" step="500" value="4000" inputmode="numeric"></label>
+        <label>Nombre de Tyts <select id="pop-mode"><option value="gestion">Géré (production / réduction)</option><option value="nature">Subi (croissance sous contrainte)</option></select></label>
+        <label>Ratio Tyts / humains visé <input id="pop-ratio" type="number" min="0.1" step="0.1" value="1.2" inputmode="decimal"></label>
+        <label>Croissance subie (%/an) <input id="pop-growth" type="number" min="0" step="0.1" value="0.8" inputmode="decimal"></label>
+        <label>Demi-vie du savoir de contrôle (ans) <input id="pop-know" type="number" min="20" step="10" value="220" inputmode="numeric"></label>
+        <label>Capacité de contrôle requise <input id="pop-ctl" type="number" min="0.1" step="0.05" value="0.6" inputmode="decimal"></label>
+        <label>Demi-vie du désespoir (ans) <input id="pop-dh" type="number" min="20" step="20" value="460" inputmode="numeric"></label>
+        <label>Vérité rapportée à l'An <input id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
+        <label>… force (0–1) <input id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
+        <button type="button" id="pop-reset" class="wide">Valeurs calées sur les documents</button>
+      </div>
+      <canvas id="pop-c1" aria-label="Populations humaine et tyt"></canvas><canvas id="pop-c2" aria-label="Contrôle, désespoir et éveil"></canvas>
+      <div id="pop-sum" class="note"></div><table id="pop-at"></table>
+    </details>
     <details id="reseau"><summary>Réseau de communication</summary>
       <div class="grid">
         <label>Origine <select id="net-origin"></select></label>

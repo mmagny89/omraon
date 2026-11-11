@@ -93,3 +93,11 @@ Les taux de diffusion, la répression et les graines sont des paramètres de con
 - **Frise chronologique** en haut de l'écran : ères colorées (voyage hors système hachuré), événements cliquables, curseur de la date simulée ; cliquer ou glisser saute à la date (flèches ±1 an, Maj ±10 ans).
 - **Options masquées par défaut** (⚙, aussi dans la barre du bas) : paramètres et diagnostics, réseau de communication, éphémérides.
 - **Vue à hauteur d'yeux** : points cardinaux (N, NE, E…) sur l'horizon et noms des astres, en cases à cocher ; hublot circulaire pour les stations (le champ choisi s'étend sur le diamètre de la fenêtre). Le ciel vu d'ici affiche aussi les points cardinaux.
+
+## Population et dégel
+Panneau « Population et dégel » (⚙ Options ; `physics/population.js`), relié à la frise : les valeurs affichées sont celles de la date choisie, et les populations
+des sites se mettent à l'échelle du modèle (ex. à l'An −100 : ~15 000 humains au lieu de 30 000 dans la cité-mine principale de Sethis).
+Modèle annuel de l'arrivée (−560) à +100 : humains (arche de 10 000 → ~500 000, soit +0,7 %/an), Tyts (nombre géré vers un ratio visé, ou subi), savoir de contrôle
+qui s'oublie (demi-vie 220 ans dès −300), contrôle effectif = savoir × humains ÷ Tyts, désespoir né du génocide (−500) qui guérit (demi-vie 460 ans), éveil des Tyts,
+révoltes, rapport de force combattants/gardes. Calage par défaut : dégel dès An −175, 7,5 % de Tyts éveillés au présent, ~0,4 révolte par an, point de bascule vers l'An +4.
+« Vérité rapportée » : à l'année choisie, le désespoir chute et l'éveil s'accélère. Les coefficients sont des paramètres de conception (le document donne les ordres de grandeur).
