@@ -42,6 +42,10 @@ export const SITES = [
     role: "Réserve d'eau et de condensats : ravitaillement vital des cités de Roushan." },
   { id: 'roukir-poste', name: 'Poste des confins', body: 'Roukir', type: 'surface', lat: 0, lon: 90, habitat: 'underground', population: 1500, tyts: 0, invented: true,
     role: 'Avant-poste minier et militaire : guet, douane du dehors, contrebande lointaine.' },
+  { id: 'shukal-colonie', name: 'Colonie de Shukal (en cours)', body: 'Shukal', type: 'surface', lat: 10, lon: 30, habitat: 'dome', population: 1200, tyts: 300, founded: -12, invented: true,
+    role: "Colonisation en cours aux confins : préfabriqués sous coupole, chantiers, très peu de surveillance. Fondée il y a une douzaine d'années." },
+  { id: 'shukal-arret', name: "Piste d'arrêt forcé (Mouvement II)", body: 'Shukal', type: 'surface', lat: -15, lon: 200, habitat: 'underground', population: 0, tyts: 0, invented: true,
+    role: "Là où le container endommagé force l'arrêt : abri de fortune, loin des yeux de la colonie. C'est là qu'Ella découvre Mira." },
   { id: 'nunzir-repaire', name: 'Repaire de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.32, e: 0.08, i: 3, Om: 80, w: 120, M: 40 }, habitat: 'underground', population: 1500, tyts: 200, invented: true,
     role: 'Repaire de pirates et de contrebandiers (Onkel, Ella) dans un astéroïde.' },
 ];

@@ -4,7 +4,7 @@ import { STAR, PLANETS } from '../app/src/data/omraon.js';
 import { buildSystem } from '../app/src/physics/system.js';
 import { Simulation } from '../app/src/physics/simulation.js';
 import { elementsToState, stateToElements } from '../app/src/physics/kepler.js';
-import { habitableZone, hillRadius, stableSatelliteLimit } from '../app/src/physics/derived.js';
+import { habitableZone, hillRadius, stableSatelliteLimit, bulk } from '../app/src/physics/derived.js';
 import { G, AU_KM } from '../app/src/physics/constants.js';
 
 const make = (opts = {}) => { const s = new Simulation(buildSystem(STAR, PLANETS), { particleCount: 300, ...opts }); s.autoTier = false; return s; };
@@ -340,4 +340,14 @@ test('dégel : la vérité rapportée accélère l\'éveil ; mode nature ≠ mod
   const nat = simulatePopulation({ tytMode: 'nature' });
   assert.ok(Math.abs(nat.at(0).T - base.at(0).T) > 1000);
   const moreArch = simulatePopulation({ N0: 20000, humansNow: 500000 }); assert.ok(moreArch.growth < base.growth); // plus de passagers → croissance plus faible pour le même présent
+});
+
+test('confins : Shukal, petite planète-colonie stable près de Roukir, gravité de type Mars', () => {
+  const sim = make(), b = sim.bodies.find((x) => x.def.name === 'Shukal'), roushan = sim.bodies.find((x) => x.def.name === 'Roushan');
+  assert.ok(b && b.parent === roushan.idx && b.def.provisional);
+  const g = bulk(b.mass, b.radiusKm).gSurf / 9.80665; assert.ok(g > 0.3 && g < 0.5, `${g} g`);
+  sim.advance(300 * 365.25, 1e9);
+  const q = sim.elementState(b.idx), el = stateToElements(q.mu, q.r, q.v);
+  assert.ok(el.e < 0.12 && Math.abs(el.a * AU_KM / 9.5e6 - 1) < 0.1, `e=${el.e} a=${el.a * AU_KM}`);
+  const hab = assess(ctxOf(sim), b.idx); assert.ok(['protege', 'station'].includes(hab.mode)); // pas d'atmosphère viable
 });

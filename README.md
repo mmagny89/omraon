@@ -101,3 +101,9 @@ Modèle annuel de l'arrivée (−560) à +100 : humains (arche de 10 000 → ~50
 qui s'oublie (demi-vie 220 ans dès −300), contrôle effectif = savoir × humains ÷ Tyts, désespoir né du génocide (−500) qui guérit (demi-vie 460 ans), éveil des Tyts,
 révoltes, rapport de force combattants/gardes. Calage par défaut : dégel dès An −175, 7,5 % de Tyts éveillés au présent, ~0,4 révolte par an, point de bascule vers l'An +4.
 « Vérité rapportée » : à l'année choisie, le désespoir chute et l'éveil s'accélère. Les coefficients sont des paramètres de conception (le document donne les ordres de grandeur).
+
+## Confins (Mouvement II)
+Le document situe « la planète en cours de colonisation » aux confins, autour de Roukir, sans la nommer ni fixer sa nature : proposition de conception, **Shukal** (nom provisoire,
+tyt SHU-KAL « la Pierre-du-vide »), petite planète rocheuse (0,06 M⊕, gravité 0,42 g) sur une orbite lointaine de Roushan (9,5 millions de km, deux fois plus loin que Roukir),
+sans atmosphère, 62 K. Deux sites : la **colonie** (fondée à l'An −12, 1 200 humains au présent, population à la date selon la fondation) et la **piste d'arrêt forcé** où le container
+endommagé s'arrête et où Ella découvre Mira. Cités de Roushan → piste : 6,2 h à 8 g (voyage animé).

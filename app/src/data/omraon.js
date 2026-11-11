@@ -126,6 +126,18 @@ export const PLANETS = [
         names: { tyt: 'Rukh-Kir', tytCourant: 'Rukhir', sens: "l'Enfant-du-vent" },
         role: 'Poste avancé : la vraie frontière extérieure du système, avant-poste minier et militaire des confins.',
       },
+      {
+        // Planète en cours de colonisation du Mouvement II (le document la situe « autour de Roukir », sans la nommer ni fixer sa nature).
+        // Choix de conception : une petite planète rocheuse (Mercure/Mars) sur une orbite lointaine de Roushan, deux fois plus loin que Roukir :
+        // stable (0,06 UA, bien sous 0,49 rayon de Hill), voisine du poste de Roukir qui la surveille à peine, sans atmosphère viable, gravité de type Mars.
+        // NOM PROVISOIRE : SHU-KAL « la Pierre-du-vide » (shu : le vide ; kal : la pierre), à forger pour de bon.
+        id: 'shukal', name: 'Shukal', texture: 'rockGrey', color: '#b9b4a8', provisional: true,
+        massEarth: 0.06, radiusKm: 0.38 * 6371, albedo: 0.12,
+        orbit: { a: 9500000, e: 0.03, i: 2.0, Om: 140, w: 60, M: 200 },
+        names: { tyt: 'SHU-KAL', tytCourant: 'Shukal', sens: 'la Pierre-du-vide' },
+        role: "Planète en cours de colonisation (Mouvement II) : sans atmosphère viable, peu surveillée, aux confins, autour de Roukir. Le container endommagé y force l'arrêt, et c'est là qu'Ella découvre Mira. Nom et nature provisoires (le document ne les fixe pas).",
+        habitat: { pressureBar: 0 },
+      },
     ],
   },
 ];
