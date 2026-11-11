@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# pre-push — les portes de la CI doivent passer en local avant qu'un push parte.
+#
+# Rejoue .github/workflows/qualite.yml dans le conteneur php, en environnement vierge
+# (outils/ci-local.sh). Contournement exceptionnel, à justifier : SKIP_CHECKS=1 git push
+#
+# Activation, une fois par clone : `git config core.hooksPath .githooks` (ou `make hooks`).
+if [ "${SKIP_CHECKS:-}" = "1" ]; then
+	echo "pre-push : contrôles ignorés (SKIP_CHECKS=1)."
+	exit 0
+fi
+cd "$(git rev-parse --show-toplevel)" || exit 1
+if [ ! -x outils/ci-local.sh ]; then
+	echo "pre-push : outils/ci-local.sh absent, aucun contrôle lancé." >&2
+	exit 0
+fi
+echo "pre-push : portes de la CI en local…"
+outils/ci-local.sh || {
+	echo "pre-push : une porte a échoué, le push est annulé." >&2
+	exit 1
+}

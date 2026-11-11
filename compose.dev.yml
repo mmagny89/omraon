@@ -1,0 +1,17 @@
+services:
+  web:
+    build:
+      target: dev
+    image: simulation-web:dev
+    environment:
+      # Pas de HTTP/3 en developpement : le relais UDP de Docker sur Mac
+      # n'achemine pas QUIC de facon fiable (section mission/pieges-symfony).
+      CADDY_GLOBAL_OPTIONS: |
+        servers {
+          protocols h1 h2
+        }
+    volumes:
+      - ./app:/srv:ro
+    ports:
+      - "${HTTP_PORT}:80"
+      - "${HTTPS_PORT}:443"

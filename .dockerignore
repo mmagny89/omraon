@@ -1,0 +1,16 @@
+# Contexte de build : context: . (racine), dockerfile: docker/php/Dockerfile
+# (conventions, section manifeste/fichiers). Exclut tout ce que le Dockerfile ne COPY pas
+# explicitement, et les .env qui ne doivent jamais entrer dans l'image.
+
+.git
+.idea
+.claude
+
+# .env* racine : jamais dans l'image (conventions, section env/trois-niveaux).
+.env
+.env.*
+
+# Documentation et fichiers d'infra non necessaires au build.
+README.docker.md
+compose*.yml
+

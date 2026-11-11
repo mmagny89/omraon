@@ -1,0 +1,20 @@
+# Outillage de l'agence (agents, regles, bibliotheque de ressources,
+# scripts) : jamais committe dans le depot du projet. Exclusion cruciale,
+# pas seulement une preference — certains fichiers qui y transitent portent
+# des secrets reels (ex. .env.install.local d'un stack Drupal, jamais un
+# modele .dist), qui ne doivent jamais entrer dans l'historique git.
+.claude/
+
+# Configuration locale des IDE : propre a chaque poste.
+.idea/
+.vscode/
+
+# Secrets reels — jamais committes (conventions, section env/trois-niveaux). Les .dist
+# restent committes.
+.env.staging.local
+.env.prod.local
+.env.*.local
+
+
+# macOS
+.DS_Store

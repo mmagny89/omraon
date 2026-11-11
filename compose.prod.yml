@@ -1,0 +1,36 @@
+# Override prod. Lancement : docker compose -f compose.yml -f compose.prod.yml --env-file .env.prod.local up -d --build --wait
+services:
+  web:
+    build:
+      target: prod
+    image: simulation-web:prod
+    # Seule NET_BIND_SERVICE est conservee : la capability posee sur le
+    # binaire (setcap) ne survit pas a un cap_drop qui la retire.
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      # Adresse d'ecoute DANS le conteneur, a ne pas confondre avec le domaine :
+      # sans elle Caddy active son propre HTTPS et repond 308 a toute requete
+      # en clair — boucle derriere Traefik, conteneur pourtant « healthy ».
+      SERVER_NAME: ":80"
+    expose:
+      - "80"
+    networks:
+      - simulation
+      - traefik
+    labels:
+      traefik.enable: "true"
+      # Deux reseaux : sans cette etiquette, Traefik peut choisir le reseau
+      # interne et repondre 502 une fois sur deux.
+      traefik.docker.network: traefik
+      traefik.http.routers.simulation-prod.rule: Host(`${DOMAINE:?DOMAINE est requis en prod}`)
+      traefik.http.routers.simulation-prod.entrypoints: websecure
+      traefik.http.routers.simulation-prod.tls.certresolver: letsencrypt
+      traefik.http.services.simulation-prod.loadbalancer.server.port: "80"
+
+networks:
+  simulation:
+  traefik:
+    external: true

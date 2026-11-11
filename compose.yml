@@ -1,0 +1,29 @@
+name: simulation-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}
+
+# Un seul service : Caddy sert app/ tel quel. read_only + no-new-privileges :
+# le conteneur n'ecrit que dans ses deux volumes (certificats, configuration).
+services:
+  web:
+    container_name: simulation-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-web
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+      target: ${TARGET}
+      args:
+        CADDY_VERSION: ${CADDY_VERSION}
+        USER_ID: ${USER_ID}
+        GROUP_ID: ${GROUP_ID}
+    image: simulation-web:${TARGET}
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - simulation-caddy-data:/data
+      - simulation-caddy-config:/config
+
+volumes:
+  simulation-caddy-data:
+    name: simulation-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-caddy-data
+  simulation-caddy-config:
+    name: simulation-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-caddy-config

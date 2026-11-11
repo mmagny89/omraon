@@ -1,0 +1,41 @@
+# Une porte = un job nomme par ce qu'il prouve (section ci/qualite).
+name: Qualité
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  image-et-demarrage:
+    name: L'image se construit et le site répond
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Construire et démarrer le stage prod
+        env:
+          COMPOSE_FILE: compose.yml
+          ENV: ci
+          TARGET: prod
+        run: docker compose --env-file .env up -d --build --wait
+      - name: Page d'accueil servie, fichier sensible refusé
+        run: |
+          set -eu
+          docker compose --env-file .env exec -T web wget -q -O /dev/null --no-check-certificate https://localhost/
+          if docker compose --env-file .env exec -T web wget -q -O /dev/null --no-check-certificate https://localhost/.env; then
+            echo "::error::/.env est servi"; exit 1
+          fi
+        env:
+          COMPOSE_FILE: compose.yml
+          ENV: ci
+          TARGET: prod
+      - name: Journaux en cas d'échec
+        if: failure()
+        run: docker compose --env-file .env logs --no-color web
+        env:
+          COMPOSE_FILE: compose.yml
+          ENV: ci
+          TARGET: prod
