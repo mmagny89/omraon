@@ -1,0 +1,12 @@
+Copyright (c) 2026 Magny. Tous droits réservés.
+
+Ce logiciel et les éléments qui l'accompagnent (code, données, textures procédurales,
+documentation) sont la propriété exclusive de leur titulaire. Aucune licence d'utilisation,
+de copie, de modification, de distribution ni de publication n'est accordée, sauf accord écrit
+préalable du titulaire.
+
+Les noms, lieux, personnages et éléments de l'univers du roman restent la propriété de leur
+auteur. Les bibliothèques tierces embarquées (Three.js, dans `app/vendor/`) restent soumises à
+leur propre licence.
+
+Contact : contact@mmagny.fr

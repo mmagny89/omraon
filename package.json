@@ -1,6 +1,7 @@
 {
   "name": "omraon-simulation",
   "private": true,
+  "license": "UNLICENSED",
   "version": "0.1.0",
   "type": "module",
   "description": "Simulation N-corps et visualisation 3D du système d'Omraon",

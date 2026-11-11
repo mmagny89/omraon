@@ -28,6 +28,8 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 - Three.js épinglé en dépendance de développement (`package.json`, `package-lock.json`, `npm run vendor`) : audit des dépendances et Dependabot deviennent effectifs, la copie servie est vérifiée identique au lockfile.
 - Portes HTML (`html-validate`) et liens internes (`.github/scripts/check-links.sh`), action composite `.github/actions/node`, `CLAUDE.md` du projet.
 
+- `LICENSE` propriétaire, badges du README (socle commun et stack), champ `license` de `package.json`.
+
 ### Modifié
 
 - `GITHUB.md` réécrit (branches, secrets et variables, protection, sécurité) ; Dependabot sans `target-branch` tant que `develop` n'existe pas.

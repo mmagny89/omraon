@@ -1,5 +1,14 @@
 # Système d'Omraon — simulation & visualisation
 
+[![Qualité et déploiement](https://github.com/mmagny89/omraon/actions/workflows/qualite.yml/badge.svg?branch=main)](https://github.com/mmagny89/omraon/actions/workflows/qualite.yml)
+[![Release](https://github.com/mmagny89/omraon/actions/workflows/release.yml/badge.svg)](https://github.com/mmagny89/omraon/actions/workflows/release.yml)
+[![Version](https://img.shields.io/github/v/tag/mmagny89/omraon?label=version&sort=semver)](CHANGELOG.md)
+[![Licence propriétaire](https://img.shields.io/badge/licence-propri%C3%A9taire-lightgrey)](LICENSE)
+[![Conventional Commits](https://img.shields.io/badge/Conventional_Commits-1.0.0-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/fr/v1.0.0/)
+[![Three.js 0.187](https://img.shields.io/badge/Three.js-0.187-000000?logo=threedotjs&logoColor=white)](app/vendor/)
+[![Caddy 2.11](https://img.shields.io/badge/Caddy-2.11-1F88C0?logo=caddy&logoColor=white)](docker/web/Dockerfile)
+[![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](README.docker.md)
+
 Simulation physique (N-corps) et vue 3D du système décrit dans la *Bible géographique v3* : l'étoile Omraon, trois telluriques (Kalpra, Sethis, Naksun),
 la ceinture Nunzir, deux géantes (Zirkan, Roushan), huit lunes dont Kebet et la planète-colonie des confins (Shukal), et dix-huit sites habités. Application
 statique : aucun serveur applicatif, aucune ressource externe.
@@ -11,7 +20,7 @@ npm test                      # 40 tests de physique, de calcul et de cohérence
 
 Stack statique d'agence (Caddy seul, ni PHP ni Node) : le site vit dans `app/`, sans étape de build ; Three.js est copié dans `app/vendor/` (importmap).
 Détails Docker : [`README.docker.md`](README.docker.md). Journal des versions : [`CHANGELOG.md`](CHANGELOG.md). Contribution : [`CONTRIBUTING.md`](CONTRIBUTING.md).
-Sécurité : [`SECURITY.md`](SECURITY.md). Licence : à choisir (aucun `LICENSE` pour l'instant).
+Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICENSE`](LICENSE).
 
 ## Ce que fait l'application
 
