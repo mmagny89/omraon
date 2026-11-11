@@ -15,7 +15,7 @@ copié dans `app/vendor/` (importmap), aucune ressource externe. Voir `README.do
 - Gravitation newtonienne N-corps, unités UA / jour / M☉ (constante de Gauss), leapfrog symplectique.
 - Conditions initiales par éléments képlériens ; lunes dans le plan équatorial de leur planète (obliquité réelle).
 - Lunes incluses dans le N-corps tant que la vitesse le permet ; au-delà elles passent « sur rails » (Kepler), planètes toujours en N-corps.
-- Astéroïdes : particules test (perturbées par l'étoile et les planètes, retirées à l'impact), troyens de Zirkan en option.
+- Astéroïdes : particules test (perturbées par l'étoile et les planètes, retirées à l'impact), troyens de Zirkan (activés par défaut, décochables).
 - Relativité générale 1PN (précession du périhélie de Kalpra, lisible sur ϖ), résonance spin-orbite 3:2 de Kalpra, rotation synchrone des lunes, aplatissement dû à la rotation.
 - Dérivés : zone habitable (Kopparapu 2013), température d'équilibre, rayon de Hill, limite de stabilité des satellites (Domingos 2006), limite de Roche.
 - Diagnostics en direct : ΔE/E et ΔL/L.
