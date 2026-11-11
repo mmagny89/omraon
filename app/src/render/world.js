@@ -6,6 +6,7 @@ import { makeBodyTexture, makeCloudTexture, glowTexture } from './textures.js';
 import { CameraRig } from './cameraRig.js';
 import { SYSTEM_EDGE_AU } from '../data/omraon.js';
 import { siteState } from '../physics/sites.js';
+import { voyageAt } from '../physics/flight.js';
 
 export const UNIT = AU_KM / 1000; // 1 unité de scène = 1000 km
 const ORBIT_PTS = 257;
@@ -182,7 +183,9 @@ export class World {
     this.w = w; this.h = h;
   }
 
-  absPos(idx, out = [0, 0, 0]) { const p = this.sim.rPos; out[0] = p[3 * idx]; out[1] = p[3 * idx + 1]; out[2] = p[3 * idx + 2]; return out; }
+  absPos(idx, out = [0, 0, 0]) {
+    if (idx < 0) { const q = this.ship ? this.ship.pos : [0, 0, 0]; out[0] = q[0]; out[1] = q[1]; out[2] = q[2]; return out; }
+    const p = this.sim.rPos; out[0] = p[3 * idx]; out[1] = p[3 * idx + 1]; out[2] = p[3 * idx + 2]; return out; }
 
   focusOn(idx, distUnits) {
     const o = this.bodies[idx];
@@ -199,6 +202,38 @@ export class World {
       if (o.visible && d < thr && d / thr < bestScore) { bestScore = d / thr; best = o.idx; }
     }
     return best;
+  }
+
+  // ---------- Vaisseau (voyage animé) ----------
+  /** voyage : sortie de planVoyage ; destNow() : position réelle (UA) de la destination, pour recaler l'arrivée. */
+  setShip(voyage, destNow, name = 'Le Mai') {
+    if (this.ship) { this.ship.el.remove(); for (const l of [this.ship.path, this.ship.trail]) { this.scene.remove(l); l.geometry.dispose(); } this.ship = null; }
+    if (!voyage) return;
+    const el = document.createElement('button'); el.className = 'ship-marker'; el.setAttribute('aria-label', name); el.innerHTML = `<span>${name}</span>`;
+    el.addEventListener('click', (e) => { e.stopPropagation(); this.onShipClick && this.onShipClick(); }); el.addEventListener('pointerdown', (e) => e.stopPropagation());
+    this.labelsEl.appendChild(el);
+    const line = (color, op) => { const l = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3)), new THREE.LineBasicMaterial({ color, transparent: true, opacity: op, depthWrite: false })); l.frustumCulled = false; this.scene.add(l); return l; };
+    this.ship = { v: voyage, destNow, el, path: line(0x7fc4ff, 0.35), trail: line(0xffd27a, 0.9), pos: voyage.A0.slice(), state: null };
+    this.computeShip(this.sim.t);
+  }
+
+  computeShip(tr) { const sh = this.ship; sh.state = voyageAt(sh.v, tr, sh.destNow ? sh.destNow() : null); sh.pos = sh.state.pos; }
+
+  updateShip(fa) {
+    const sh = this.ship; if (!sh) return;
+    const rel = (p) => [(p[0] - fa[0]) * UNIT, (p[1] - fa[1]) * UNIT, (p[2] - fa[2]) * UNIT];
+    const a = rel(sh.v.A0), b = rel(sh.v.Bend), c = rel(sh.pos);
+    sh.path.geometry.attributes.position.array.set([...a, ...b]); sh.path.geometry.attributes.position.needsUpdate = true;
+    sh.trail.geometry.attributes.position.array.set([...a, ...c]); sh.trail.geometry.attributes.position.needsUpdate = true;
+    const v = this.tmp.set(c[0], c[1], c[2]).project(this.camera), ok = v.z < 1 && v.z > -1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+    sh.el.style.display = ok ? 'block' : 'none';
+    if (ok) sh.el.style.transform = `translate(${((v.x * 0.5 + 0.5) * this.w).toFixed(1)}px, ${((-v.y * 0.5 + 0.5) * this.h).toFixed(1)}px)`;
+  }
+
+  focusOnShip(distUnits) {
+    if (!this.ship) return;
+    const remaining = this.ship.v.dMeters / 1000 / 1000 * (1 - (this.ship.state?.progress || 0));
+    this.rig.focus(-1, this.ship.pos, 0.01, distUnits ?? Math.max(2e4, remaining * 0.03));
   }
 
   // ---------- Sites habités ----------
@@ -248,14 +283,15 @@ export class World {
   frame(tr, dt) {
     const sim = this.sim, rig = this.rig, cam = this.camera;
     sim.computeRender(tr);
-    const fb = this.bodies[rig.focusIdx];
+    if (this.ship) this.computeShip(tr);
+    const fb = this.bodies[Math.max(0, rig.focusIdx)];
     rig.update(dt, this.absPos(rig.focusIdx));
     const fa = rig.focusAbs;
     const tanF = Math.tan(cam.fov * DEG / 2), pxPerRad = this.h / (2 * tanF);
     const rp = sim.rPos, rv = sim.rVel, N = sim.N;
     const starRel = [(rp[0] - fa[0]) * UNIT, (rp[1] - fa[1]) * UNIT, (rp[2] - fa[2]) * UNIT];
     // exposition automatique : normalise l'éclairement au niveau du corps suivi
-    const dF = Math.max(1e-3, Math.hypot(rp[3 * rig.focusIdx] - rp[0], rp[3 * rig.focusIdx + 1] - rp[1], rp[3 * rig.focusIdx + 2] - rp[2])) * UNIT;
+    const fpos = this.absPos(rig.focusIdx), dF = Math.max(1e-3, Math.hypot(fpos[0] - rp[0], fpos[1] - rp[1], fpos[2] - rp[2])) * UNIT;
     this.sun.intensity = 1.4 * Math.PI * Math.max(dF, 1e5) ** 2;
     this.sun.position.set(starRel[0], starRel[1], starRel[2]);
 
@@ -340,6 +376,7 @@ export class World {
       this.edgeRing.material.dashSize = this.edgeRing.material.gapSize = R / 90;
     }
     this.updateSites(tr, fa);
+    this.updateShip(fa);
     this.stars.position.copy(cam.position);
     this.renderer.render(this.scene, cam);
     this.updateLabels(fb);

@@ -23,14 +23,15 @@
   </header>
 
   <aside id="bodies" aria-label="Corps célestes"><div id="list"></div></aside>
-  <aside id="info" aria-label="Fiche du corps sélectionné"><div id="site-tools" hidden>
+  <aside id="info" aria-label="Fiche du corps sélectionné"><div id="voyage" hidden><h3>Le Mai en route</h3><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
+  <div id="site-tools" hidden>
     <details id="sky-box" open><summary>Ciel vu d'ici</summary>
       <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option></select></label>
       <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option></select></label></div>
       <canvas id="sky" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div>
     </details>
     <details id="scene-box"><summary>Fiche de scène</summary><div id="scene-out"></div><div class="actions"><button type="button" id="scene-copy">Copier le texte</button></div></details>
-  </div><details id="transfer" hidden><summary>Trajet vers un autre site</summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><div id="tr-out"></div></details><div id="info-live"></div></aside>
+  </div><details id="transfer" hidden><summary>Trajet vers un autre site</summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><button type="button" id="tr-launch">▶ Lancer le voyage du Mai</button><div id="tr-out"></div></details><div id="info-live"></div></aside>
 
   <footer id="bar">
     <div class="row">

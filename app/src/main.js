@@ -36,7 +36,7 @@ world.rig.logD = world.rig.logTarget; // pas d'animation au démarrage
 
 const rebuild = () => {
   const s = newSim();
-  world.rebind(s); ui.sim = s; ui.target = 0; ui.hz = habitableZone(STAR); ui.L = starLuminosity(STAR);
+  ui.cancelVoyage(); world.rebind(s); ui.sim = s; ui.target = 0; ui.hz = habitableZone(STAR); ui.L = starLuminosity(STAR);
   s.computeRender(0);
   window.__omraon.sim = s;
 };

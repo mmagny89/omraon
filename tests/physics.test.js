@@ -255,3 +255,29 @@ test('intégrateur d\'ordre 4 : précession parasite de Kalpra < 0,03°/an, RG �
   const a = run(false), b = run(true);
   assert.ok(Math.abs(a) < 0.03, `${a}`); assert.ok(Math.abs(b - a) > 1e-4 && Math.abs(b - a) < 8e-4, `GR=${b - a}`);
 });
+
+import { planFlight, planVoyage, voyageAt } from '../app/src/physics/flight.js';
+test('vol : profil cohérent (distance parcourue = distance, vitesses nulles aux extrémités)', () => {
+  const d = 3.96e11, p = planFlight(d, 8, 0.95);
+  assert.ok(Math.abs(p.distAt(p.total) / d - 1) < 1e-9 && p.speedAt(0) === 0 && p.speedAt(p.total) < 1e-3);
+  assert.ok(Math.abs(p.total / 86400 - 1.64) < 0.05, `${p.total / 86400} j`); // 2,65 UA à 8 g : 2·√(d/a) = 1,64 j
+  assert.equal(p.hasRest, false);
+});
+test('vol : 35 UA = repos moteur au milieu, jamais plus de 6 j de poussée continue', () => {
+  const d = 35 * 149597870700, p = planFlight(d, 4, 0.95); // 4 g : trajet de ~11 j > 6 j
+  assert.ok(p.hasRest && p.segs.some((s) => s.kind === 'rest'));
+  assert.ok(p.segs.filter((s) => s.kind !== 'rest').every((s) => s.dur <= 6 * 86400 + 1), 'poussées ≤ 6 j');
+  assert.ok(Math.abs(p.distAt(p.total) / d - 1) < 1e-9);
+  const noRest = planFlight(d, 8, 0.95); assert.equal(noRest.hasRest, false); // 8 g : 35 UA en ~6 j sans repos
+});
+test('vol : plafond de vitesse 0,1 c (subliminique) → croisière', () => {
+  const p = planFlight(1e14, 1, 0.1); assert.ok(p.segs.some((s) => s.kind === 'cruise') && Math.abs(p.peak / 299792458 - 0.1) < 1e-9);
+});
+test('voyage : intercepte une destination mobile (arrivée = position prévue)', () => {
+  const dest = (t) => [1.5 + 0.01 * t, 0.3 * Math.sin(0.1 * t), 0]; // cible qui se déplace de 0,01 UA/j
+  const v = planVoyage({ A0: [0, 0, 0], tDep: 0, destPosAt: dest, aG: 8, vmax: 0.95 });
+  const end = voyageAt(v, v.tArr, dest(v.tArr)), B = dest(v.tArr);
+  assert.ok(Math.hypot(end.pos[0] - B[0], end.pos[1] - B[1], end.pos[2] - B[2]) < 1e-9 && end.done);
+  const mid = voyageAt(v, v.tDep + (v.tArr - v.tDep) / 2, dest(v.tDep + (v.tArr - v.tDep) / 2));
+  assert.ok(mid.speed > 0 && mid.progress > 0.3 && mid.progress < 0.7);
+});

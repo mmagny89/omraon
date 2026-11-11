@@ -149,3 +149,13 @@ summary { cursor: pointer; color: var(--mute); padding: 8px 0; min-height: 44px;
 #transfer > summary { margin-bottom: 4px; }
 #site-tools { margin-top: 0; margin-bottom: 4px; }
 #info-live { margin-top: 10px; }
+
+.ship-marker { position: absolute; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; padding: 0; min-height: 0; border: 0; background: transparent; pointer-events: auto; display: none; will-change: transform; }
+.ship-marker::before { content: ''; position: absolute; inset: 4px; background: #ffd27a; clip-path: polygon(50% 0, 100% 100%, 50% 75%, 0 100%); filter: drop-shadow(0 0 4px rgba(255,200,100,.9)); }
+.ship-marker span { position: absolute; left: 16px; top: -2px; font-size: 11px; color: #ffe2b0; text-shadow: 0 0 4px #000; white-space: nowrap; }
+@media (pointer: coarse) { .ship-marker { width: 44px; height: 44px; margin: -22px 0 0 -22px; } .ship-marker::before { inset: 14px; } }
+#voyage { border: 1px solid var(--accent); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; background: rgba(255,191,107,.06); }
+#voyage h3 { margin: 0 0 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+#voyage .bar { height: 6px; background: rgba(255,255,255,.1); border-radius: 3px; overflow: hidden; margin: 4px 0 8px; } #voyage .bar i { display: block; height: 100%; background: var(--accent); }
+#voyage .actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 6px; }
+#tr-launch { width: 100%; margin: 6px 0; background: rgba(255,191,107,.14); border-color: var(--accent); }

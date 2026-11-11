@@ -12,6 +12,9 @@ import { drawSky } from '../render/skyView.js';
 import { runEphemeris } from '../physics/ephemeris.js';
 import { buildScene } from '../physics/scene.js';
 import { habitabilityScan } from '../physics/habscan.js';
+import { planVoyage } from '../physics/flight.js';
+import { makeSnapshot, ctxAt } from '../physics/ephem.js';
+import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
 
 const SPEEDS = [
@@ -33,6 +36,7 @@ export class UI {
     this.buildChrono();
     this.buildEphem();
     this.bindSiteTools();
+    this.bindVoyage();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
@@ -94,6 +98,7 @@ export class UI {
 
   /** Saute à la date t (jours depuis l'An 0). */
   goToTime(t) {
+    this.cancelVoyage();
     this.calculating = true; $('#date').textContent = 'Calcul des positions…';
     setTimeout(() => {
       this.sim.jumpTo(t);
@@ -101,6 +106,56 @@ export class UI {
       this.sim.computeRender(this.target);
       this.calculating = false;
     }, 30);
+  }
+
+  // ---------- Voyage animé du Mai ----------
+  bindVoyage() {
+    $('#tr-launch').addEventListener('click', () => this.startVoyage());
+    $('#voy-follow').addEventListener('click', () => { this.world.focusOnShip(); this.selected = this.selected; });
+    $('#voy-cancel').addEventListener('click', () => this.cancelVoyage());
+    this.world.onShipClick = () => this.world.focusOnShip();
+  }
+
+  startVoyage() {
+    const site = this.currentSite(), dest = SITES.find((x) => x.id === $('#tr-dest').value), key = $('#tr-prop').value, prop = PROPULSION[key];
+    if (!site || !dest || prop.mode !== 'cruise') return;
+    const w = this.world, t0 = this.target, accG = parseFloat($('#tr-acc').value) > 0 ? parseFloat($('#tr-acc').value) : prop.acc;
+    this.sim.computeRender(t0);
+    const snap = makeSnapshot(this.sim, t0, this.rotParams());
+    const A0 = w.siteEls.get(site.id).st.pos.slice();
+    const v = planVoyage({ A0, tDep: t0, destPosAt: (t) => siteState(ctxAt(snap, t), dest, t).pos, aG: accG, vmax: prop.vmax, opts: { maxBurnDays: prop.maxDays || 6, restDays: 1 } });
+    w.setShip(v, () => w.siteEls.get(dest.id)?.st?.pos || null);
+    this.voyage = { v, site, dest, key, accG, prop };
+    // vitesse de lecture : le trajet dure ~30 s à l'écran
+    const need = (v.tArr - v.tDep) / 30; let best = 0, gap = Infinity;
+    SPEEDS.forEach(([d], i) => { const g = Math.abs(Math.log(d / need)); if (g < gap) { gap = g; best = i; } });
+    this.speedIdx = best; $('#speed').value = best; $('#speed-out').textContent = SPEEDS[best][1];
+    this.playing = true; $('#play').textContent = '❚❚';
+    $('#voyage').hidden = false; w.focusOnShip(); this.voyageAcc = 1;
+  }
+
+  cancelVoyage(arrived = false) {
+    if (!this.voyage) return;
+    const dest = this.voyage.dest; this.world.setShip(null); this.voyage = null; $('#voyage').hidden = true;
+    if (arrived) this.selectSite(dest.id); else if (this.world.rig.focusIdx < 0) this.select(this.selected, true);
+  }
+
+  updateVoyage() {
+    const vy = this.voyage, sh = this.world.ship; if (!vy || !sh?.state) return;
+    const st = sh.state, v = vy.v, d = v.dMeters / 1000;
+    if (st.done) { this.cancelVoyage(true); return; }
+    const phases = { accel: 'Accélération', rest: 'Repos moteur (refroidissement)', decel: 'Freinage', cruise: 'Croisière', arrivee: 'Arrivée' };
+    const o = this.world.siteEls.get(vy.site.id)?.st?.pos, de = this.world.siteEls.get(vy.dest.id)?.st?.pos, dist = (a, b) => Math.hypot(...[0, 1, 2].map((k) => a[k] - b[k])) * 8.3167;
+    const dur = (s) => (s < 7200 ? `${(s / 60).toFixed(0)} min` : s < 172800 ? `${(s / 3600).toFixed(1)} h` : `${(s / 86400).toFixed(2)} j`);
+    const maxB = (vy.prop.maxDays || 6) * 86400, burnPct = Math.min(100, st.burn / maxB * 100);
+    const min = (m) => (m < 1 ? `${(m * 60).toFixed(0)} s` : m < 120 ? `${m.toFixed(1)} min` : `${(m / 60).toFixed(1)} h`);
+    $('#voy-body').innerHTML = `<p><b>${vy.site.name}</b> → <b>${vy.dest.name}</b></p><div class="bar"><i style="width:${(st.progress * 100).toFixed(1)}%"></i></div><dl>` +
+      row('Phase', phases[st.phase] || st.phase, st.phase === 'rest' ? 'warn' : '') + row('Écoulé / total', `${dur(st.elapsed)} / ${dur(v.plan.total)}`) +
+      row('Vitesse', `${(st.speed / 1000).toFixed(0)} km/s (${(st.speed / 299792458 * 100).toFixed(2)} % de c)`) + row('Accélération', `${vy.accG} g`) +
+      row('Distance restante', `${((1 - st.progress) * d / 1e6).toFixed(1)} M km`) +
+      row('Poussée continue', `${dur(st.burn)} / ${vy.prop.maxDays || 6} j max`, burnPct > 85 ? 'warn' : '') +
+      (o ? row('Délai de message → ' + vy.site.name, min(dist(sh.pos, o))) : '') + (de ? row('Délai de message → ' + vy.dest.name, min(dist(sh.pos, de))) : '') + '</dl>' +
+      (v.plan.hasRest ? '<p class="note">Plus de 6 jours de poussée : le moteur est coupé au milieu du trajet (repos supposé d\'un jour) pour éviter la surchauffe.</p>' : '');
   }
 
   // ---------- Ciel, fiche de scène, éphémérides ----------
@@ -207,6 +262,7 @@ export class UI {
     const dest = SITES.find((x) => x.id === $('#tr-dest').value), key = $('#tr-prop').value;
     const a = this.world.siteEls.get(site.id)?.st, b = this.world.siteEls.get(dest?.id)?.st;
     if (!a || !b) return;
+    $('#tr-launch').disabled = PROPULSION[key].mode !== 'cruise';
     const accIn = parseFloat($('#tr-acc').value);
     const r = transfer({ sim: this.sim }, site, a, dest, b, key, PROPULSION[key].mode === 'cruise' ? accIn : undefined), nf = (x, d = 1) => (Math.abs(x) >= 1e5 ? x.toExponential(2) : x.toFixed(d));
     const au = r.distKm / AU_KM;
@@ -417,6 +473,7 @@ export class UI {
       $('#date').textContent = `An ${String(y).replace('-', '−')} · jour ${Math.floor(dd)} · ${clock}`;
     }
     if (y !== this.lastYear) { this.lastYear = y; const r = $('#chrono-range'); if (r && document.activeElement !== r) { r.value = Math.max(-960, Math.min(60, y)); this.chronoLabel(y); } }
+    if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }
     this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
     if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }
     if (this.selectedSite && this.sceneAcc > 2.5) { this.sceneAcc = 0; this.refreshScene(); }

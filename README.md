@@ -66,3 +66,10 @@ champ magnétique de Zirkan supposé très faible (sinon dose mortelle), excentr
 ## Précision numérique
 Intégrateur : composition d'ordre 4 (Yoshida) de pas leapfrog symétriques, donc réversible. Précession parasite de Kalpra : 0,014°/an
 (leapfrog P/64 : 3,7°/an) ; la relativité générale ajoute ~0,0003°/an. Ellipses calculées sur l'état du dernier pas, en coordonnées de Jacobi.
+
+## Voyage animé du Mai
+Bouton « ▶ Lancer le voyage du Mai » dans le panneau de trajet (propulsions hyper/subluminique) : le vaisseau part du site, vise la position
+PRÉVUE de la destination à l'arrivée (point fixe), accélère puis freine ; si l'accélération + le freinage dépassent 6 jours de poussée continue,
+le moteur est coupé au milieu (repos supposé d'un jour). Panneau : phase, vitesse, distance, poussée continue, délai de message vers l'origine
+et la destination. La caméra peut suivre le vaisseau ; la vitesse de lecture est choisie pour que le trajet dure ~30 s. Profil newtonien
+(vitesses < 0,06 c en système), l'arrivée est recalée sur la position réelle de la destination (`physics/flight.js`).
