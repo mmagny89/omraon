@@ -7,10 +7,15 @@ import { SITES } from '../data/sites.js';
 import { EVENTS, ERAS, eraAt, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
 import { siteReport } from '../physics/habitat.js';
 import { transfer, PROPULSION } from '../physics/transfers.js';
+import { computeSky } from '../physics/sky.js';
+import { drawSky } from '../render/skyView.js';
+import { runEphemeris } from '../physics/ephemeris.js';
+import { buildScene } from '../physics/scene.js';
+import { habitabilityScan } from '../physics/habscan.js';
 import { UNIT } from '../render/world.js';
 
 const SPEEDS = [
-  [1 / 24, '1 h/s'], [1, '1 j/s'], [10, '10 j/s'], [30.4375, '1 mois/s'],
+  [1 / 86400, 'temps réel'], [1 / 1440, '1 min/s'], [1 / 24, '1 h/s'], [1, '1 j/s'], [10, '10 j/s'], [30.4375, '1 mois/s'],
   [DAYS_PER_YEAR, '1 an/s'], [DAYS_PER_YEAR * 10, '10 ans/s'], [DAYS_PER_YEAR * 100, '100 ans/s'], [DAYS_PER_YEAR * 1000, '1000 ans/s'],
 ];
 const $ = (s) => document.querySelector(s);
@@ -21,11 +26,13 @@ const row = (k, v, cls = '') => `<dt>${k}</dt><dd class="${cls}">${v}</dd>`;
 export class UI {
   constructor(sim, world) {
     this.sim = sim; this.world = world;
-    this.playing = true; this.speedIdx = 2; this.target = 0; this.selected = 0; this.selectedSite = null;
+    this.playing = true; this.speedIdx = 4; this.target = 0; this.selected = 0; this.selectedSite = null;
     this.hz = habitableZone(sim.bodies[0].def);
     this.L = starLuminosity(sim.bodies[0].def);
     this.buildList();
     this.buildChrono();
+    this.buildEphem();
+    this.bindSiteTools();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
@@ -83,14 +90,87 @@ export class UI {
   }
 
   /** Va à l'année donnée (An 0 = présent) : recalcule les positions des planètes à cette date. */
-  goTo(year) {
+  goTo(year) { $('#chrono-range').value = year; this.chronoLabel(year); this.goToTime(year * DAYS_PER_YEAR); }
+
+  /** Saute à la date t (jours depuis l'An 0). */
+  goToTime(t) {
     this.calculating = true; $('#date').textContent = 'Calcul des positions…';
-    $('#chrono-range').value = year; this.chronoLabel(year);
     setTimeout(() => {
-      this.sim.jumpTo(year * DAYS_PER_YEAR);
+      this.sim.jumpTo(t);
       this.target = this.sim.t;
       this.sim.computeRender(this.target);
       this.calculating = false;
+    }, 30);
+  }
+
+  // ---------- Ciel, fiche de scène, éphémérides ----------
+  fmtT(t) {
+    const y = Math.floor(t / DAYS_PER_YEAR), d = t - y * DAYS_PER_YEAR;
+    return `An ${String(y).replace('-', '−')} · jour ${Math.floor(d)} · ${String(Math.floor((d % 1) * 24)).padStart(2, '0')} h`;
+  }
+  rotParams() { return this.world.bodies.map((o) => ({ phase0: o.phase0, protDays: o.protDays })); }
+
+  bindSiteTools() {
+    $('#sky-center').addEventListener('change', () => this.drawSkyNow());
+    $('#sky-fov').addEventListener('change', () => this.drawSkyNow());
+    $('#scene-box').addEventListener('toggle', () => { if ($('#scene-box').open) this.refreshScene(); });
+    $('#scene-copy').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(this.sceneText || ''); $('#scene-copy').textContent = 'Copié ✓'; } catch { $('#scene-copy').textContent = 'Copie impossible'; }
+      setTimeout(() => ($('#scene-copy').textContent = 'Copier le texte'), 1800);
+    });
+  }
+
+  drawSkyNow() {
+    const site = this.currentSite(), rec = site && this.world.siteEls?.get(site.id);
+    if (!rec?.st || !$('#sky-box').open) return;
+    const sky = computeSky(this.sim, site, rec.st), body = site.type === 'heliocentric' ? null : this.sim.bodies[rec.st.idx];
+    const P = body?.def.habitat?.pressureBar ?? 0, atm = body?.def.kind === 'gas' ? 'gas' : P >= 0.3 ? 'earth' : P > 0 ? 'thin' : 'none';
+    const parentName = body ? (body.type === 'moon' ? this.sim.bodies[body.parent].def.name : body.def.name) : null;
+    drawSky($('#sky'), sky, { center: $('#sky-center').value, fov: +$('#sky-fov').value, atm, surface: site.type === 'surface' || site.type === 'floating', parentName });
+    const el = sky.sunEl * 180 / Math.PI;
+    $('#sky-info').innerHTML = `Étoile à ${el.toFixed(0)}°${sky.eclipse ? ` — <b>éclipse : ${sky.eclipse.by} masque ${(sky.eclipse.fraction * 100).toFixed(0)} % de l'étoile</b>` : ''}`;
+  }
+
+  refreshScene() {
+    const site = this.currentSite(), rec = site && this.world.siteEls?.get(site.id);
+    if (!rec?.st || !$('#scene-box').open) return;
+    const sim = this.sim, w = this.world, body = site.type === 'heliocentric' ? null : sim.bodies[rec.st.idx];
+    const report = siteReport({ sim, el: (i) => w.bodies[i].el }, site, rec.st, this.target), sky = computeSky(sim, site, rec.st);
+    const dayD = !body ? 1 : body.type === 'moon' ? (w.bodies[body.idx].el?.period || 1) : site.type === 'orbit' ? 1 : (w.bodies[body.idx].protDays || 1);
+    const horizon = Math.min(130, Math.max(3, dayD * 1.2 + 0.3));
+    let events = [];
+    if (body) events = runEphemeris(sim, horizon, { rot: this.rotParams(), site, kinds: { eclipses: true, sun: true, alignments: false, apsides: false }, max: 80 })
+      .filter((e) => (/étoile/.test(e.type) ? e.who === site.name : e.who === body.def.name)).map((e) => ({ ...e, t: e.t }));
+    const refs = ['kebet-orbite', 'roushan-cites', 'sethis-cite-a', 'naksun-octroi', 'roukir-poste'].filter((id) => id !== site.id);
+    const comms = refs.map((id) => { const o = w.siteEls.get(id)?.st; if (!o) return null; return { name: SITES.find((x) => x.id === id).name, minutes: Math.hypot(...[0, 1, 2].map((k) => o.pos[k] - rec.st.pos[k])) * 8.3167 }; }).filter(Boolean);
+    const title = `${site.name} — ${body ? body.def.name : 'ceinture'} · ${this.fmtT(this.sim.t)}`;
+    const sc = buildScene({ site, sky, report, events, t: this.sim.t, comms, title });
+    this.sceneText = sc.text;
+    $('#scene-out').innerHTML = `<p><b>${sc.title}</b></p>` + sc.blocks.map((b) => `<h4>${b.h}</h4><ul>${b.lines.map((l) => `<li>${l}</li>`).join('')}</ul>`).join('');
+  }
+
+  buildEphem() {
+    const names = this.sim.bodies.slice(1).map((b) => b.def.name);
+    $('#eph-body').innerHTML = '<option value="*">Tous</option>' + names.map((n) => `<option ${n === 'Kebet' ? 'selected' : ''}>${n}</option>`).join('');
+    $('#eph-go').addEventListener('click', () => this.computeEphem());
+  }
+
+  computeEphem() {
+    const note = $('#eph-note'), list = $('#eph-list'); note.textContent = 'Calcul…'; list.innerHTML = '';
+    setTimeout(() => {
+      const site = this.currentSite(), t0 = performance.now();
+      const kinds = { eclipses: $('#eph-ecl').checked, sun: $('#eph-sun').checked && !!site, alignments: $('#eph-ali').checked, apsides: $('#eph-aps').checked };
+      const sel = $('#eph-body').value;
+      let ev = runEphemeris(this.sim, +$('#eph-h').value, { rot: this.rotParams(), site, kinds, max: 8000 });
+      if (sel !== '*') ev = ev.filter((e) => e.who === sel || e.by === sel || (/étoile/.test(e.type) && site && this.sim.bodies.find((b) => b.def.name === sel)?.def.name === site.body));
+      const now = this.sim.t, more = ev.length > 150;
+      note.textContent = `${ev.length} événement(s) en ${((performance.now() - t0) / 1000).toFixed(1)} s${more ? ' (150 premiers affichés)' : ''}.${$('#eph-sun').checked && !site ? ' Choisis un site au sol pour les levers et couchers.' : ''} Cliquer saute à la date (la ceinture est regénérée).`;
+      list.innerHTML = ev.slice(0, 150).map((e) => {
+        const detail = e.duration != null ? `${e.who} ← ${e.by}, ${e.duration < 1 / 12 ? (e.duration * 1440).toFixed(0) + ' min' : (e.duration * 24).toFixed(1) + ' h'}` : e.by ? `${e.who} – ${e.by}` : e.who;
+        const dt = e.t - now;
+        return `<li><button type="button" data-t="${e.t}"><span><b>${e.type}</b> · ${detail}</span><small>${this.fmtT(e.t)} · dans ${dt < 2 ? (dt * 24).toFixed(1) + ' h' : dt < 400 ? dt.toFixed(1) + ' j' : (dt / DAYS_PER_YEAR).toFixed(2) + ' ans'}</small></button></li>`;
+      }).join('');
+      list.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => this.goToTime(+b.dataset.t)));
     }, 30);
   }
 
@@ -102,6 +182,7 @@ export class UI {
     this.selectedSite = id;
     if (site.type === 'heliocentric') { this.selected = 0; w.focusOn(0, 3 * UNIT); } else { this.selected = w.bodies.find((o) => o.name === site.body).idx; w.focusOn(this.selected); }
     this.markList(); this.buildTransfer(); this.renderInfo();
+    $('#site-tools').hidden = false; this.skyAcc = 1; this.sceneAcc = 9;
     if (window.innerWidth <= 860) document.body.classList.remove('show-bodies');
   }
 
@@ -201,7 +282,7 @@ export class UI {
     if (fly) this.world.focusOn(idx);
     this.selectedSite = null;
     this.markList();
-    $('#transfer').hidden = true;
+    $('#transfer').hidden = true; $('#site-tools').hidden = true;
     this.renderInfo(true);
     if (fly && window.innerWidth <= 860) document.body.classList.remove('show-bodies');
   }
@@ -225,6 +306,13 @@ export class UI {
     let h = `<h3>Habitabilité humaine</h3><div class="hab ${a.level}">${a.label}</div><ul class="crit">`;
     for (const c of a.criteria) h += `<li><span class="s ${c.status}"></span><span>${c.label}</span><span class="v">${c.value}</span>${c.note ? `<small>${c.note}</small>` : ''}</li>`;
     h += '</ul>';
+    if (a.mode === 'surface') {
+      const key = `${b.idx}:${Math.round(this.sim.t / 365.25)}`;
+      if (!this._scan || this._scan.key !== key || this._scan.sim !== this.sim) this._scan = { key, sim: this.sim, res: habitabilityScan(this.sim, b.idx, 5) };
+      const r = this._scan.res, cl = { ok: 'ok', warn: 'warn', bad: 'bad' };
+      h += `<h3>Habitable en permanence ? (${r.years} ans simulés)</h3><dl>${row('Température', `${r.T[0].toFixed(0)} – ${r.T[1].toFixed(0)} K`, cl[r.status.T])}${row('Flux stellaire', `${r.S[0].toFixed(2)} – ${r.S[1].toFixed(2)} × Terre`)}${row('Excentricité', `${r.e[0].toExponential(1)} – ${r.e[1].toExponential(1)}`)}${row('Chauffage de marée', `${r.heat[0].toFixed(2)} – ${r.heat[1].toFixed(2)} W/m²`, cl[r.status.heat])}${row('Verdict', r.always ? 'habitable en permanence' : 'pas toujours habitable', r.always ? 'ok' : 'warn')}</dl>`;
+      h += `<p class="note">Le chauffage de marée varie comme e² : à e = 5·10⁻⁴ il atteindrait ~4 W/m² (volcanisme intense), à 3·10⁻³ ~150 W/m² (Io ≈ 2,4). Les marées amortissent e en ~16 000 ans ; sans résonance avec les autres lunes, e reste bas.${r.greenhouseNeeded > 0 ? ` Il manque ${r.greenhouseNeeded.toFixed(1)} K d'effet de serre pour que le minimum reste ≥ 278 K.` : r.T[0] < 280 ? ` Marge faible côté froid : minimum ${r.T[0].toFixed(1)} K pour un seuil de 278 K.` : ''}</p>`;
+    }
     if (a.suggestions.length) h += `<h3>Pour ajuster</h3><ul class="sugg">${a.suggestions.map((t) => `<li>${t}</li>`).join('')}</ul>`;
     if (a.notes?.length) h += a.notes.map((t) => `<p class="note">${t}</p>`).join('');
     h += `<p class="note">Estimations de conception (analogies Terre/Jupiter/Io), pas un modèle climatique 3D.</p>`;
@@ -323,8 +411,15 @@ export class UI {
     }
     const t = this.target;
     const y = Math.floor(t / DAYS_PER_YEAR), dd = t - y * DAYS_PER_YEAR;
-    if (!this.calculating) $('#date').textContent = `An ${String(y).replace('-', '−')} · jour ${Math.floor(dd)} · ${String(Math.floor((dd % 1) * 24)).padStart(2, '0')} h`;
+    if (!this.calculating) {
+      const fr = dd % 1, p2 = (n) => String(Math.floor(n)).padStart(2, '0');
+      const clock = this.speedIdx <= 2 ? `${p2(fr * 24)}:${p2((fr * 1440) % 60)}:${p2((fr * 86400) % 60)}` : `${p2(fr * 24)} h`; // secondes seulement aux vitesses lisibles
+      $('#date').textContent = `An ${String(y).replace('-', '−')} · jour ${Math.floor(dd)} · ${clock}`;
+    }
     if (y !== this.lastYear) { this.lastYear = y; const r = $('#chrono-range'); if (r && document.activeElement !== r) { r.value = Math.max(-960, Math.min(60, y)); this.chronoLabel(y); } }
+    this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
+    if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }
+    if (this.selectedSite && this.sceneAcc > 2.5) { this.sceneAcc = 0; this.refreshScene(); }
     this.sinceInfo = (this.sinceInfo || 0) + dt;
     if (this.sinceInfo > 0.25) {
       this.sinceInfo = 0;

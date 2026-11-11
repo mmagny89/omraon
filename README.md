@@ -55,3 +55,14 @@ réveils −2, présent) : les planètes sont recalculées en N-corps (leapfrog 
 L'âge de l'étoile (3 Gyr, durée de vie ~5,7 Gyr) est affiché et sert à estimer quand Zirkan sortira de la zone habitable.
 Kebet (jour ≈ 1,3 j) est à 4,7 rayons de Zirkan (345 000 km) : rotation synchrone, Zirkan de 24° dans le ciel, éclipses ≈ 7 % de l'orbite,
 champ magnétique de Zirkan supposé très faible (sinon dose mortelle), excentricité ≈ 0 (chauffage de marée).
+
+## Ciel, fiche de scène, éphémérides
+- **Ciel vu d'un site** (`physics/sky.js`, `render/skyView.js`) : azimut/hauteur, diamètres angulaires réels, phases, éclipse en cours (ex. Zirkan à 24° sur Kebet) ; couleur du ciel selon l'atmosphère du lieu.
+- **Fiche de scène** : lumière et heure du jour (aube, crépuscule…), prochain lever/coucher/éclipse, conditions physiques, délais de communication, puis la banque d'images des documents « Quotidien sensoriel » (`data/ambiances.js`, génériques marqués non canon) ; bouton « Copier le texte ».
+- **Éphémérides** (`physics/ephemeris.js`) : une copie de la simulation N-corps tourne sur 30 j / 1 an / 5 ans et détecte éclipses de l'étoile par la planète parente, lever/coucher, alignements, périhélies/aphélies (précision ~1 minute). Un clic saute à la date.
+- **Habitable en permanence ?** (`physics/habscan.js`) : extrêmes de température, flux, excentricité et chauffage de marée de Kebet sur 5 ans simulés.
+- **Vitesses** : de « temps réel » (1 s/s) et « 1 min/s » jusqu'à 1000 ans/s.
+
+## Précision numérique
+Intégrateur : composition d'ordre 4 (Yoshida) de pas leapfrog symétriques, donc réversible. Précession parasite de Kalpra : 0,014°/an
+(leapfrog P/64 : 3,7°/an) ; la relativité générale ajoute ~0,0003°/an. Ellipses calculées sur l'état du dernier pas, en coordonnées de Jacobi.

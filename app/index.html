@@ -23,15 +23,34 @@
   </header>
 
   <aside id="bodies" aria-label="Corps célestes"><div id="list"></div></aside>
-  <aside id="info" aria-label="Fiche du corps sélectionné"><div id="info-live"></div><div id="transfer" hidden><h3>Trajet vers…</h3><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><div id="tr-out"></div></div></aside>
+  <aside id="info" aria-label="Fiche du corps sélectionné"><div id="site-tools" hidden>
+    <details id="sky-box" open><summary>Ciel vu d'ici</summary>
+      <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option></select></label>
+      <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option></select></label></div>
+      <canvas id="sky" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div>
+    </details>
+    <details id="scene-box"><summary>Fiche de scène</summary><div id="scene-out"></div><div class="actions"><button type="button" id="scene-copy">Copier le texte</button></div></details>
+  </div><details id="transfer" hidden><summary>Trajet vers un autre site</summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><div id="tr-out"></div></details><div id="info-live"></div></aside>
 
   <footer id="bar">
     <div class="row">
       <button id="play" class="icon" aria-label="Pause">❚❚</button>
-      <input id="speed" type="range" min="0" max="7" step="1" value="2" aria-label="Vitesse de simulation">
+      <input id="speed" type="range" min="0" max="9" step="1" value="4" aria-label="Vitesse de simulation">
       <output id="speed-out">10 j/s</output>
       <output id="date" aria-label="Date de simulation"></output>
     </div>
+    <details id="ephem"><summary>Éphémérides</summary>
+      <div class="grid">
+        <label>Horizon <select id="eph-h"><option value="30">30 jours</option><option value="365.25" selected>1 an</option><option value="1826">5 ans</option></select></label>
+        <label>Corps <select id="eph-body"></select></label>
+        <label><input type="checkbox" id="eph-ecl" checked> Éclipses de l'étoile</label>
+        <label><input type="checkbox" id="eph-sun" checked> Lever / coucher (site choisi)</label>
+        <label><input type="checkbox" id="eph-ali"> Alignements</label>
+        <label><input type="checkbox" id="eph-aps"> Périhélies / aphélies</label>
+        <button type="button" id="eph-go" class="wide">Calculer</button>
+      </div>
+      <div id="eph-note" class="note"></div><ol id="eph-list"></ol>
+    </details>
     <details id="chrono"><summary>Chronologie · âge du système</summary><div id="chrono-body"></div></details>
     <details id="settings">
       <summary>Paramètres &amp; diagnostics</summary>

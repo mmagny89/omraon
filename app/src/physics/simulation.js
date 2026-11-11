@@ -15,6 +15,7 @@ export class Simulation {
     this.tier = 1; // 1 = N-corps complet ; 2 = planètes N-corps, lunes sur rails
     this.gr = true;
     this.autoTier = true;
+    this.order4 = true;
     this.acc = new Float64Array(3 * this.N);
     this.rails = new Map();
     this.rPos = new Float64Array(3 * this.N); // positions de rendu (extrapolées)
@@ -32,7 +33,7 @@ export class Simulation {
       const mu = G * ((b.type === 'moon' ? this.mass[par.idx] : this.bodies[0].mass) + this.mass[b.idx]);
       const P = TWO_PI * Math.sqrt(a ** 3 / mu) * Math.pow(1 - o.e, 1.5);
       h1 = Math.min(h1, P / 80);
-      if (b.type === 'planet') h2 = Math.min(h2, P / 64);
+      if (b.type === 'planet') h2 = Math.min(h2, P / 160); // ordre 4 : précession parasite de Kalpra ≈ 0,006°/an (leapfrog P/64 : 3,7°/an)
     }
     this.h1 = h1; this.h2 = h2;
     this.computeAcc(this.pos, this.mass, this.N, this.acc);
@@ -82,8 +83,16 @@ export class Simulation {
   get masses() { return this.tier === 1 ? this.mass : this.mEff; }
   get nAct() { return this.tier === 1 ? this.N : this.nHeavy; }
 
-  // Pas symétrique K_N K_GR D K_GR K_N : réversible dans le temps (h négatif = pas inverse exact).
+  // Composition d'ordre 4 (Yoshida) de pas symétriques : supprime la précession parasite du leapfrog
+  // (≈ 1,7°/an pour Kalpra avec h = P/64) tout en restant réversible dans le temps.
   substep(h) {
+    if (!this.order4) { this.stepBase(h); return; }
+    const w1 = 1.3512071919596578, w0 = -1.7024143839193153;
+    this.stepBase(w1 * h); this.stepBase(w0 * h); this.stepBase(w1 * h);
+  }
+
+  // Pas symétrique K_N K_GR D K_GR K_N : réversible dans le temps (h négatif = pas inverse exact).
+  stepBase(h) {
     const n = this.nAct, m = this.masses, v = this.vel, p = this.pos, a = this.acc, hh = 0.5 * h;
     for (let k = 0; k < 3 * n; k++) v[k] += hh * a[k];
     if (this.gr) this.kickGR(hh);
@@ -265,8 +274,8 @@ export class Simulation {
     const t0 = performance.now();
     const need = (target - this.t) / this.h1;
     if (this.autoTier) {
-      if (this.tier === 1 && need > 600) this.enterRails();
-      else if (this.tier === 2 && need < 250) this.exitRails();
+      if (this.tier === 1 && need > 200) this.enterRails(); // ordre 4 = 3 pas par pas : seuils divisés par 3
+      else if (this.tier === 2 && need < 80) this.exitRails();
     }
     const h = this.tier === 1 ? this.h1 : this.h2;
     let limited = false, n = 0;

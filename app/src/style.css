@@ -56,7 +56,7 @@ aside { position: fixed; top: 64px; bottom: 120px; background: var(--panel); bac
 #bar { position: fixed; left: 12px; right: 12px; bottom: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); max-width: 760px; margin: 0 auto; background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 12px; }
 #bar .row { display: flex; align-items: center; gap: 10px; }
 #speed { flex: 1; min-width: 80px; accent-color: var(--accent); height: 44px; }
-#speed-out { width: 62px; text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
+#speed-out { width: 84px; text-align: right; color: var(--accent); font-variant-numeric: tabular-nums; }
 #date { min-width: 150px; text-align: right; font-variant-numeric: tabular-nums; color: var(--mute); }
 summary { cursor: pointer; color: var(--mute); padding: 8px 0; min-height: 44px; display: flex; align-items: center; }
 #settings .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; padding-bottom: 6px; }
@@ -125,3 +125,27 @@ summary { cursor: pointer; color: var(--mute); padding: 8px 0; min-height: 44px;
 @media (max-width: 860px) { #chrono-body .chips button { min-height: 44px; } }
 
 #bar { max-height: 64vh; overflow-y: auto; }
+
+#site-tools { margin-top: 10px; }
+#site-tools details { border-top: 1px solid var(--line); }
+#sky { width: 100%; display: block; border-radius: 8px; border: 1px solid var(--line); background: #04060e; }
+.sky-ctl { display: flex; gap: 12px; flex-wrap: wrap; padding: 4px 0; }
+.sky-ctl label { color: var(--mute); display: flex; align-items: center; gap: 6px; }
+.sky-ctl select, #ephem select { min-height: 36px; background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+#sky-info { font-size: 12px; color: var(--mute); padding: 4px 0 8px; }
+#sky-info b { color: var(--warn); }
+#scene-out h4 { margin: 10px 0 2px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+#scene-out ul { margin: 0; padding-left: 16px; } #scene-out li { margin: 3px 0; font-size: 13px; }
+#site-tools .actions { padding: 6px 0 10px; }
+#ephem .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; padding-bottom: 6px; }
+#ephem label { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+#ephem input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+#eph-list { list-style: none; margin: 4px 0 6px; padding: 0; max-height: 220px; overflow: auto; font-size: 13px; }
+#eph-list li button { display: grid; grid-template-columns: 1fr auto; gap: 8px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 6px 4px; min-height: 36px; }
+#eph-list li button small { color: var(--mute); }
+@media (max-width: 860px) { #ephem .grid { grid-template-columns: 1fr; } #ephem label, #ephem select, .sky-ctl select { min-height: 44px; } #eph-list li button { min-height: 44px; } }
+
+#transfer { margin-top: 0; }
+#transfer > summary { margin-bottom: 4px; }
+#site-tools { margin-top: 0; margin-bottom: 4px; }
+#info-live { margin-top: 10px; }

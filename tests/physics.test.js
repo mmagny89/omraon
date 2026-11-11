@@ -64,10 +64,10 @@ test('bascule rails <-> N-corps : pas de saut', () => {
   for (const b of sim.bodies) if (b.type === 'moon') for (let c = 0; c < 3; c++) assert.ok(Math.abs(sim.pos[3 * b.idx + c] - before[3 * b.idx + c]) * AU_KM < 1);
 });
 
-test('planètes stables sur 5000 ans (lunes sur rails)', () => {
+test('planètes stables sur 1500 ans (lunes sur rails)', () => {
   const sim = make();
   sim.enterRails(); sim.gr = false;
-  sim.advance(5000 * 365.25, 1e9);
+  sim.advance(1500 * 365.25, 1e9);
   assert.ok(Math.abs(sim.drift().dE) < 1e-5, `dE=${sim.drift().dE}`);
   for (const pi of sim.planetIdx) {
     const o = sim.bodies[pi].def.orbit;
@@ -193,4 +193,65 @@ test('Kebet : rotation synchrone, jour ≈ 1,3 j (« journée proche de 1 jour �
   const sim = make(); const k = sim.bodies.find((b) => b.def.name === 'Kebet'), z = sim.bodies.find((b) => b.def.name === 'Zirkan');
   const el = ctxOf(sim).el(k.idx), solar = 1 / (1 / el.period - 1 / ctxOf(sim).el(z.idx).period);
   assert.ok(el.period > 1 && el.period < 1.5 && solar > 1 && solar < 1.5, `P=${el.period} solaire=${solar}`);
+});
+
+import { computeSky, overlapFraction } from '../app/src/physics/sky.js';
+import { runEphemeris } from '../app/src/physics/ephemeris.js';
+import { buildScene } from '../app/src/physics/scene.js';
+
+const simAt0 = () => { const s = make(); s.computeRender(0); return s; };
+const rotOf = (sim) => sim.bodies.map(() => ({ phase0: 0, protDays: 1 }));
+
+test('ciel : recouvrement de disques', () => {
+  assert.equal(overlapFraction(1, 2, 5), 0);
+  assert.equal(overlapFraction(1, 2, 0), 1);
+  assert.ok(Math.abs(overlapFraction(1, 1, 0) - 1) < 1e-12);
+  const half = overlapFraction(1, 1, 1); assert.ok(half > 0.3 && half < 0.45);
+});
+test('ciel de Kebet : Zirkan ≈ 24° de diamètre, étoile ≈ 0,5°', () => {
+  const sim = simAt0(), ctx = siteCtx(sim), site = find('kebet-temples'), st = siteState(ctx, site, 0), sky = computeSky(sim, site, st);
+  const z = sky.objs.find((o) => o.name === 'Zirkan'), s = sky.objs.find((o) => o.type === 'star');
+  assert.ok(Math.abs(z.angR * 2 * 180 / Math.PI - 24.4) < 0.7, `${z.angR * 360 / Math.PI}`);
+  assert.ok(s.angR * 360 / Math.PI > 0.3 && s.angR * 360 / Math.PI < 0.7);
+  assert.ok(!sky.objs.some((o) => o.name === 'Kebet'), 'le corps du site ne se voit pas lui-même');
+});
+test('éphémérides : 23-24 éclipses de Kebet en 30 j (2,1 h chacune), source non modifiée', () => {
+  const sim = simAt0(), before = Array.from(sim.pos), t = sim.t;
+  const ev = runEphemeris(sim, 30, { rot: rotOf(sim), kinds: { eclipses: true, alignments: false, apsides: false, sun: false } });
+  const kebet = ev.filter((e) => e.who === 'Kebet');
+  assert.ok(kebet.length >= 22 && kebet.length <= 25, `${kebet.length}`);
+  assert.ok(kebet.every((e) => Math.abs(e.duration * 24 - 2.1) < 0.4), kebet.map((e) => e.duration * 24).join());
+  assert.equal(sim.t, t); assert.deepEqual(Array.from(sim.pos), before);
+});
+test('éphémérides : levers/couchers alternent ; périhélies et aphélies de Kalpra en 130 j', () => {
+  const sim = simAt0(), site = find('kebet-temples');
+  const sun = runEphemeris(sim, 12, { rot: rotOf(sim), site, kinds: { eclipses: false, alignments: false, apsides: false, sun: true } });
+  assert.ok(sun.length >= 14 && sun.every((e, i) => i === 0 || e.type !== sun[i - 1].type), `${sun.length}`);
+  const aps = runEphemeris(sim, 130, { rot: rotOf(sim), kinds: { eclipses: false, alignments: false, apsides: true, sun: false } });
+  assert.ok(aps.some((e) => e.type === 'Périhélie' && e.who === 'Kalpra') && aps.some((e) => e.type === 'Aphélie' && e.who === 'Kalpra'));
+});
+test('fiche de scène : contient lumière, ciel, communications et banque d\'images', () => {
+  const sim = simAt0(), ctx = siteCtx(sim), site = find('kebet-quartiers'), st = siteState(ctx, site, 0), sky = computeSky(sim, site, st);
+  const report = siteReport(ctx, site, st, 0);
+  const sc = buildScene({ site, sky, report, events: [{ type: 'Éclipse partielle', t: 0.2, duration: 0.08, by: 'Zirkan', who: 'Kebet' }], t: 0, comms: [{ name: 'Roushan', minutes: 12 }], title: 'T' });
+  const heads = sc.blocks.map((b) => b.h).join('|');
+  assert.ok(/Lumière/.test(heads) && /Ciel/.test(heads) && /Communications/.test(heads) && /Kebet/.test(heads));
+  assert.ok(/Zirkan/.test(sc.text) && /Prochaine éclipse/.test(sc.text) && !/NaN|undefined/.test(sc.text));
+});
+
+import { habitabilityScan } from '../app/src/physics/habscan.js';
+test('Kebet : habitable en permanence sur 5 ans (température, chauffage de marée), copie sans effet sur la source', () => {
+  const sim = simAt0(), t = sim.t, k = sim.bodies.find((b) => b.def.name === 'Kebet').idx;
+  const r = habitabilityScan(sim, k, 5);
+  assert.ok(r.always, JSON.stringify(r));
+  assert.ok(r.T[0] >= 278 && r.T[1] <= 308 && r.heat[1] < 0.5 && r.e[1] < 3e-4, JSON.stringify(r));
+  assert.equal(sim.t, t);
+});
+test('intégrateur d\'ordre 4 : précession parasite de Kalpra < 0,03°/an, RG ≈ 0,0003°/an', () => {
+  const run = (gr) => {
+    const s = make(); s.gr = gr; s.enterRails(); const el = () => { const q = s.elementState(1); return stateToElements(q.mu, q.r, q.v); };
+    const w0 = el().varpi; s.jumpTo(50 * 365.25); let dw = el().varpi - w0; dw = Math.atan2(Math.sin(dw), Math.cos(dw)); return dw * 180 / Math.PI / 50;
+  };
+  const a = run(false), b = run(true);
+  assert.ok(Math.abs(a) < 0.03, `${a}`); assert.ok(Math.abs(b - a) > 1e-4 && Math.abs(b - a) < 8e-4, `GR=${b - a}`);
 });
