@@ -106,8 +106,8 @@ git switch -c chore/eprouver-la-ci && git commit --allow-empty -m "chore: eprouv
 ```
 
 Ouvrir la PR : sept portes et l'agrégateur `Portes qualité` doivent apparaître ; le résumé de run nomme toute porte ignorée. Une release se publie en posant un tag
-(`git tag -a v0.1.0 -m "v0.1.0" && git push origin v0.1.0`) : le workflow `Release` en crée la page à partir de la section du `CHANGELOG.md` (`sh outils/extraire-changelog.sh v0.1.0`
-se joue en local avant d'étiqueter ; la section `[0.1.0]` doit exister).
+(`git tag -a v1.0.0 -m "v1.0.0" && git push origin v1.0.0`) : le workflow `Release` en crée la page à partir de la section du `CHANGELOG.md` (`sh outils/extraire-changelog.sh v1.0.0`
+se joue en local avant d'étiqueter ; la section `[1.0.0]` doit exister).
 
 ## Récapitulatif
 

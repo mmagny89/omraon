@@ -5,6 +5,8 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [1.0.0] - 2026-11-11
+
 ### Ajouté
 
 - Socle Docker statique généré par `.claude/scripts/setup-statique.sh` (Caddy seul, contexte serveur partagé).
