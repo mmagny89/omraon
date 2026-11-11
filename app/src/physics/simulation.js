@@ -297,6 +297,50 @@ export class Simulation {
     }
   }
 
+  /**
+   * Position et vitesse relatives pour les éléments osculateurs, à la date du dernier pas (SANS extrapolation) :
+   * l'extrapolation du rendu entraîne une erreur de vitesse (jusqu'à ~0,3 % sur a pour Kalpra en pas de 0,76 j)
+   * qui faisait osciller les ellipses d'une image à l'autre. Planète = barycentre planète + lunes.
+   */
+  elementState(i) {
+    const b = this.bodies[i], p = this.pos, v = this.vel;
+    // barycentre « planète + lunes » (tier 1) ou état de la planète (tier 2 : déjà le barycentre)
+    const bary = (k) => {
+      const mo = this.tier === 1 ? this.bodies.filter((m) => m.type === 'moon' && m.parent === k) : [];
+      const M = this.mEff[k], x = [0, 0, 0], u = [0, 0, 0];
+      for (let c = 0; c < 3; c++) {
+        let px = this.mass[k] * p[3 * k + c], pv = this.mass[k] * v[3 * k + c];
+        if (this.tier === 1) for (const m of mo) { px += this.mass[m.idx] * p[3 * m.idx + c]; pv += this.mass[m.idx] * v[3 * m.idx + c]; }
+        else { px = M * p[3 * k + c]; pv = M * v[3 * k + c]; }
+        x[c] = px / M; u[c] = pv / M;
+      }
+      return { x, u, M };
+    };
+    if (b.type === 'planet') {
+      // Coordonnées de Jacobi : on mesure la planète par rapport au centre de masse de l'étoile et des planètes intérieures.
+      // Sans cela, l'étoile (qui oscille sous l'attraction de Zirkan) fait osciller les éléments des planètes lointaines.
+      let M = this.mass[0]; const cx = [this.mass[0] * p[0], this.mass[0] * p[1], this.mass[0] * p[2]], cu = [this.mass[0] * v[0], this.mass[0] * v[1], this.mass[0] * v[2]];
+      for (const k of this.planetIdx) {
+        if (k >= i) break;
+        const q = bary(k); M += q.M;
+        for (let c = 0; c < 3; c++) { cx[c] += q.M * q.x[c]; cu[c] += q.M * q.u[c]; }
+      }
+      const me = bary(i);
+      return { r: [0, 1, 2].map((c) => me.x[c] - cx[c] / M), v: [0, 1, 2].map((c) => me.u[c] - cu[c] / M), mu: G * (M + me.M) };
+    }
+    const q = b.parent, r = [0, 0, 0], w = [0, 0, 0];
+    if (this.tier === 2) { const R = [0, 0, 0], V = [0, 0, 0]; railState(this.rails.get(i), this.t, R, V); return { r: R, v: V, mu: G * (this.mass[q] + this.mass[i]) }; }
+    for (let c = 0; c < 3; c++) { r[c] = p[3 * i + c] - p[3 * q + c]; w[c] = v[3 * i + c] - v[3 * q + c]; }
+    return { r, v: w, mu: G * (this.mass[q] + this.mass[i]) };
+  }
+
+  /** Foyer de l'ellipse d'une planète au rendu : centre de masse de l'étoile et des planètes intérieures (positions de rendu). */
+  originRender(i) {
+    const rp = this.rPos; let M = this.mass[0]; const o = [this.mass[0] * rp[0], this.mass[0] * rp[1], this.mass[0] * rp[2]];
+    for (const k of this.planetIdx) { if (k >= i) break; M += this.mEff[k]; for (let c = 0; c < 3; c++) o[c] += this.mEff[k] * rp[3 * k + c]; }
+    return [o[0] / M, o[1] / M, o[2] / M];
+  }
+
   particleRender(tr, outPos, outBright) {
     const tau = tr - this.tPart, h2 = 0.5 * tau * tau, n = this.pN;
     for (let i = 0; i < n; i++) {

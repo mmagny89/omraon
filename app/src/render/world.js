@@ -298,19 +298,8 @@ export class World {
       // éléments osculateurs
       if (b.type !== 'star') {
         const p = b.parent;
-        let r = [rp[3 * i] - rp[3 * p], rp[3 * i + 1] - rp[3 * p + 1], rp[3 * i + 2] - rp[3 * p + 2]];
-        let v = [rv[3 * i] - rv[3 * p], rv[3 * i + 1] - rv[3 * p + 1], rv[3 * i + 2] - rv[3 * p + 2]];
-        if (b.type === 'planet' && sim.tier === 1 && sim.mEff[i] !== sim.mass[i]) {
-          // éléments du BARYCENTRE planète + lunes : la planète seule oscille autour de lui au rythme de ses lunes
-          // (Zirkan : ±0,015 UA sur a et ±9° sur ϖ à chaque orbite de Kebet), ce qui faisait « bouger » l'ellipse.
-          o.moonIdx ??= sim.bodies.filter((m) => m.type === 'moon' && m.parent === i).map((m) => m.idx);
-          for (let c = 0; c < 3; c++) {
-            let x = sim.mass[i] * rp[3 * i + c], u = sim.mass[i] * rv[3 * i + c];
-            for (const m of o.moonIdx) { x += sim.mass[m] * rp[3 * m + c]; u += sim.mass[m] * rv[3 * m + c]; }
-            r[c] = x / sim.mEff[i] - rp[c]; v[c] = u / sim.mEff[i] - rv[c];
-          }
-        }
-        const mu = G * ((p === 0 ? sim.mass[0] : sim.mass[p]) + (b.type === 'planet' ? sim.mEff[i] : sim.mass[i]));
+        const es = sim.elementState(i); // état exact du dernier pas, pas l'état extrapolé du rendu
+        const r = es.r, v = es.v, mu = es.mu;
         o.el = stateToElements(mu, r, v);
         // orbite visible si assez grande à l'écran
         const orbR = o.el.a * UNIT * pxPerRad / Math.max(1, this.bodies[p].dist);
@@ -318,7 +307,8 @@ export class World {
         o.line.visible = show;
         if (show) {
           const prel = this.bodies[p].rel;
-          const ox = (rp[3 * p] - fa[0]) * UNIT, oy = (rp[3 * p + 1] - fa[1]) * UNIT, oz = (rp[3 * p + 2] - fa[2]) * UNIT;
+          const org = b.type === 'planet' ? sim.originRender(i) : [rp[3 * p], rp[3 * p + 1], rp[3 * p + 2]];
+          const ox = (org[0] - fa[0]) * UNIT, oy = (org[1] - fa[1]) * UNIT, oz = (org[2] - fa[2]) * UNIT;
           void prel;
           ellipsePoints(o.el, ORBIT_PTS, this.elBuf, 0, 0, 0, UNIT);
           const arr = o.line.geometry.attributes.position.array;
