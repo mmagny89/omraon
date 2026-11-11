@@ -281,3 +281,37 @@ test('voyage : intercepte une destination mobile (arrivée = position prévue)',
   const mid = voyageAt(v, v.tDep + (v.tArr - v.tDep) / 2, dest(v.tDep + (v.tArr - v.tDep) / 2));
   assert.ok(mid.speed > 0 && mid.progress > 0.3 && mid.progress < 0.7);
 });
+
+import { simulateSpread, lightDelayDays } from '../app/src/physics/network.js';
+const netPos = (sim) => { sim.computeRender(0); const ctx = siteCtx(sim); return new Map(SITES.map((s) => [s.id, siteState(ctx, s, 0).pos])); };
+test('réseau : délai lumière = distance × 8,3167 min/UA', () => {
+  assert.ok(Math.abs(lightDelayDays([0, 0, 0], [1, 0, 0]) * 1440 - 8.3167) < 1e-9);
+});
+test('réseau : diffusion directe = lumière + saut ; via le Consortium = détour (jamais plus tôt)', () => {
+  const pos = netPos(make()), base = { sites: SITES, pos, origin: 'nunzir-repaire', horizonDays: 7 };
+  const d = simulateSpread({ ...base, topology: 'direct' }), c = simulateSpread({ ...base, topology: 'controle' });
+  for (const n of d.nodes) { const m = c.nodes.find((x) => x.id === n.id); assert.ok(m.tReceive >= n.tReceive - 1e-12, n.id); }
+  const o = d.nodes.find((n) => n.id === 'nunzir-repaire'); assert.equal(o.tReceive, 0);
+  const far = d.nodes.find((n) => n.id === 'roukir-poste'), near = d.nodes.find((n) => n.id === 'kebet-orbite');
+  assert.ok(far.tReceive > 0 && near.tReceive > 0);
+});
+test('réseau : proportions croissantes, ≤ 1, la répression réduit la portée, le bouche-à-oreille est plus lent', () => {
+  const pos = netPos(make()), base = { sites: SITES, pos, origin: 'sethis-cite-a', horizonDays: 30, topology: 'direct' };
+  const r = simulateSpread(base);
+  for (let i = 1; i < r.curve.length; i++) { assert.ok(r.curve[i].humans >= r.curve[i - 1].humans - 1e-12 && r.curve[i].humans <= 1 + 1e-12); }
+  const slowKill = simulateSpread({ ...base, detectMin: 100000 }), fastKill = simulateSpread({ ...base, detectMin: 1 });
+  assert.ok(fastKill.summary.finalH < slowKill.summary.finalH, `${fastKill.summary.finalH} vs ${slowKill.summary.finalH}`);
+  const bo = simulateSpread({ ...base, mode: 'bouche' });
+  const tmax = (x) => Math.max(...x.nodes.map((n) => n.tReceive));
+  assert.ok(tmax(bo) > tmax(r) * 10, `${tmax(bo)} vs ${tmax(r)}`);
+  assert.ok(Number.isFinite(r.summary.finalH) && r.summary.reached >= 1);
+});
+
+import { horizonDistance, surfaceDrop, horizonDip } from '../app/src/physics/horizon.js';
+test('vue à hauteur d\'yeux : horizon de la Terre ≈ 4,7 km, courbure cohérente', () => {
+  assert.ok(Math.abs(horizonDistance(6371e3, 1.7) / 4650 - 1) < 0.02, `${horizonDistance(6371e3, 1.7)}`);
+  assert.ok(Math.abs(surfaceDrop(6371e3, 4650) - 1.7) < 0.01);
+  const kebet = horizonDistance(0.95 * 6371e3, 1.7), sedbou = horizonDistance(38e3, 1.7);
+  assert.ok(kebet > 4000 && kebet < 5000 && sedbou > 300 && sedbou < 400, `${kebet} ${sedbou}`); // un astéroïde : horizon à 360 m
+  assert.ok(horizonDip(6371e3, 400e3) > 15 && horizonDip(6371e3, 400e3) < 25); // ISS : ~19,7°
+});

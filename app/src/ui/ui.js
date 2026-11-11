@@ -37,6 +37,7 @@ export class UI {
     this.buildEphem();
     this.bindSiteTools();
     this.bindVoyage();
+    this.bindGround();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
@@ -108,6 +109,36 @@ export class UI {
     }, 30);
   }
 
+  // ---------- Vue à hauteur d'yeux ----------
+  bindGround() {
+    $('#ground-btn').addEventListener('click', () => this.enterGround());
+    $('#gh-exit').addEventListener('click', () => this.exitGround());
+    document.querySelectorAll('#ground-hud [data-look]').forEach((b) => b.addEventListener('click', () => this.world.ground?.lookAt(b.dataset.look)));
+    addEventListener('keydown', (e) => { if (e.code === 'Escape' && this.world.ground?.active) this.exitGround(); });
+  }
+
+  enterGround() {
+    const site = this.currentSite(); if (!site || !this.world.enterGround(site)) return;
+    document.body.classList.add('ground'); $('#ground-hud').hidden = false; $('#ground-hud').classList.toggle('porthole', site.type === 'orbit');
+    $('#gh-site').textContent = site.name + (site.type === 'orbit' ? ' — hublot' : ' — à hauteur d\'yeux'); this.ghAcc = 1;
+    $('#ground-hud [data-look="parent"]').hidden = !(site.type !== 'heliocentric' && this.sim.bodies[this.world.siteEls.get(site.id).st.idx]?.type === 'moon');
+    this.ghAcc = 1;
+  }
+
+  exitGround() { this.world.exitGround(); document.body.classList.remove('ground'); $('#ground-hud').hidden = true; }
+
+  updateGround(dt) {
+    this.ghAcc = (this.ghAcc || 0) + dt; if (this.ghAcc < 0.1) return; this.ghAcc = 0;
+    const gi = this.world.groundInfo; if (!gi) return;
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'], az = gi.azimuth;
+    $('#gh-heading').textContent = `CAP ${az.toFixed(0).padStart(3, '0')}° ${dirs[Math.round(az / 45) % 8]}`;
+    const g = this.world.ground, site = g.site, parts = [`Étoile à ${gi.sunDeg.toFixed(0)}°`];
+    if (g.horizon) parts.push(`horizon à ${(g.horizon / 1000).toFixed(g.horizon > 10000 ? 0 : 1)} km`);
+    if (gi.eclipse) parts.push(`éclipse : ${gi.eclipse.by} masque ${(gi.eclipse.fraction * 100).toFixed(0)} %`);
+    parts.push(`champ ${g.fov.toFixed(0)}°`); $('#gh-info').textContent = parts.join(' · ');
+    void site;
+  }
+
   // ---------- Voyage animé du Mai ----------
   bindVoyage() {
     $('#tr-launch').addEventListener('click', () => this.startVoyage());
@@ -166,8 +197,29 @@ export class UI {
   rotParams() { return this.world.bodies.map((o) => ({ phase0: o.phase0, protDays: o.protDays })); }
 
   bindSiteTools() {
-    $('#sky-center').addEventListener('change', () => this.drawSkyNow());
-    $('#sky-fov').addEventListener('change', () => this.drawSkyNow());
+    // vue du ciel interactive : glisser = tourner/incliner, molette ou pincement = champ ; « Libre » prend le relais des centrages
+    this.skyOpt = { center: 'star', fov: 180, az: 0, el: null };
+    $('#sky-center').addEventListener('change', () => { this.skyOpt.center = $('#sky-center').value; this.skyOpt.el = null; this.drawSkyNow(); });
+    $('#sky-fov').addEventListener('change', () => { if ($('#sky-fov').value !== 'custom') this.skyOpt.fov = +$('#sky-fov').value; this.drawSkyNow(); });
+    const cv = $('#sky'), ptrs = new Map(); let pinch = 0;
+    const setFov = (f) => {
+      this.skyOpt.fov = Math.max(20, Math.min(360, f)); const sel = $('#sky-fov'), o = sel.querySelector('option[value="custom"]');
+      o.textContent = `${this.skyOpt.fov.toFixed(0)}°`; o.hidden = false; sel.value = Object.values(sel.options).some((x) => x.value === String(Math.round(this.skyOpt.fov)) && x.value !== 'custom') ? String(Math.round(this.skyOpt.fov)) : 'custom';
+    };
+    const toFree = () => { if (this.skyOpt.center !== 'free') { this.skyOpt.center = 'free'; this.skyOpt.az = this._skyLast?.center ?? 0; $('#sky-center').value = 'free'; } if (this.skyOpt.el == null) this.skyOpt.el = this._skyLast?.elC ?? 0; };
+    cv.style.touchAction = 'none'; cv.style.cursor = 'grab';
+    cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); } });
+    cv.addEventListener('pointermove', (e) => {
+      const p = ptrs.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+      const ppr = this._skyLast?.ppr || 100;
+      if (ptrs.size === 1) { toFree(); this.skyOpt.az -= dx / ppr; this.skyOpt.el = Math.max(-1.4, Math.min(1.4, this.skyOpt.el + dy / ppr)); }
+      else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinch) setFov(this.skyOpt.fov * pinch / d); pinch = d; }
+      this.drawSkyNow();
+    });
+    const up = (e) => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = 0; };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('wheel', (e) => { e.preventDefault(); setFov(this.skyOpt.fov * Math.exp(e.deltaY * 0.001)); this.drawSkyNow(); }, { passive: false });
+    cv.addEventListener('dblclick', () => { this.skyOpt = { center: 'star', fov: 180, az: 0, el: null }; $('#sky-center').value = 'star'; $('#sky-fov').value = '180'; this.drawSkyNow(); });
     $('#scene-box').addEventListener('toggle', () => { if ($('#scene-box').open) this.refreshScene(); });
     $('#scene-copy').addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(this.sceneText || ''); $('#scene-copy').textContent = 'Copié ✓'; } catch { $('#scene-copy').textContent = 'Copie impossible'; }
@@ -181,7 +233,7 @@ export class UI {
     const sky = computeSky(this.sim, site, rec.st), body = site.type === 'heliocentric' ? null : this.sim.bodies[rec.st.idx];
     const P = body?.def.habitat?.pressureBar ?? 0, atm = body?.def.kind === 'gas' ? 'gas' : P >= 0.3 ? 'earth' : P > 0 ? 'thin' : 'none';
     const parentName = body ? (body.type === 'moon' ? this.sim.bodies[body.parent].def.name : body.def.name) : null;
-    drawSky($('#sky'), sky, { center: $('#sky-center').value, fov: +$('#sky-fov').value, atm, surface: site.type === 'surface' || site.type === 'floating', parentName });
+    this._skyLast = drawSky($('#sky'), sky, { center: this.skyOpt.center, centerAz: this.skyOpt.az, elCenter: this.skyOpt.el ?? undefined, fov: this.skyOpt.fov, atm, surface: site.type === 'surface' || site.type === 'floating', parentName });
     const el = sky.sunEl * 180 / Math.PI;
     $('#sky-info').innerHTML = `Étoile à ${el.toFixed(0)}°${sky.eclipse ? ` — <b>éclipse : ${sky.eclipse.by} masque ${(sky.eclipse.fraction * 100).toFixed(0)} % de l'étoile</b>` : ''}`;
   }
@@ -474,6 +526,7 @@ export class UI {
     }
     if (y !== this.lastYear) { this.lastYear = y; const r = $('#chrono-range'); if (r && document.activeElement !== r) { r.value = Math.max(-960, Math.min(60, y)); this.chronoLabel(y); } }
     if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }
+    if (this.world.ground?.active) this.updateGround(dt);
     this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
     if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }
     if (this.selectedSite && this.sceneAcc > 2.5) { this.sceneAcc = 0; this.refreshScene(); }

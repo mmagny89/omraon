@@ -57,5 +57,5 @@ export function computeSky(sim, site, st) {
     if (f > 0 && (!eclipse || f > eclipse.fraction) && o.dist < star.dist) eclipse = { by: o.name, fraction: f, total: f >= 0.999 };
   }
   const horizon = site.type === 'orbit' ? -Math.acos(Math.min(1, ob.radiusKm / (st.radiusKm || ob.radiusKm))) : 0;
-  return { objs, sunEl: star ? star.el : 0, eclipse, horizon, own: ob.def.name, ownColor: ob.def.color };
+  return { objs, sunEl: star ? star.el : 0, eclipse, horizon, own: ob.def.name, ownColor: ob.def.color, frame: { east, north, up } };
 }

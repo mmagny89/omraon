@@ -25,10 +25,11 @@
   <aside id="bodies" aria-label="Corps célestes"><div id="list"></div></aside>
   <aside id="info" aria-label="Fiche du corps sélectionné"><div id="voyage" hidden><h3>Le Mai en route</h3><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
   <div id="site-tools" hidden>
+    <button type="button" id="ground-btn" class="wide-btn">👁 Vue à hauteur d'yeux (horizon)</button>
     <details id="sky-box" open><summary>Ciel vu d'ici</summary>
-      <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option></select></label>
-      <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option></select></label></div>
-      <canvas id="sky" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div>
+      <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option><option value="free">Libre (glisser)</option></select></label>
+      <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option><option value="custom" hidden>—</option></select></label></div>
+      <canvas id="sky" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div><div class="note" style="font-size:11px;color:var(--mute)">Glisser : tourner et incliner · molette ou pincement : champ · double-clic : recentrer sur l'étoile</div>
     </details>
     <details id="scene-box"><summary>Fiche de scène</summary><div id="scene-out"></div><div class="actions"><button type="button" id="scene-copy">Copier le texte</button></div></details>
   </div><details id="transfer" hidden><summary>Trajet vers un autre site</summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><button type="button" id="tr-launch">▶ Lancer le voyage du Mai</button><div id="tr-out"></div></details><div id="info-live"></div></aside>
@@ -70,6 +71,11 @@
     </details>
   </footer>
 
+  <div id="ground-hud" hidden>
+    <div class="gh-top"><b id="gh-site"></b><span id="gh-info"></span></div>
+    <div class="gh-bottom"><span id="gh-heading"></span>
+      <div class="gh-btns"><button type="button" data-look="star">Étoile</button><button type="button" data-look="parent">Planète parente</button><button type="button" data-look="north">Nord</button><button type="button" id="gh-exit">✕ Quitter la vue</button></div></div>
+  </div>
   <div id="loader"><div><b>Système d'Omraon</b><span id="loader-msg">Initialisation…</span></div></div>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
   <script type="module" src="./src/main.js"></script>

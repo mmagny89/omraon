@@ -10,23 +10,26 @@ export class CameraRig {
     this.focusIdx = 0;
     this.focusAbs = [0, 0, 0];
     this.trans = null;
+    this.enabled = true;
     this.ptrs = new Map(); this.moved = 0; this.pinch = 0;
     this.onClick = null;
     dom.addEventListener('pointerdown', (e) => this.down(e));
     dom.addEventListener('pointermove', (e) => this.move(e));
     dom.addEventListener('pointerup', (e) => this.up(e));
     dom.addEventListener('pointercancel', (e) => this.up(e, true));
-    dom.addEventListener('wheel', (e) => { e.preventDefault(); this.zoom(e.deltaY * 0.0011); }, { passive: false });
+    dom.addEventListener('wheel', (e) => { e.preventDefault(); if (this.enabled) this.zoom(e.deltaY * 0.0011); }, { passive: false });
     dom.addEventListener('dblclick', (e) => this.onDouble && this.onDouble(e.clientX, e.clientY));
   }
   zoom(dl) { this.logTarget = Math.max(Math.log(this.minDist), Math.min(Math.log(this.maxDist), this.logTarget + dl)); }
   down(e) {
+    if (!this.enabled) return;
     this.dom.setPointerCapture(e.pointerId);
     this.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
     this.moved = 0;
     if (this.ptrs.size === 2) { const [a, b] = [...this.ptrs.values()]; this.pinch = Math.hypot(a.x - b.x, a.y - b.y); }
   }
   move(e) {
+    if (!this.enabled) return;
     const p = this.ptrs.get(e.pointerId); if (!p) return;
     const dx = e.clientX - p.x, dy = e.clientY - p.y;
     p.x = e.clientX; p.y = e.clientY;
@@ -41,6 +44,7 @@ export class CameraRig {
     }
   }
   up(e, cancel) {
+    if (!this.enabled) { this.ptrs.delete(e.pointerId); return; }
     const was = this.ptrs.has(e.pointerId);
     this.ptrs.delete(e.pointerId);
     if (this.ptrs.size < 2) this.pinch = 0;

@@ -35,8 +35,8 @@ export function drawSky(canvas, sky, opts) {
   const W = cw, H = ch, fov = (opts.fov || 180) * Math.PI / 180, ppr = W / fov;
   const star = sky.objs.find((o) => o.type === 'star');
   const parent = sky.objs.find((o) => o.name === opts.parentName);
-  const center = opts.center === 'north' ? 0 : opts.center === 'parent' && parent ? parent.az : star ? star.az : 0;
-  const elC = opts.surface ? 0.38 : 0; // hauteur au centre de l'image
+  const center = opts.center === 'free' ? opts.centerAz : opts.center === 'north' ? 0 : opts.center === 'parent' && parent ? parent.az : star ? star.az : 0;
+  const elC = opts.elCenter ?? (opts.surface ? 0.38 : 0); // hauteur au centre de l'image
   const X = (az) => W / 2 + wrap(az - center) * ppr, Y = (el) => H / 2 - (el - elC) * ppr;
   const sunDeg = sky.sunEl * 180 / Math.PI;
   const day = opts.atm === 'none' ? 0 : clamp((sunDeg + 6) / 16, 0, 1) * (opts.atm === 'thin' ? 0.55 : 1);
@@ -75,5 +75,6 @@ export function drawSky(canvas, sky, opts) {
   for (const [t, x, y] of labels) if (x < W - 20) g.fillText(t, x, y);
   g.shadowBlur = 0;
   // repères cardinaux
-  if (opts.surface) { g.fillStyle = 'rgba(255,255,255,.55)'; for (const [t, a] of [['N', 0], ['E', Math.PI / 2], ['S', Math.PI], ['O', -Math.PI / 2]]) { const x = X(a); if (x > 6 && x < W - 6) g.fillText(t, x - 3, Math.min(H - 5, hy + 14)); } }
+  if (opts.surface) { g.fillStyle = 'rgba(255,255,255,.55)'; g.shadowBlur = 0; for (const [t, a] of [['N', 0], ['E', Math.PI / 2], ['S', Math.PI], ['O', -Math.PI / 2]]) { const x = X(a); if (x > 6 && x < W - 6) g.fillText(t, x - 3, Math.min(H - 5, hy + 14)); } }
+  return { center, ppr, elC };
 }

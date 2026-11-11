@@ -7,6 +7,7 @@ import { CameraRig } from './cameraRig.js';
 import { SYSTEM_EDGE_AU } from '../data/omraon.js';
 import { siteState } from '../physics/sites.js';
 import { voyageAt } from '../physics/flight.js';
+import { GroundView } from './ground.js';
 
 export const UNIT = AU_KM / 1000; // 1 unité de scène = 1000 km
 const ORBIT_PTS = 257;
@@ -204,6 +205,13 @@ export class World {
     return best;
   }
 
+  // ---------- Vue à la première personne ----------
+  enterGround(site) {
+    const rec = this.siteEls?.get(site.id); if (!rec?.st) return false;
+    this.ground ??= new GroundView(this); this.ground.enter(site, rec.st); this.labelsEl.style.visibility = 'hidden'; return true;
+  }
+  exitGround() { if (this.ground?.active) this.ground.exit(); this.labelsEl.style.visibility = 'visible'; }
+
   // ---------- Vaisseau (voyage animé) ----------
   /** voyage : sortie de planVoyage ; destNow() : position réelle (UA) de la destination, pour recaler l'arrivée. */
   setShip(voyage, destNow, name = 'Le Mai') {
@@ -378,7 +386,8 @@ export class World {
     this.updateSites(tr, fa);
     this.updateShip(fa);
     this.stars.position.copy(cam.position);
-    this.renderer.render(this.scene, cam);
+    if (this.ground?.active) { this.groundInfo = this.ground.update(); this.ground.render(); }
+    else this.renderer.render(this.scene, cam);
     this.updateLabels(fb);
   }
 
