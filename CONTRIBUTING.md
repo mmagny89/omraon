@@ -19,3 +19,9 @@ git config core.hooksPath .githooks # une fois par clone : le même contrôle av
 ```
 
 La demande de fusion vise `develop`. Elle ne passe que si les portes de la CI sont vertes.
+
+## Données et tests
+
+- Les valeurs du système (étoile, orbites, masses, atmosphères) vivent dans `app/src/data/omraon.js`, les sites dans `app/src/data/sites.js`, la chronologie dans `app/src/data/chronologie.js`. Toute valeur que les documents du roman ne fixent pas porte `invented` / `provisional` : voir [`docs/hypotheses.md`](docs/hypotheses.md).
+- `npm test` rejoue les tests de physique (Node seul, sans dépendance). Après un changement de donnée, ils vérifient la stabilité des lunes, la conservation d'énergie et la cohérence avec le canon (populations, habitabilité de Kebet).
+- Ce dépôt n'a pour l'instant que la branche `main`.

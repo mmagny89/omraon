@@ -1,109 +1,75 @@
 # Système d'Omraon — simulation & visualisation
 
-Simulation physique (N-corps) et vue 3D du système décrit dans la *Bible géographique v3* : une étoile, trois
-telluriques (Kalpra, Sethis, Naksun), la ceinture Nunzir, deux géantes (Zirkan, Roushan) et six lunes dont Kebet.
+Simulation physique (N-corps) et vue 3D du système décrit dans la *Bible géographique v3* : l'étoile Omraon, trois telluriques (Kalpra, Sethis, Naksun),
+la ceinture Nunzir, deux géantes (Zirkan, Roushan), huit lunes dont Kebet et la planète-colonie des confins (Shukal), et dix-huit sites habités. Application
+statique : aucun serveur applicatif, aucune ressource externe.
 
 ```sh
 docker compose up -d --wait   # https://localhost (certificat auto-signé de Caddy)
-npm test                       # physique : conservation, stabilité des lunes, bascule d'intégrateur
+npm test                      # 40 tests de physique, de calcul et de cohérence avec le canon
 ```
 
-Stack statique d'agence (Caddy seul, ni PHP ni Node) : le site vit dans `app/`, sans étape de build ; Three.js est
-copié dans `app/vendor/` (importmap), aucune ressource externe. Voir `README.docker.md`.
+Stack statique d'agence (Caddy seul, ni PHP ni Node) : le site vit dans `app/`, sans étape de build ; Three.js est copié dans `app/vendor/` (importmap).
+Détails Docker : [`README.docker.md`](README.docker.md). Journal des versions : [`CHANGELOG.md`](CHANGELOG.md). Contribution : [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Sécurité : [`SECURITY.md`](SECURITY.md). Licence : à choisir (aucun `LICENSE` pour l'instant).
 
-## Physique
-- Gravitation newtonienne N-corps, unités UA / jour / M☉ (constante de Gauss), leapfrog symplectique.
-- Conditions initiales par éléments képlériens ; lunes dans le plan équatorial de leur planète (obliquité réelle).
-- Lunes incluses dans le N-corps tant que la vitesse le permet ; au-delà elles passent « sur rails » (Kepler), planètes toujours en N-corps.
-- Astéroïdes : particules test (perturbées par l'étoile et les planètes, retirées à l'impact), troyens de Zirkan (activés par défaut, décochables).
-- Relativité générale 1PN (précession du périhélie de Kalpra, lisible sur ϖ), résonance spin-orbite 3:2 de Kalpra, rotation synchrone des lunes, aplatissement dû à la rotation.
-- Dérivés : zone habitable (Kopparapu 2013), température d'équilibre, rayon de Hill, limite de stabilité des satellites (Domingos 2006), limite de Roche.
-- Diagnostics en direct : ΔE/E et ΔL/L.
+## Ce que fait l'application
 
-## Données
-Le document ne fixe aucune valeur physique (hors ordre, rôles, noms, « ~35 UA au bord »). Les masses, rayons, orbites et
-l'étoile (F6V, 1,25 M☉) sont des choix de conception dans `src/data/omraon.js`, calés pour que Zirkan soit en zone habitable.
-Les racines égyptiennes (« jamais affichées » dans la bible) sont volontairement absentes de l'interface.
+| Domaine | Contenu |
+|---|---|
+| **Vue du système** | Vue 3D à la vraie échelle (de l'étoile à une lune), orbites osculatrices, ceinture d'astéroïdes et troyens de Zirkan, textures procédurales, caméra libre ou suivant un corps. Vues rapides Système / Intérieur / Kebet. |
+| **Physique** | N-corps gravitationnel, relativité générale 1PN, lunes en N-corps ou sur rails, rotation synchrone, résonance spin-orbite 3:2 de Kalpra, aplatissement, éclipses. Diagnostics ΔE/E et ΔL/L. |
+| **Fiches** | Masse, rayon, gravité, éléments orbitaux en direct, rayon de Hill, limite de Roche, jour sidéral et solaire, année locale, éclairement, température. |
+| **Habitabilité** | Diagnostic par corps (température, eau, atmosphère, gravité, rayonnement, marées, stabilité) avec verdict par mode, et « habitable en permanence ? » sur 5 ans simulés. |
+| **Sites habités** | 18 sites (mines, octroi, garnison, tribunaux, port et cités de Kebet, cités flottantes, postes des confins…) : thermique, blindage, énergie, vie, trajets. |
+| **Trajets et voyage animé** | Hohmann, hyperpropulsion 0,95 c (6 jours de poussée continue au plus), subluminique 0,1 c, fenêtres, délai lumière ; voyage animé du Mai avec repos moteur. |
+| **Ciel et vue à hauteur d'yeux** | Ciel vu d'un site, interactif ; vue à la première personne avec horizon réel, hublot pour les stations, points cardinaux et noms des astres à la demande. |
+| **Fiche de scène** | Lumière, heure du jour, prochain lever ou éclipse, conditions, communications, puis la banque d'images des documents « Quotidien sensoriel ». |
+| **Éphémérides** | Éclipses, levers et couchers, alignements, périhélies sur 30 jours, 1 an ou 5 ans (précision ~1 minute) ; un clic saute à la date. |
+| **Chronologie** | An 0 = présent du roman ; frise de −960 à +60 ans, saut de date avec recalcul N-corps réversible, âge du système. |
+| **Réseau de communication** | Diffusion d'une information (piratage de Jax) selon trois topologies, ordre de coupure du Consortium à la vitesse de la lumière, bouche-à-oreille par vaisseaux. |
+| **Population et dégel** | De l'arche de 10 000 personnes au présent : humains, Tyts, contrôle, désespoir, éveil, révoltes, point de bascule ; populations des sites à la date de la frise. |
+
+### Interface
+- **Panneaux** : ☰ Corps, ⓘ Fiche et ⚙ Options (en-tête) ouvrent et ferment les panneaux (croix dans chacun) ; sur téléphone, un seul à la fois.
+- **Masquer toute l'interface** : bouton 🙈 ou touche **H** ; « 👁 Interface » ou H la ramène.
+- **Frise chronologique** en haut : ères colorées, événements cliquables, curseur de la date simulée ; cliquer ou glisser saute à la date (flèches ±1 an, Maj ±10 ans).
+- **Options masquées par défaut** (⚙, aussi dans la barre du bas) : paramètres et diagnostics, population et dégel, réseau, éphémérides.
+- **Vitesses** : de « temps réel » (1 s/s, par défaut) et « 1 min/s » jusqu'à 1000 ans/s.
+- **Vue à hauteur d'yeux** : souris ou tactile pour tourner, molette ou pincement pour le champ, Échap pour quitter.
+
+## Physique et précision
+
+- Unités UA / jour / M☉ (constante de Gauss). Intégrateur : composition d'ordre 4 (Yoshida) de pas leapfrog symétriques, donc **réversible** : aller à −500 ans puis revenir ramène les planètes à 10⁻⁹ UA près.
+- Planètes en N-corps, lunes en N-corps tant que la vitesse le permet, puis « sur rails » (Kepler) ; astéroïdes en particules test (retirées à l'impact).
+- Précession parasite de Kalpra : 0,014 °/an (leapfrog simple : 3,7 °/an) ; la relativité générale ajoute 0,0003 °/an. Ellipses calculées sur l'état du dernier pas, en coordonnées de Jacobi (stables : a/a de 3·10⁻² à 5·10⁻⁷ pour Zirkan).
+- Éphémérides par exécution d'une copie de la simulation N-corps (pas de formule képlérienne qui dérive).
+- Dérivés : zone habitable (Kopparapu 2013), Hill, Roche, stabilité des satellites (Domingos 2006), chauffage de marée (Peale), dose de rayonnement par analogie avec Jupiter (Galileo), critère de Jeans.
+
+## Données, canon et hypothèses
+
+Le document ne fixe aucune valeur physique hormis l'ordre des corps, leurs rôles, leurs noms, « ~35 UA au bord », les propulsions, les ordres de grandeur de population
+et la chronologie. Tout le reste est une **proposition de conception**, marquée `invented` / `provisional` / « supposé » et listée dans
+[`docs/hypotheses.md`](docs/hypotheses.md) avec le fichier où la changer (`app/src/data/`). Les racines égyptiennes (« jamais affichées » dans la bible) sont absentes de l'interface.
 Hors simulation : monde natal tyt, hangar-musée, Terre.
 
-## Habitabilité
-Chaque fiche contient un diagnostic d'habitabilité humaine (`app/src/physics/habitability.js`) : température
-(équilibre + effet de serre), eau liquide, pression, rétention d'atmosphère (critère de Jeans), gravité, rayonnement
-des ceintures des géantes (analogie Jupiter/Galileo), chauffage de marée (Peale), saisons, stabilité de Hill/Roche,
-durée de vie de l'étoile. Verdict par mode : biosphère de surface, habitat protégé, base/station, cité flottante.
-La fiche d'Omraon donne la synthèse de tous les corps. Les valeurs (orbites, masses, atmosphères, populations) se règlent dans `app/src/data/` ; les suggestions chiffrent ce qui ramène un corps dans la plage. Ce sont des estimations de conception, pas un modèle climatique 3D.
+## Arborescence
 
-## Sites habités
-`app/src/data/sites.js` : 14 sites (mines, octroi, garnison, tribunaux, relais, balise, port et cités de Kebet, cités flottantes,
-postes des confins, repaire de la ceinture). Emplacements et populations sont des propositions (`invented: true`), modifiables
-dans `app/src/data/sites.js`. Les bases au sol suivent la rotation du corps, les stations sont de vraies orbites, les cités flottantes sont au niveau 1 bar.
-Chaque fiche calcule : jour/nuit local, température, chauffage ou climatisation par habitant, blindage (rayons cosmiques + ceintures),
-énergie (solaire ou fission), besoins en air/eau/nourriture, gravité artificielle ou enveloppe d'hydrogène chaud, et les **trajets**
-vers les autres sites (Hohmann par cônes raccordés, fenêtres de lancement, délai lumière, croisière à accélération constante).
-La propulsion (chimique, fusion 0,01 g, torche 0,1 g) est une hypothèse : le document ne la fixe pas.
-Les fiches des corps donnent aussi le jour sidéral, le jour solaire et l'année locale ; la liste regroupe lunes et sites sous leur planète.
+```
+app/
+├── index.html, vendor/three.*       page, Three.js local (importmap)
+└── src/
+    ├── data/       omraon.js (étoile, planètes, lunes), sites.js, chronologie.js, ambiances.js
+    ├── physics/    simulation, kepler, system, sites, habitability, habitat, habscan, transfers, flight,
+    │               sky, scene, ephem, ephemeris, network, population, horizon, derived, constants
+    ├── render/     world, ground (vue au sol), skyView, cameraRig, textures, noise
+    └── ui/ui.js    interface (panneaux, frise, fiches, options)
+tests/physics.test.js               node --test
+docs/hypotheses.md                  canon / propositions de conception
+```
 
-## Canon intégré (documents 00–13)
-Propulsion : subliminique 0,1 c, hyperpropulsion 0,95 c limitée à 6 jours continus (accélération supposée, 8 g par défaut ≈ 35 UA en 6 j) ;
-populations : ~300 000 à 800 000 humains, Haut (Kebet) en dizaines de milliers, Tyts plus nombreux dans les zones de travail ;
-Sethis : atmosphère ténue (vent, poussière) ; voyage des arches : 0,35 c × ~400 ans ≈ 140 années-lumière.
+## Limites connues
 
-## Chronologie et âge du système
-L'An 0 est le présent du roman (`app/src/data/chronologie.js`) ; les éléments orbitaux de `omraon.js` sont ceux de l'An 0.
-Le panneau « Chronologie » saute à n'importe quelle date de −960 à +60 ans (arrivée −560, double basculement −500, Siècles Sombres −300,
-réveils −2, présent) : les planètes sont recalculées en N-corps (leapfrog réversible, retour exact à 1e-9 UA près), la ceinture est regénérée.
-L'âge de l'étoile (3 Gyr, durée de vie ~5,7 Gyr) est affiché et sert à estimer quand Zirkan sortira de la zone habitable.
-Kebet (jour ≈ 1,3 j) est à 4,7 rayons de Zirkan (345 000 km) : rotation synchrone, Zirkan de 24° dans le ciel, éclipses ≈ 7 % de l'orbite,
-champ magnétique de Zirkan supposé très faible (sinon dose mortelle), excentricité ≈ 0 (chauffage de marée).
-
-## Ciel, fiche de scène, éphémérides
-- **Ciel vu d'un site** (`physics/sky.js`, `render/skyView.js`) : azimut/hauteur, diamètres angulaires réels, phases, éclipse en cours (ex. Zirkan à 24° sur Kebet) ; couleur du ciel selon l'atmosphère du lieu.
-- **Fiche de scène** : lumière et heure du jour (aube, crépuscule…), prochain lever/coucher/éclipse, conditions physiques, délais de communication, puis la banque d'images des documents « Quotidien sensoriel » (`data/ambiances.js`, génériques marqués non canon) ; bouton « Copier le texte ».
-- **Éphémérides** (`physics/ephemeris.js`) : une copie de la simulation N-corps tourne sur 30 j / 1 an / 5 ans et détecte éclipses de l'étoile par la planète parente, lever/coucher, alignements, périhélies/aphélies (précision ~1 minute). Un clic saute à la date.
-- **Habitable en permanence ?** (`physics/habscan.js`) : extrêmes de température, flux, excentricité et chauffage de marée de Kebet sur 5 ans simulés.
-- **Vitesses** : de « temps réel » (1 s/s) et « 1 min/s » jusqu'à 1000 ans/s.
-
-## Précision numérique
-Intégrateur : composition d'ordre 4 (Yoshida) de pas leapfrog symétriques, donc réversible. Précession parasite de Kalpra : 0,014°/an
-(leapfrog P/64 : 3,7°/an) ; la relativité générale ajoute ~0,0003°/an. Ellipses calculées sur l'état du dernier pas, en coordonnées de Jacobi.
-
-## Voyage animé du Mai
-Bouton « ▶ Lancer le voyage du Mai » dans le panneau de trajet (propulsions hyper/subluminique) : le vaisseau part du site, vise la position
-PRÉVUE de la destination à l'arrivée (point fixe), accélère puis freine ; si l'accélération + le freinage dépassent 6 jours de poussée continue,
-le moteur est coupé au milieu (repos supposé d'un jour). Panneau : phase, vitesse, distance, poussée continue, délai de message vers l'origine
-et la destination. La caméra peut suivre le vaisseau ; la vitesse de lecture est choisie pour que le trajet dure ~30 s. Profil newtonien
-(vitesses < 0,06 c en système), l'arrivée est recalée sur la position réelle de la destination (`physics/flight.js`).
-
-## Vue à hauteur d'yeux
-Bouton « 👁 Vue à hauteur d'yeux » sur un site : caméra à 1,7 m du sol (ou hublot pour une station), horizon à sa vraie distance (4,5 km sur Kebet,
-360 m sur Sedbou), sol à la vraie courbure du monde, étoile et planètes à leur diamètre angulaire réel avec leurs phases, éclipses, ciel qui suit
-l'étoile et l'atmosphère, lumière de Zirkan sur le sol la nuit. Souris/tactile pour tourner, molette/pincement pour le champ, Échap pour quitter.
-Le panneau « Ciel vu d'ici » est aussi interactif (glisser, molette, double-clic).
-
-## Réseau de communication
-Panneau « Réseau de communication » (`physics/network.js`) : diffusion d'une information (le piratage de Jax) depuis un site, au délai de la lumière +
-routage ; trois topologies (direct, via le Consortium qui filtre ~65 %, réseau pirate chiffré) ; ou bouche-à-oreille par vaisseaux (Dijkstra sur les temps
-de vol). Le Consortium apprend le message, réagit après un délai, et son ordre de coupure voyage à la lumière : chaque site reçoit alors un ralentissement
-de la diffusion locale (répression). Résultats : tableau par site, courbe humains/Tyts, marqueurs 3D qui se colorent au fil du temps.
-Les taux de diffusion, la répression et les graines sont des paramètres de conception (le document ne chiffre rien).
-
-## Interface
-- **Panneaux** : boutons ☰ Corps, ⓘ Fiche et ⚙ Options (en-tête) ouvrent/ferment les panneaux (croix dans chaque panneau) ; sur téléphone un seul panneau à la fois, carte seule au départ.
-- **Masquer toute l'interface** : bouton 🙈 ou touche **H** ; le bouton « 👁 Interface » (ou H) la ramène.
-- **Frise chronologique** en haut de l'écran : ères colorées (voyage hors système hachuré), événements cliquables, curseur de la date simulée ; cliquer ou glisser saute à la date (flèches ±1 an, Maj ±10 ans).
-- **Options masquées par défaut** (⚙, aussi dans la barre du bas) : paramètres et diagnostics, réseau de communication, éphémérides.
-- **Vue à hauteur d'yeux** : points cardinaux (N, NE, E…) sur l'horizon et noms des astres, en cases à cocher ; hublot circulaire pour les stations (le champ choisi s'étend sur le diamètre de la fenêtre). Le ciel vu d'ici affiche aussi les points cardinaux.
-
-## Population et dégel
-Panneau « Population et dégel » (⚙ Options ; `physics/population.js`), relié à la frise : les valeurs affichées sont celles de la date choisie, et les populations
-des sites se mettent à l'échelle du modèle (ex. à l'An −100 : ~15 000 humains au lieu de 30 000 dans la cité-mine principale de Sethis).
-Modèle annuel de l'arrivée (−560) à +100 : humains (arche de 10 000 → ~500 000, soit +0,7 %/an), Tyts (nombre géré vers un ratio visé, ou subi), savoir de contrôle
-qui s'oublie (demi-vie 220 ans dès −300), contrôle effectif = savoir × humains ÷ Tyts, désespoir né du génocide (−500) qui guérit (demi-vie 460 ans), éveil des Tyts,
-révoltes, rapport de force combattants/gardes. Calage par défaut : dégel dès An −175, 7,5 % de Tyts éveillés au présent, ~0,4 révolte par an, point de bascule vers l'An +4.
-« Vérité rapportée » : à l'année choisie, le désespoir chute et l'éveil s'accélère. Les coefficients sont des paramètres de conception (le document donne les ordres de grandeur).
-
-## Confins (Mouvement II)
-Le document situe « la planète en cours de colonisation » aux confins, autour de Roukir, sans la nommer ni fixer sa nature : proposition de conception, **Shukal** (nom provisoire,
-tyt SHU-KAL « la Pierre-du-vide »), petite planète rocheuse (0,06 M⊕, gravité 0,42 g) sur une orbite lointaine de Roushan (9,5 millions de km, deux fois plus loin que Roukir),
-sans atmosphère, 62 K. Deux sites : la **colonie** (fondée à l'An −12, 1 200 humains au présent, population à la date selon la fondation) et la **piste d'arrêt forcé** où le container
-endommagé s'arrête et où Ella découvre Mira. Cités de Roushan → piste : 6,2 h à 8 g (voyage animé).
+- Lunes et astéroïdes ne se perturbent pas entre eux (astéroïdes = particules test) ; pas de modèle climatique 3D (température = équilibre + effet de serre fixé).
+- Éveil et diffusion d'informations : modèles à paramètres de conception, très sensibles aux coefficients.
+- Aucun export (fiches PDF/JSON) pour l'instant.
