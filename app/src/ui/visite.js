@@ -15,7 +15,7 @@ export function etapesVisite(ui) {
   return [
     {
       titre: 'Omraon, l\'étoile', vue: 'inner', etat: { b: 'Omraon', t: 0, az: 0.6, el: 0.9 },
-      texte: () => `Une étoile de type F6V, ${STAR.massMsun} M☉ et ${ui.L.toFixed(1)} fois la luminosité du Soleil. Sa zone habitable (estimation prudente) s'étend de ${ui.hz.conservative[0].toFixed(2)} à ${ui.hz.conservative[1].toFixed(2)} UA : Zirkan, la géante, y est, et Kebet avec elle.`,
+      texte: () => `Une étoile de type G0V, plus vieille que le Soleil (${STAR.ageGyr} Gyr contre 4,6), ${STAR.massMsun} M☉ et ${ui.L.toFixed(1)} fois la luminosité du Soleil. Sa zone habitable (estimation prudente) s'étend de ${ui.hz.conservative[0].toFixed(2)} à ${ui.hz.conservative[1].toFixed(2)} UA : Zirkan, la géante, y est, et Kebet avec elle.`,
     },
     {
       titre: 'Kalpra, la brûlée', etat: { b: 'Kalpra', t: 0, az: 0.6, el: 0.5 },

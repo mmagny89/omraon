@@ -7,12 +7,12 @@
 export const STAR = {
   id: 'omraon',
   name: 'Omraon',
-  massMsun: 1.25, // conception : étoile F6V
-  radiusRsun: 1.25,
-  teff: 6490,
-  rotation: { periodH: 120 }, // conception : étoile de type F, rotation ≈ 5 jours
-  ageGyr: 3.0, // conception : âge de l'étoile (durée de vie sur la séquence principale ≈ 5,7 Gyr)
-  color: '#fff1dc',
+  massMsun: 1.10, // conception : étoile de type G0V, un peu plus massive que le Soleil
+  radiusRsun: 1.10,
+  teff: 5900,
+  rotation: { periodH: 360 }, // conception : étoile âgée, rotation ralentie (≈ 15 jours)
+  ageGyr: 5.8, // CANON (lore) : le système est plus vieux que celui du Soleil (≈ 4,6 Gyr) car l'étoile a abrité une ancienne civilisation ; la valeur 5,8 Gyr est de conception (durée de vie sur la séquence principale ≈ 7,9 Gyr)
+  color: '#ffeccc',
   names: { tyt: "ASHK-KH'RU", tytCourant: 'Ashru', sens: 'la Lumière-sacrée' },
   role: "Astre-père du dogme, fondue avec le dieu unique (Osaon-Omraon). Le nom humain a perdu ashk- (le sacré).",
 };
@@ -92,7 +92,7 @@ export const PLANETS = [
         names: { tyt: 'GEB-NAN-KAHA', tytCourant: 'Gebnan', sens: 'la Terre-maison' },
         role: "Seul monde habité du système : lune vivante (sol, forêts, océans), sanctuaire tyt volé. Cœur du roman.",
         atmosphere: { color: '#6fb4ff', strength: 1.0 },
-        habitat: { pressureBar: 1.1, greenhouseK: 56 }, // conception : atmosphère un peu plus dense et plus riche en gaz à effet de serre que la Terre (Zirkan est en bord de zone habitable)
+        habitat: { pressureBar: 1.1, greenhouseK: 90 }, // conception : atmosphère un peu plus dense et très riche en gaz à effet de serre (Zirkan est au bord extérieur de la zone habitable d'une étoile G0V : sans cela Kebet serait gelée ; +90 K ≈ 288 K au sol, minimum annuel ≥ 278 K)
         clouds: true,
       },
       {

@@ -17,6 +17,6 @@ export const EVENTS = [
   { year: 0, label: 'Présent du roman', note: 'La mission d\'Onkel ; le système est à un point de bascule.' },
 ];
 export const eraAt = (year) => ERAS.find((e) => year >= e.from && year < e.to) || ERAS[ERAS.length - 1];
-// Évolution de la luminosité sur la séquence principale (estimation : +17,5 % par Gyr pour une étoile de 1,25 M☉, plus rapide que le Soleil).
-export const LUMINOSITY_GROWTH_PER_GYR = 0.175;
+// Évolution de la luminosité sur la séquence principale (estimation : +13 % par Gyr pour une étoile de 1,10 M☉, un peu plus rapide que le Soleil, ≈ +10 %).
+export const LUMINOSITY_GROWTH_PER_GYR = 0.13;
 export const systemAgeGyr = (star, year) => (star.ageGyr ?? 3) + year / 1e9;

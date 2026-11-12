@@ -5,6 +5,14 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Modifié
+
+- L'étoile Omraon passe de F6V (1,25 M☉, 3 Gyr) à G0V (1,10 M☉, 5900 K, 5,8 Gyr) : le lore veut un système plus vieux que celui du Soleil, qui a abrité une ancienne civilisation. Zirkan reste dans la zone habitable (bord extérieur) ; l'effet de serre de Kebet passe de +56 K à +90 K pour garder un sol à ≈ 288 K.
+
+### Ajouté
+
+- Jour de Kebet comme unité de temps affichée, anneaux de Roushan et de Zirkan, lumières nocturnes de Kebet, infobulles graphiques, visite guidée, lien partageable, photo et carnet de scènes, comparateur de lieux, fiche de la ceinture Nunzir, statut canon/conception, page de chargement, accessibilité (voir le README).
+
 ## [1.0.0] - 2026-11-11
 
 ### Ajouté

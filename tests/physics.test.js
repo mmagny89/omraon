@@ -187,7 +187,9 @@ test('chronologie : ères, événements et âge du système', () => {
   assert.equal(eraAt(-530).label.startsWith('La cohabitation'), true);
   assert.equal(eraAt(-400).label, 'Les Siècles Sombres');
   assert.ok(EVENTS.some((e) => e.year === -500) && EVENTS.some((e) => e.year === 0));
-  assert.ok(Math.abs(systemAgeGyr(STAR, -500) - (3 - 5e-7)) < 1e-12);
+  assert.ok(Math.abs(systemAgeGyr(STAR, -500) - (STAR.ageGyr - 5e-7)) < 1e-12);
+  assert.ok(STAR.ageGyr > 4.6, 'canon (lore) : le système est plus vieux que celui du Soleil (≈ 4,6 Gyr), il a abrité une ancienne civilisation');
+  assert.ok(10 * STAR.massMsun ** -2.5 - STAR.ageGyr >= 2, 'il reste de la séquence principale : l\'étoile n\'est pas mourante');
 });
 test('Kebet : rotation synchrone, jour ≈ 1,3 j (« journée proche de 1 jour »)', () => {
   const sim = make(); const k = sim.bodies.find((b) => b.def.name === 'Kebet'), z = sim.bodies.find((b) => b.def.name === 'Zirkan');
