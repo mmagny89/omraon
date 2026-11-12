@@ -440,6 +440,17 @@ test('lore : calendrier de 13 mois, personnages et vestiges bien placés, aucune
   assert.ok(!/\b(égypt\w*|Horus|Isis|Osiris|Aton|Atoum|Khépri|Nephthys|Maât|Sopdou|Tefnout)\b/i.test(tout), 'les racines égyptiennes ne s\'affichent jamais');
 });
 
+import { indexer, versFrancais, versTyt } from '../app/src/ui/traducteur.js';
+test('traducteur : mot à mot sur le canon, rien d\'inventé', () => {
+  const idx = indexer(glossaireComplet(GLOSSAIRE, []));
+  assert.equal(versFrancais('shu suna zu', idx).resultat, 'je, moi aimer toi');
+  assert.match(versFrancais('kiran', idx).resultat, /enfant.*\(pluriel\)/); assert.match(versFrancais('Zarruku', idx).resultat, /mémoire.*\(agent\)/);
+  assert.equal(versFrancais('Ashk-nan', idx).resultat, 'lumière-terre'); assert.match(versFrancais('Aset', idx).resultat, /^Celle-qui-soutient/, 'alias courant');
+  assert.equal(versFrancais('xyzzy', idx).resultat, '[xyzzy]', 'inconnu : signalé, jamais deviné');
+  assert.equal(versTyt('mon amour', idx).resultat, 'sunazu'); assert.equal(versTyt("le feu et l'eau", idx).resultat, 'Pyr ka Nunn');
+  assert.equal(versTyt('je dors', idx).resultat, 'shu [dors]'); assert.equal(versTyt('', idx).resultat, '');
+});
+
 import { AMBIANCES_SITES, ambianceFor } from '../app/src/data/ambiances.js';
 test('ambiances : chaque entrée propre à un lieu est complète, non canon, et choisie pour son site', () => {
   const ids = new Set(ST.map((s) => s.id));

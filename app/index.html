@@ -78,6 +78,7 @@
         <button type="button" role="tab" id="lt-gl" aria-controls="lore-gl" aria-selected="true">Glossaire</button>
         <button type="button" role="tab" id="lt-pj" aria-controls="lore-pj" aria-selected="false" tabindex="-1">Personnages</button>
         <button type="button" role="tab" id="lt-vs" aria-controls="lore-vs" aria-selected="false" tabindex="-1">Vestiges</button>
+        <button type="button" role="tab" id="lt-tr" aria-controls="lore-tr" aria-selected="false" tabindex="-1">Traducteur</button>
       </div>
       <div id="lore-gl" role="tabpanel" aria-labelledby="lt-gl">
         <div class="grid"><label class="wide" for="lore-q">Chercher un mot ou un sens</label><input id="lore-q" type="search" class="wide" placeholder="ex. lumière, Kaha, Aset" autocomplete="off"><label class="wide" for="lore-cat">Catégorie</label><select id="lore-cat" class="wide"></select></div>
@@ -87,6 +88,11 @@
       <div id="lore-vs" role="tabpanel" aria-labelledby="lt-vs" hidden>
         <label class="chk"><input type="checkbox" id="lore-iceberg" checked> Montrer les indices d'iceberg</label>
         <ul id="lore-vs-l" class="lore-l"></ul><p class="note">Les Anciens (les Iktu, la Première Race) : le lore veut qu'on ne les explique jamais tout à fait. Un « iceberg » est un indice, pas une réponse.</p>
+      </div>
+      <div id="lore-tr" role="tabpanel" aria-labelledby="lt-tr" hidden>
+        <div class="grid"><label class="wide" for="tr-sens">Sens</label><select id="tr-sens" class="wide"><option value="tf">Tyt → français</option><option value="ft">Français → tyt</option></select><label class="wide" for="tr-in">Texte</label><textarea id="tr-in" class="wide" rows="3" placeholder="ex. shu suna zu" autocomplete="off" spellcheck="false"></textarea></div>
+        <p id="tl-out" class="note tr-out" aria-live="polite"></p><ul id="tr-l" class="lore-l"></ul>
+        <p class="note">Mot à mot, limité au glossaire (canon) : aucun mot, aucune conjugaison ni règle d'ordre n'est inventé. Mot inconnu : [entre crochets]. Les noms propres et les verbes conjugués ne se traduisent pas.</p>
       </div>
     </details>
     <details id="compare">

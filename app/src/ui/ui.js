@@ -26,6 +26,7 @@ import { fusionner, liaison } from './comparaison.js';
 import { PERSONNAGES, VESTIGES } from '../data/lore.js';
 import { GLOSSAIRE } from '../data/glossaire.js';
 import { glossaireComplet, filtrer, auLieu, moisConfederal } from './lore.js';
+import { indexer, versFrancais, versTyt } from './traducteur.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -721,7 +722,15 @@ export class UI {
     rendrePj(); rendreVs();
     $('#lore-iceberg').addEventListener('change', (e) => { this.loreIceberg = e.target.checked; rendreVs(); this.renderInfo(true); });
     $('#lore').addEventListener('click', (e) => { const b = e.target.closest('[data-lieu]'); if (!b) return; const k = b.dataset.lieu, o = k[0] === 'p' ? PERSONNAGES[+k.slice(1)].origine : VESTIGES[+k.slice(1)]; this.allerAuLieu(o); });
-    const tabs = ['gl', 'pj', 'vs'], sel = (t) => { for (const x of tabs) { $('#lt-' + x).setAttribute('aria-selected', x === t); $('#lt-' + x).tabIndex = x === t ? 0 : -1; $('#lore-' + x).hidden = x !== t; } };
+    const idx = indexer(this.glossaire), rendreTr = () => {
+      const t = $('#tr-in').value, ft = $('#tr-sens').value === 'ft', r = ft ? versTyt(t, idx) : versFrancais(t, idx);
+      $('#tl-out').textContent = t.trim() ? r.resultat : '';
+      $('#tr-l').innerHTML = r.lignes.map((l) => ft
+        ? `<li><b>${esc(l.src)}</b><span>${l.tyt ? esc(l.tyt) + ' — ' + esc(l.sens) : 'absent du glossaire'}</span>${l.alt.length ? `<small>autres : ${l.alt.map(esc).join(', ')}</small>` : ''}</li>`
+        : `<li><b>${esc(l.src)}</b><span>${l.trouve ? esc(l.sens) : 'absent du glossaire'}</span></li>`).join('');
+    };
+    $('#tr-in').addEventListener('input', rendreTr); $('#tr-sens').addEventListener('change', rendreTr);
+    const tabs = ['gl', 'pj', 'vs', 'tr'], sel = (t) => { for (const x of tabs) { $('#lt-' + x).setAttribute('aria-selected', x === t); $('#lt-' + x).tabIndex = x === t ? 0 : -1; $('#lore-' + x).hidden = x !== t; } };
     $('#lore-tabs').addEventListener('click', (e) => { const b = e.target.closest('[role=tab]'); if (b) sel(b.id.slice(3)); });
     $('#lore-tabs').addEventListener('keydown', (e) => { const i = tabs.findIndex((x) => $('#lt-' + x).getAttribute('aria-selected') === 'true'); if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; sel(n); $('#lt-' + n).focus(); } });
   }

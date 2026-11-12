@@ -431,6 +431,8 @@ body.ui-hidden #tour { display: none; }
 #lore-pj-l button:hover, #lore-vs-l button:hover, #lore-pj-l button:focus-visible, #lore-vs-l button:focus-visible { background: rgba(255, 191, 107, .1); }
 #lore-tabs { display: flex; gap: 4px; margin: 6px 0; } #lore-tabs button { flex: 1; min-height: 44px; padding: 0 6px; }
 #lore-tabs button[aria-selected="true"] { border-color: var(--accent); background: rgba(255, 191, 107, .14); }
+#tr-in, #tr-sens { width: 100%; min-height: 44px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 8px; }
+.tr-out { color: var(--accent); font-size: 14px; overflow-wrap: anywhere; }
 #lore-q, #lore-cat { width: 100%; min-height: 44px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 8px; }
 .chk { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .pill.iceberg { color: #8fd0ff; border-color: rgba(143, 208, 255, .5); } .pill.ouvert { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
