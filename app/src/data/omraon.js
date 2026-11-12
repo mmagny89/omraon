@@ -75,6 +75,7 @@ export const PLANETS = [
     names: { tyt: 'ZIR-KAAN', tytCourant: 'Zirkaan', sens: 'la Voûte-qui-porte' },
     role: 'Géante-ciel qui porte la lune habitable Kebet. Pas de surface ; seuls les navigateurs la nomment.',
     atmosphere: { color: '#f2d9a8', strength: 0.85, height: 0.07 }, // rendu seulement (halo de la géante)
+    rings: { inner: 1.2, outer: 2.0, color: '#9b8b78', opacity: 0.22, seed: 5 }, // conception, rendu seulement : anneau poussiéreux et ténu, bien à l'intérieur de Kebet (4,7 R) et de la limite de Roche
     habitat: { magnetosphere: 0.0005 }, // conception : champ très faible (Kebet est à 4,7 rayons de Zirkan ; avec un champ jovien la dose serait mortelle)
     moons: [
       {
@@ -111,6 +112,7 @@ export const PLANETS = [
     names: { tyt: 'RUKH-SHU', tytCourant: 'Rukhshu', sens: 'le Grand-Souffle' },
     role: 'Géante externe pâle et froide : cités flottantes, raffineries de gaz, carburant des moteurs. Monde d\'origine d\'Ella.',
     atmosphere: { color: '#e9e2c4', strength: 0.75, height: 0.07 }, // rendu seulement (halo de la géante)
+    rings: { inner: 1.3, outer: 2.3, color: '#ece5cf', opacity: 0.8, gaps: [[1.85, 1.92], [2.12, 2.14]], seed: 9 }, // conception, rendu seulement : anneaux de glace, divisions à l'esprit de Cassini ; Nunka (11 R) est loin au-delà
     habitat: { magnetosphere: 0.03, internalHeat: 1.63 }, // champ de type Saturne ; T(1 bar) ≈ 1,63 × T équilibre comme Saturne
     moons: [
       {

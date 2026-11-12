@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { AU_KM, DEG, TWO_PI, G } from '../physics/constants.js';
 import { stateToElements, ellipsePoints } from '../physics/kepler.js';
 import { poleVector } from '../physics/system.js';
-import { makeBodyTexture, makeCloudTexture, glowTexture } from './textures.js';
+import { makeBodyTexture, makeCloudTexture, makeRingTexture, glowTexture } from './textures.js';
 import { CameraRig } from './cameraRig.js';
 import { SYSTEM_EDGE_AU } from '../data/omraon.js';
 import { siteState } from '../physics/sites.js';
@@ -21,20 +21,55 @@ const frac = (x) => x - Math.floor(x);
  * Éclairage des corps : terminateur adouci (l'éclairage direct déborde un peu sur la face nuit), et, pour une lune,
  * ombre d'éclipse (uShadow : part du disque de l'étoile encore visible) et lumière de la planète sur la face nuit (uShine, uShineDir).
  */
-function lightMods(mat, wrap, moon = false) {
+function lightMods(mat, wrap, moon = false, ring = null) {
   const a = 'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );';
   mat.userData.u = { uShadow: { value: 1 }, uShine: { value: new THREE.Vector3() }, uShineDir: { value: new THREE.Vector3(1, 0, 0) } };
+  if (ring) Object.assign(mat.userData.u, { uRingTex: { value: ring.tex }, uRingIn: { value: ring.inner }, uRingOut: { value: ring.outer }, uRingK: { value: ring.k }, uRingN: { value: new THREE.Vector3(0, 0, 1) }, uC: { value: new THREE.Vector3() }, uSunW: { value: new THREE.Vector3() }, uRingR: { value: 1 } });
   mat.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace('#include <lights_physical_pars_fragment>', THREE.ShaderChunk.lights_physical_pars_fragment.replace(a, `float dotNL = saturate( ( dot( geometryNormal, directLight.direction ) + ${wrap.toFixed(2)} ) / ${(1 + wrap).toFixed(2)} );`));
+    if (ring) {
+      Object.assign(sh.uniforms, mat.userData.u);
+      sh.vertexShader = sh.vertexShader.replace('void main() {', 'varying vec3 vWPos;\nvoid main() {').replace('#include <project_vertex>', '#include <project_vertex>\n  vWPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('void main() {', 'varying vec3 vWPos; uniform sampler2D uRingTex; uniform float uRingIn; uniform float uRingOut; uniform float uRingK; uniform float uRingR; uniform vec3 uRingN; uniform vec3 uC; uniform vec3 uSunW;\nvoid main() {')
+        .replace('#include <lights_fragment_end>', `{ vec3 Ld = normalize( uSunW - vWPos ); float dn = dot( Ld, uRingN );
+          if ( abs( dn ) > 1e-3 ) { float tt = dot( uC - vWPos, uRingN ) / dn;
+            if ( tt > 0.0 ) { vec3 H = vWPos + Ld * tt; float u = ( length( H - uC ) / uRingR - uRingIn ) / ( uRingOut - uRingIn );
+              if ( u > 0.0 && u < 1.0 ) { float sh = 1.0 - texture2D( uRingTex, vec2( u, 0.5 ) ).a * uRingK; reflectedLight.directDiffuse *= sh; reflectedLight.directSpecular *= sh; } } } }
+        #include <lights_fragment_end>`);
+    }
     if (!moon) return;
-    Object.assign(sh.uniforms, mat.userData.u);
+    if (!ring) Object.assign(sh.uniforms, mat.userData.u);
     sh.fragmentShader = sh.fragmentShader.replace('void main() {', 'uniform float uShadow; uniform vec3 uShine; uniform vec3 uShineDir;\nvoid main() {')
       .replace('#include <lights_fragment_end>', `reflectedLight.directDiffuse *= uShadow; reflectedLight.directSpecular *= uShadow;
       { vec3 sd = normalize( ( viewMatrix * vec4( uShineDir, 0.0 ) ).xyz ); reflectedLight.directDiffuse += uShine * max( dot( geometryNormal, sd ), 0.0 ) * diffuseColor.rgb; }
       #include <lights_fragment_end>`);
   };
-  mat.customProgramCacheKey = () => `eclairage-${wrap}-${moon}`;
+  mat.customProgramCacheKey = () => `eclairage-${wrap}-${moon}-${!!ring}`;
 }
+const ringVert = /* glsl */ `
+#include <common>
+#include <logdepthbuf_pars_vertex>
+varying vec3 vWPos; varying vec2 vUv;
+void main(){
+  vUv = uv; vec4 wp = modelMatrix * vec4(position, 1.0); vWPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+  #include <logdepthbuf_vertex>
+}`;
+const ringFrag = /* glsl */ `
+#include <common>
+#include <logdepthbuf_pars_fragment>
+uniform sampler2D uTex; uniform vec3 uSun; uniform vec3 uC; uniform float uR; uniform vec3 uN; uniform float uOpacity;
+varying vec3 vWPos; varying vec2 vUv;
+void main(){
+  #include <logdepthbuf_fragment>
+  vec4 t = texture2D(uTex, vec2(vUv.x, 0.5));
+  vec3 L = normalize(uSun - vWPos);
+  float lit = 0.2 + 0.8 * abs(dot(uN, L)); // l'anneau est translucide : éclairé des deux côtés, plus sombre quand le Soleil rase son plan
+  vec3 oc = vWPos - uC; float b = dot(oc, L); float disc = b * b - (dot(oc, oc) - uR * uR);
+  float sh = (disc > 0.0 && b < 0.0) ? 1.0 - smoothstep(0.0, 0.05 * uR * uR, disc) : 1.0; // ombre de la planète sur l'anneau
+  gl_FragColor = vec4(t.rgb * lit * mix(0.04, 1.0, sh), t.a * uOpacity);
+  #include <colorspace_fragment>
+}`;
 const atmVert = /* glsl */ `
 #include <common>
 #include <logdepthbuf_pars_vertex>
@@ -117,11 +152,13 @@ export class World {
         const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glow, color: new THREE.Color(b.def.color), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
         o.glow = sp; this.scene.add(sp);
       } else {
+        const rg = b.def.rings;
+        o.ringTex = rg ? makeRingTexture(rg, seed) : null;
         const big = b.def.kind === 'gas' || b.def.texture === 'kebet';
         const small = b.type === 'moon' && !big && b.radiusKm < 200;
         const tex = makeBodyTexture(b.def.texture, seed, big ? 1024 : small ? 256 : 512, big ? 512 : small ? 128 : 256, b.def.texture === 'kalpra');
         mat = new THREE.MeshStandardMaterial({ map: tex.map, bumpMap: tex.bump || null, bumpScale: 2.5, roughness: 0.95, metalness: 0, emissiveMap: tex.emissive, emissive: tex.emissive ? 0xffffff : 0x000000, emissiveIntensity: 0.8 });
-        lightMods(mat, b.def.kind === 'gas' ? 0.3 : b.def.atmosphere ? 0.22 : 0.12, b.type === 'moon');
+        lightMods(mat, b.def.kind === 'gas' ? 0.3 : b.def.atmosphere ? 0.22 : 0.12, b.type === 'moon', rg ? { tex: o.ringTex, inner: rg.inner, outer: rg.outer, k: rg.opacity } : null);
         o.lit = mat;
       }
       o.mesh = new THREE.Mesh(this.sphereGeo, mat);
@@ -140,6 +177,16 @@ export class World {
         lightMods(o.clouds.material, 0.22, b.type === 'moon');
         o.litClouds = o.clouds.material;
         o.group.add(o.clouds);
+      }
+      if (b.def.rings) { // anneau : disque dans le plan équatorial, texture radiale, ombres croisées avec la planète
+        const rg = b.def.rings, geo = new THREE.RingGeometry(rg.inner, rg.outer, 192, 1), pos = geo.attributes.position, uv = geo.attributes.uv;
+        for (let q = 0; q < pos.count; q++) uv.setXY(q, (Math.hypot(pos.getX(q), pos.getY(q)) - rg.inner) / (rg.outer - rg.inner), 0.5);
+        o.ring = new THREE.Mesh(geo, new THREE.ShaderMaterial({
+          vertexShader: ringVert, fragmentShader: ringFrag, transparent: true, depthWrite: false, side: THREE.DoubleSide,
+          uniforms: { uTex: { value: o.ringTex }, uSun: { value: new THREE.Vector3() }, uC: { value: new THREE.Vector3() }, uR: { value: 1 }, uN: { value: new THREE.Vector3(0, 0, 1) }, uOpacity: { value: rg.opacity } },
+        }));
+        o.ring.frustumCulled = false;
+        o.group.add(o.ring);
       }
       this.scene.add(o.group);
       // rotation
@@ -380,6 +427,12 @@ export class World {
         o.atm.scale.set(s * o.atmScale, s * o.atmScale, s * o.atmScale * (1 - o.flat));
         o.atm.quaternion.copy(o.qFrame);
         o.atm.material.uniforms.uSun.value.set(starRel[0] - rx, starRel[1] - ry, starRel[2] - rz);
+      }
+      if (o.ring) {
+        o.ring.scale.set(s, s, s); o.ring.quaternion.copy(o.qFrame);
+        const ru = o.ring.material.uniforms, pu = o.lit.userData.u;
+        ru.uN.value.set(0, 0, 1).applyQuaternion(o.qFrame); ru.uC.value.set(rx, ry, rz); ru.uR.value = s; ru.uSun.value.set(starRel[0], starRel[1], starRel[2]);
+        pu.uRingN.value.copy(ru.uN.value); pu.uC.value.copy(ru.uC.value); pu.uSunW.value.copy(ru.uSun.value); pu.uRingR.value = s;
       }
       if (o.clouds) {
         o.clouds.scale.set(s * 1.012, s * 1.012, s * 1.012);
