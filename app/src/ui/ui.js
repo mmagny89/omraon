@@ -65,7 +65,8 @@ export class UI {
     const btn = (parent, cls, html, attrs, onClick) => { const e = mk(parent, 'button', cls, html); Object.assign(e.dataset, attrs); e.addEventListener('click', onClick); return e; };
     const group = () => mk(list, 'div', 'grp');
     const sitesOf = (name) => SITES.filter((x) => x.body === name);
-    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}`, { site: x.id }, () => this.selectSite(x.id));
+    const pop = (n) => (n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
+    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small title="${x.population.toLocaleString('fr-FR')} humains">${pop(x.population)}</small>`, { site: x.id }, () => this.selectSite(x.id));
     const bodyBtn = (parent, b, cls) => {
       const dot = `<span class="dot" style="color:${b.def.color || '#ffe2b0'};background:${b.def.color || '#ffe2b0'}"></span>`;
       return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); });
@@ -75,6 +76,13 @@ export class UI {
       const g = group();
       bodyBtn(g, p);
       const own = sitesOf(p.def.name);
+      const nMoons = bodies.filter((m) => m.type === 'moon' && m.parent === p.idx).length;
+      if (own.length || nMoons) {
+        const folded = this.listFolded?.has(p.def.id);
+        g.classList.toggle('folded', !!folded);
+        const t = mk(g, 'button', 'tgl'); t.type = 'button'; t.setAttribute('aria-label', `Replier ${p.def.name}`); t.setAttribute('aria-expanded', String(!folded));
+        t.addEventListener('click', () => { const f = g.classList.toggle('folded'); t.setAttribute('aria-expanded', String(!f)); (this.listFolded ||= new Set())[f ? 'add' : 'delete'](p.def.id); });
+      }
       if (own.length) { mk(g, 'div', 'sub', 'Villes et stations'); own.forEach((x) => siteBtn(g, x)); }
       const moons = bodies.filter((m) => m.type === 'moon' && m.parent === p.idx);
       if (moons.length) {
@@ -87,7 +95,26 @@ export class UI {
         const bs = sitesOf('Nunzir'); if (bs.length) { mk(gb, 'div', 'sub', 'Sites'); bs.forEach((x) => siteBtn(gb, x)); }
       }
     });
+    list.querySelectorAll('button:not(.tgl)').forEach((e) => { e.dataset.q = e.textContent.toLowerCase(); });
+    this.filterList();
     this.markList();
+  }
+
+  /** Filtre la liste : ne garde que les entrées dont le nom contient la saisie, avec leur planète pour le contexte. */
+  filterList() {
+    const q = ($('#list-q')?.value || '').trim().toLowerCase(), list = $('#list');
+    list.classList.toggle('searching', !!q);
+    let any = false;
+    list.querySelectorAll('.grp').forEach((g) => {
+      const btns = [...g.querySelectorAll('button:not(.tgl)')], hit = btns.filter((b) => !q || b.dataset.q.includes(q));
+      g.hidden = !!q && !hit.length;
+      btns.forEach((b) => { b.hidden = !!q && !hit.includes(b) && !b.matches('.planet, .star'); });
+      g.querySelectorAll('.sub').forEach((x) => { x.hidden = !!q; });
+      if (hit.length) any = true;
+    });
+    let none = $('#list-none');
+    if (!none) { none = document.createElement('p'); none.id = 'list-none'; none.className = 'note'; none.textContent = 'Aucun résultat.'; list.after(none); }
+    none.hidden = any || !q;
   }
 
   // ---------- Chronologie ----------
@@ -514,6 +541,7 @@ export class UI {
     $('#play').addEventListener('click', () => { this.playing = !this.playing; $('#play').textContent = this.playing ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', this.playing ? 'Pause' : 'Lecture'); });
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
+    $('#list-q').addEventListener('input', () => this.filterList());
     $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
     const tog = (id, fn) => $(id).addEventListener('change', (e) => fn(e.target.checked));
     tog('#t-orbits', (v) => (w.opts.orbits = v)); tog('#t-labels', (v) => (w.opts.labels = v));

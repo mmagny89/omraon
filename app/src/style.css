@@ -275,3 +275,18 @@ body.ground #bar { z-index: 6; position: fixed; }
 #info details.sec[open] { padding-bottom: 8px; }
 #info .divider { margin: 14px 0 6px; padding-top: 10px; border-top: 2px solid var(--line); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
 @media (prefers-reduced-motion: reduce) { #info details.sec > summary::after { transition: none; } }
+
+/* Liste des corps : recherche, repli par planète, population des sites */
+#list-q { position: sticky; top: 0; z-index: 1; width: calc(100% - 28px); margin: 0 0 8px; min-height: 40px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .95); border: 1px solid var(--line); border-radius: 8px; }
+#list-q::placeholder { color: var(--mute); }
+#list .grp { position: relative; }
+#list button.tgl { position: absolute; top: 0; right: 0; width: 36px; min-height: 36px; padding: 0; justify-content: center; }
+#list button.tgl::before { content: ""; width: 7px; height: 7px; border: solid var(--mute); border-width: 0 2px 2px 0; transform: rotate(45deg) translateY(-2px); transition: transform .15s; }
+#list .grp.folded button.tgl::before { transform: rotate(-45deg); }
+#list:not(.searching) .grp.folded > :not(button.planet):not(button.tgl) { display: none; }
+#list .grp > button.planet { padding-right: 40px; }
+#list [hidden], #list-none[hidden] { display: none !important; }
+#list-none { padding: 6px 8px; }
+@media (max-width: 860px) { #list button.tgl { width: 44px; min-height: 44px; } #list-q { min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { #list button.tgl::before { transition: none; } }
+#list small { flex: none; white-space: nowrap; }
