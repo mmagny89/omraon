@@ -59,6 +59,14 @@
   </footer>
   <section id="options" aria-label="Options"><button type="button" class="panel-x" data-close="options" aria-label="Fermer les options">×</button><h2>Options</h2>
     <div id="quick"><button type="button" id="btn-tour2">🧭 Visite</button><button type="button" id="btn-link2">🔗 Lien</button><button type="button" id="btn-photo2">📷 Photo</button></div>
+    <details id="compare">
+      <summary>Comparer deux lieux</summary>
+      <div class="grid">
+        <label for="cmp-a">Lieu A</label><select id="cmp-a" class="wide"></select>
+        <label for="cmp-b">Lieu B</label><select id="cmp-b" class="wide"></select>
+      </div>
+      <div id="cmp-out"></div>
+    </details>
     <details id="carnet">
       <summary>Carnet de scènes &amp; photo</summary>
       <div class="grid">

@@ -22,6 +22,7 @@ import { encoderEtat, decoderEtat } from './lien.js';
 import { etapesVisite } from './visite.js';
 import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug } from './carnet.js';
 import { STATUTS, statutSection } from './statut.js';
+import { fusionner, liaison } from './comparaison.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -553,6 +554,7 @@ export class UI {
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
     this.bindLink();
+    this.buildCompare();
     this.bindCarnet();
     for (const a of document.querySelectorAll('a.skip')) a.addEventListener('click', (e) => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.focus(); }); // liens d'évitement sans toucher à l'adresse (#t=…)
     this.bindTour();
@@ -674,6 +676,27 @@ export class UI {
       rows += row(`Jour vu depuis ${p.def.name}`, 'infini : ' + p.def.name + ' est fixe dans le ciel');
     }
     return rows;
+  }
+
+  // ---------- Comparateur de lieux ----------
+  buildCompare() {
+    const opts = SITES.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}${x.body && x.body !== 'Nunzir' ? ' (' + esc(x.body) + ')' : ''}</option>`).join('');
+    $('#cmp-a').innerHTML = opts; $('#cmp-b').innerHTML = opts;
+    $('#cmp-a').value = 'kebet-quartiers'; $('#cmp-b').value = 'sethis-cite-a';
+    for (const id of ['#cmp-a', '#cmp-b']) $(id).addEventListener('change', () => this.renderCompare());
+    $('#compare').addEventListener('toggle', () => { if ($('#compare').open) this.renderCompare(); });
+  }
+  renderCompare() {
+    const out = $('#cmp-out'), w = this.world, ids = [$('#cmp-a').value, $('#cmp-b').value], sites = ids.map((id) => SITES.find((x) => x.id === id));
+    const recs = ids.map((id) => w.siteEls?.get(id)?.st); if (!recs[0] || !recs[1]) { out.textContent = 'Positions non disponibles.'; return; }
+    const ctx = { sim: this.sim, el: (i) => w.bodies[i].el };
+    const rep = recs.map((st, k) => siteReport(ctx, sites[k], st, this.target));
+    const nf = (n) => n.toLocaleString('fr-FR'), L = liaison(recs[0].pos, recs[1].pos);
+    const haut = [{ title: 'Population', rows: [['Humains', nf(sites[0].population)], ['Tyts', nf(sites[0].tyts || 0)]] }], hb = [{ title: 'Population', rows: [['Humains', nf(sites[1].population)], ['Tyts', nf(sites[1].tyts || 0)]] }];
+    const tab = fusionner([...haut, ...rep[0].sections], [...hb, ...rep[1].sections]);
+    const lien = `<h3>Entre les deux (à cet instant)</h3><dl>${row('Distance', `${f(L.km / 1e6, 1)} M km`)}${row('Message à la lumière', fmtSecondes(L.lumiereS))}${row('Trajet en hyperpropulsion (8 g, hypothèse)', fmtSecondes(L.volS))}</dl>`;
+    out.innerHTML = `<table class="cmp"><caption class="sr-only">Comparaison de ${esc(sites[0].name)} et ${esc(sites[1].name)}</caption><thead><tr><td></td><th scope="col">${esc(sites[0].name)}</th><th scope="col">${esc(sites[1].name)}</th></tr></thead>`
+      + tab.map((s) => `<tbody><tr class="cmp-h"><th colspan="3" scope="colgroup">${esc(s.titre)}</th></tr>${s.lignes.map(([k, a, b, d]) => `<tr${d ? ' class="diff"' : ''}><th scope="row">${esc(k)}</th><td>${a}</td><td>${b}</td></tr>`).join('')}</tbody>`).join('') + `</table>${lien}`;
   }
 
   // ---------- Photo et carnet de scènes ----------
@@ -925,6 +948,7 @@ export class UI {
     if (this.world.ground?.active) this.updateGround(dt);
     this.netAcc = (this.netAcc || 0) + dt; if (this.net && this.netAcc > 0.2) { this.netAcc = 0; this.updateNetMarkers(); }
     const pb = $('#play'), ptxt = this.playing ? '❚❚' : '▶', plab = this.playing ? 'Pause' : 'Lecture'; if (pb.textContent !== ptxt || pb.getAttribute('aria-label') !== plab) { pb.textContent = ptxt; pb.setAttribute('aria-label', plab); } // le bouton reflète toujours l'état réel
+    this.cmpAcc = (this.cmpAcc || 0) + dt; if (this.cmpAcc > 1 && $('#compare').open) { this.cmpAcc = 0; this.renderCompare(); }
     this.hashAcc = (this.hashAcc || 0) + dt; if (this.hashAcc > 1 && !this.calculating) { this.hashAcc = 0; this.syncHash(); }
     this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
     if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }

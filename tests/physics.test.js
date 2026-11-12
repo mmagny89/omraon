@@ -384,3 +384,16 @@ test('carnet de scènes : stockage tolérant, export Markdown, noms de fichier s
   const md = versMarkdown([s], 'https://x/'); assert.match(md, /## Éclipse/); assert.match(md, /Vue : https:\/\/x\/#t=0\.47&b=Kebet/); assert.match(md, />\s*ligne 1\n>\n> ligne 2/);
   assert.equal(slug('Cité-mine de Sethis — An −5 · jour 3'), 'cite-mine-de-sethis-an-5-jour-3');
 });
+
+import { fusionner, liaison } from '../app/src/ui/comparaison.js';
+test('comparateur : fusion de deux rapports et liaison entre deux sites', () => {
+  const A = [{ title: 'Environnement', rows: [['Gravité', '0,93 g'], ['Soleil', 'jour']] }], B = [{ title: 'Environnement', rows: [['Gravité', '0,99 g'], ['Soleil', 'jour'], ['Pression', '0,05 bar']] }, { title: 'Énergie', rows: [['Solaire', '1 kW']] }];
+  const m = fusionner(A, B);
+  assert.deepEqual(m.map((s) => s.titre), ['Environnement', 'Énergie']);
+  assert.deepEqual(m[0].lignes, [['Gravité', '0,93 g', '0,99 g', true], ['Soleil', 'jour', 'jour', false], ['Pression', '—', '0,05 bar', true]]);
+  assert.deepEqual(m[1].lignes, [['Solaire', '—', '1 kW', true]]);
+  assert.deepEqual(fusionner(), []);
+  const L = liaison([0, 0, 0], [1, 0, 0]); // 1 UA
+  assert.ok(Math.abs(L.lumiereS - 499) < 1 && L.km > 1.49e8 && L.km < 1.50e8, `lumière ${L.lumiereS}`);
+  assert.ok(L.volS > 0 && L.volS < 86400 * 6, `1 UA en hyperpropulsion : ${L.volS} s`);
+});

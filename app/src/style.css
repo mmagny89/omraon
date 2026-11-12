@@ -365,3 +365,16 @@ body.ui-hidden #tour { display: none; }
 .pill.conception { color: var(--accent); border-color: rgba(255, 191, 107, .5); }
 .pill.provisoire { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
 #info details.sec > summary[data-tip] { cursor: help; }
+
+/* Comparateur de lieux */
+#cmp-out { overflow-x: auto; }
+#cmp-out table.cmp { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+#cmp-out th, #cmp-out td { padding: 4px 6px; text-align: left; vertical-align: top; border-top: 1px solid var(--line); }
+#cmp-out thead th { color: var(--accent); border-top: 0; }
+#cmp-out tr.cmp-h th { padding-top: 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--mute); }
+#cmp-out tbody th[scope=row] { font-weight: 400; color: var(--mute); width: 34%; }
+#cmp-out tr.diff td { color: #fff; }
+#cmp-out tr:not(.diff):not(.cmp-h) td { color: var(--mute); }
+#cmp-out h3 { margin: 12px 0 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+#cmp-out dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; margin: 0; } #cmp-out dt { color: var(--mute); } #cmp-out dd { margin: 0; text-align: right; }
+#compare select { width: 100%; min-height: 44px; }
