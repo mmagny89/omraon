@@ -29,16 +29,22 @@ export function decouperDate(t) {
   return { an, jour, h: Math.floor(fr * HEURES_PAR_JOUR), min: Math.floor((fr * 1440) % 60), s: Math.floor((fr * 86400) % 60) };
 }
 
-/** Durée en jours terrestres → texte : minutes, heures ou jours de Kebet, puis années (365,25 j terrestres) au-delà de 400 j. */
-export function fmtDuree(d, { minutes = false } = {}) {
-  const k = d / jourK;
-  if (minutes && k < 1 / HEURES_PAR_JOUR) return `${(k * 1440).toFixed(0)} min`;
-  if (k < 2) return `${(k * HEURES_PAR_JOUR).toFixed(1)} h`;
-  return d < 400 ? `${k.toFixed(2)} j` : `${(d / DAYS_PER_YEAR).toFixed(2)} ans`;
+/** Durée en jours terrestres → équivalent terrestre en min / h / j (pour la parenthèse « Terre »). */
+export function fmtTerre(d) {
+  return d < 1 / HEURES_PAR_JOUR ? `${(d * 1440).toFixed(0)} min` : d < 2 ? `${(d * HEURES_PAR_JOUR).toFixed(1)} h` : `${d.toFixed(2)} j`;
 }
 
-/** Durée en secondes SI → texte (min / h / j de Kebet). */
+/** Durée en jours terrestres → minutes, heures ou jours de Kebet, suivis de l'équivalent terrestre entre parenthèses ; années (365,25 j terrestres) au-delà de 400 j. */
+export function fmtDuree(d, { minutes = false } = {}) {
+  const k = d / jourK;
+  if (d >= 400) return `${(d / DAYS_PER_YEAR).toFixed(2)} ans`;
+  const base = minutes && k < 1 / HEURES_PAR_JOUR ? `${(k * 1440).toFixed(0)} min` : k < 2 ? `${(k * HEURES_PAR_JOUR).toFixed(1)} h` : `${k.toFixed(2)} j`;
+  return `${base} (${fmtTerre(d)} Terre)`;
+}
+
+/** Durée en secondes SI → texte (min / h / j de Kebet) avec l'équivalent terrestre entre parenthèses. */
 export function fmtSecondes(s) {
   const k = enSecondesKebet(s);
-  return k < 7200 ? `${(k / 60).toFixed(0)} min` : k < 172800 ? `${(k / 3600).toFixed(1)} h` : `${(k / 86400).toFixed(2)} j`;
+  const base = k < 7200 ? `${(k / 60).toFixed(0)} min` : k < 172800 ? `${(k / 3600).toFixed(1)} h` : `${(k / 86400).toFixed(2)} j`;
+  return `${base} (${fmtTerre(s / 86400)} Terre)`;
 }

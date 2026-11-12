@@ -18,7 +18,7 @@ import { planVoyage } from '../physics/flight.js';
 import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
-import { jourKebet, decouperDate, fmtDuree, fmtSecondes, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
+import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
 // Vitesses : jour, heure, minute et seconde sont ceux de Kebet (facteur en jours de Kebet) ; mois et années restent terrestres (flag T).
 const SPEEDS_BASE = [
@@ -26,7 +26,10 @@ const SPEEDS_BASE = [
   [DAYS_PER_YEAR, '1 an/s', true], [DAYS_PER_YEAR * 10, '10 ans/s', true], [DAYS_PER_YEAR * 100, '100 ans/s', true], [DAYS_PER_YEAR * 1000, '1000 ans/s', true],
 ];
 const SPEEDS = SPEEDS_BASE.map(([b, l]) => [b, l]); // [jours terrestres par seconde réelle, libellé] — recalé sur Kebet par recalerVitesses()
-const recalerVitesses = () => SPEEDS_BASE.forEach(([b, , T], i) => { SPEEDS[i][0] = T ? b : b * jourKebet(); });
+const recalerVitesses = () => SPEEDS_BASE.forEach(([b, l, T], i) => {
+  SPEEDS[i][0] = T ? b : b * jourKebet();
+  SPEEDS[i][1] = /j\/s$/.test(l) ? `${l} (${fmtTerre(SPEEDS[i][0])} Terre/s)` : l;
+});
 const $ = (s) => document.querySelector(s);
 const mixHex = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`; };
 const f = (x, d = 3) => (d === 0 ? Math.round(x).toLocaleString('fr-FR') : Math.abs(x) >= 1e5 || (Math.abs(x) < 1e-2 && x !== 0) ? x.toExponential(2) : x.toFixed(d));
@@ -37,7 +40,7 @@ export class UI {
   constructor(sim, world) {
     this.sim = sim; this.world = world;
     recalerVitesses();
-    document.querySelectorAll('option[data-jk]').forEach((o) => { o.value = String(+o.dataset.jk * jourKebet()); }); // horizons en jours de Kebet
+    document.querySelectorAll('option[data-jk]').forEach((o) => { o.value = String(+o.dataset.jk * jourKebet()); o.textContent = `${o.dataset.jk} jour${+o.dataset.jk > 1 ? "s" : ""} (${fmtTerre(+o.value)} Terre)`; }); // horizons en jours de Kebet
     this.playing = true; this.speedIdx = 0; this.target = 0; this.selected = 0; this.selectedSite = null;
     this.hz = habitableZone(sim.bodies[0].def);
     this.L = starLuminosity(sim.bodies[0].def);
@@ -327,14 +330,14 @@ export class UI {
     const o = this.world.siteEls.get(vy.site.id)?.st?.pos, de = this.world.siteEls.get(vy.dest.id)?.st?.pos, dist = (a, b) => Math.hypot(...[0, 1, 2].map((k) => a[k] - b[k])) * 8.3167;
     const dur = fmtSecondes;
     const maxB = (vy.prop.maxDays || 6) * 86400, burnPct = Math.min(100, st.burn / maxB * 100);
-    const min = (m) => { m = enSecondesKebet(m * 60) / 60; return m < 1 ? `${(m * 60).toFixed(0)} s` : m < 120 ? `${m.toFixed(1)} min` : `${(m / 60).toFixed(1)} h`; };
+    const min = (mt) => { const m = enSecondesKebet(mt * 60) / 60; return (m < 1 ? `${(m * 60).toFixed(0)} s` : m < 120 ? `${m.toFixed(1)} min` : `${(m / 60).toFixed(1)} h`) + ` (${fmtTerre(mt / 1440)} Terre)`; };
     $('#voy-body').innerHTML = `<p><b>${vy.site.name}</b> → <b>${vy.dest.name}</b></p><div class="bar"><i style="width:${(st.progress * 100).toFixed(1)}%"></i></div><dl>` +
       row('Phase', phases[st.phase] || st.phase, st.phase === 'rest' ? 'warn' : '') + row('Écoulé / total', `${dur(st.elapsed)} / ${dur(v.plan.total)}`) +
       row('Vitesse', `${(st.speed / 1000).toFixed(0)} km/s (${(st.speed / 299792458 * 100).toFixed(2)} % de c)`) + row('Accélération', `${vy.accG} g`) +
       row('Distance restante', `${((1 - st.progress) * d / 1e6).toFixed(1)} M km`) +
       row('Poussée continue', `${dur(st.burn)} / ${dur(maxB)} max`, burnPct > 85 ? 'warn' : '') +
       (o ? row('Délai de message → ' + vy.site.name, min(dist(sh.pos, o))) : '') + (de ? row('Délai de message → ' + vy.dest.name, min(dist(sh.pos, de))) : '') + '</dl>' +
-      (v.plan.hasRest ? `<p class="note">Plus de ${dur(maxB)} de poussée (6 jours terrestres, canon) : le moteur est coupé au milieu du trajet (repos supposé de ${dur(86400)}) pour éviter la surchauffe.</p>` : '');
+      (v.plan.hasRest ? `<p class="note">Plus de ${dur(maxB)} de poussée : le moteur est coupé au milieu du trajet (repos supposé de ${dur(86400)}) pour éviter la surchauffe.</p>` : '');
   }
 
   // ---------- Ciel, fiche de scène, éphémérides ----------
@@ -603,7 +606,7 @@ export class UI {
 
   // Durée du jour : sidéral (rotation propre) et solaire (d'un lever de l'étoile au suivant).
   dayRows(o, b) {
-    const hours = (d) => { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j (${f(k * HEURES_PAR_JOUR, 0)} h)`; };
+    const hours = (d) => { const k = d / jourKebet(); return (k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j (${f(k * HEURES_PAR_JOUR, 0)} h)`) + ` (${fmtTerre(d)} Terre)`; };
     const sid = b.type === 'moon' ? o.el?.period : o.protDays;
     if (!sid) return '';
     let year = null, rows = '';
