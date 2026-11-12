@@ -78,7 +78,7 @@ export class UI {
     const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small>${pop(x.population)}</small>`, { site: x.id, tip: popTip(x) }, () => this.selectSite(x.id));
     const bodyBtn = (parent, b, cls) => {
       const dot = `<span class="dot" style="color:${b.def.color || '#ffe2b0'};background:${b.def.color || '#ffe2b0'}"></span>`;
-      return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); });
+      return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); this.announce(`${b.def.name} sélectionné`); });
     };
     bodyBtn(group(), bodies[0]);
     bodies.filter((b) => b.type === 'planet').forEach((p) => {
@@ -170,14 +170,14 @@ export class UI {
   goTo(year) { this.friseLabel(year); this._friseYear = year; this.popAtDate(year); this.popCursor(year); this.goToTime(year * DAYS_PER_YEAR); }
 
   /** Saute à la date t (jours depuis l'An 0). */
-  goToTime(t) {
+  goToTime(t, silencieux = false) {
     this.cancelVoyage();
     this.calculating = true; $('#date').textContent = 'Calcul des positions…';
     setTimeout(() => {
       this.sim.jumpTo(t);
       this.target = this.sim.t;
       this.sim.computeRender(this.target);
-      this.calculating = false;
+      this.calculating = false; if (!silencieux) this.announce(`Date : ${this.fmtT(this.sim.t)}`);
     }, 30);
   }
 
@@ -473,7 +473,7 @@ export class UI {
 
   selectSite(id) {
     const site = SITES.find((x) => x.id === id), w = this.world;
-    this.selectedSite = id;
+    this.selectedSite = id; this.announce(`${site.name} sélectionné`);
     if (site.type === 'heliocentric') { this.selected = 0; w.focusOn(0, 3 * UNIT); } else { this.selected = w.bodies.find((o) => o.name === site.body).idx; w.focusOn(this.selected); }
     this.markList(); this.buildTransfer(); this.renderInfo();
     $('#site-tools').hidden = false; this.skyAcc = 1; this.sceneAcc = 9;
@@ -547,10 +547,11 @@ export class UI {
 
   bind() {
     const w = this.world, sim = this.sim;
-    $('#play').addEventListener('click', () => { this.playing = !this.playing; $('#play').textContent = this.playing ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', this.playing ? 'Pause' : 'Lecture'); });
+    $('#play').addEventListener('click', () => { this.playing = !this.playing; this.announce(this.playing ? 'Lecture' : 'Pause'); $('#play').textContent = this.playing ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', this.playing ? 'Pause' : 'Lecture'); });
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
     this.bindLink();
+    for (const a of document.querySelectorAll('a.skip')) a.addEventListener('click', (e) => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.focus(); }); // liens d'évitement sans toucher à l'adresse (#t=…)
     this.bindTour();
     $('#info-live').addEventListener('click', (e) => { const t = e.target.closest?.('.evts button[data-t]'); if (t) this.goToTime(+t.dataset.t); });
     $('#list-q').addEventListener('input', () => this.filterList());
@@ -671,10 +672,16 @@ export class UI {
     return rows;
   }
 
+  /** Annonce un changement d'état aux lecteurs d'écran (zone `role=status`, hors écran). */
+  announce(msg) {
+    const el = $('#sr-status'); if (!el) return;
+    el.textContent = ''; clearTimeout(this._ann); this._ann = setTimeout(() => { el.textContent = msg; }, 60);
+  }
+
   // ---------- Visite guidée ----------
   startTour() {
     if (this.touring) return;
-    this.touring = true; this.tourSteps = etapesVisite(this); this.tourSaved = this.etatCourant();
+    this.touring = true; this.tourSteps = etapesVisite(this); this.tourSaved = this.etatCourant(); this.tourOpener = document.activeElement;
     const cl = document.body.classList; this.tourHadLeft = cl.contains('hide-left'); cl.add('hide-left', 'touring');
     document.body.classList.remove('options-open'); // le panneau Options ne doit pas recouvrir la visite
     $('#tour').hidden = false; this.tourGo(0);
@@ -689,12 +696,14 @@ export class UI {
       + `<div class="t-dots">${dots}</div><div class="t-act"><button type="button" data-tour="prev"${this.tourIdx === 0 ? ' disabled' : ''}>◀ Précédent</button>`
       + `<button type="button" data-tour="${this.tourIdx === n - 1 ? 'end' : 'next'}" class="main">${this.tourIdx === n - 1 ? 'Terminer' : 'Suivant ▶'}</button><button type="button" data-tour="end" class="quit" aria-label="Quitter la visite">✕</button></div>`;
     $('#tour').querySelector('.main').focus({ preventScroll: true });
+    this.announce(`Étape ${this.tourIdx + 1} sur ${n} : ${s.titre}`);
   }
   endTour() {
     if (!this.touring) return;
     this.touring = false; $('#tour').hidden = true;
     const cl = document.body.classList; cl.remove('touring'); if (!this.tourHadLeft) cl.remove('hide-left');
     this.restoreState(this.tourSaved); // retour à la vue d'avant la visite
+    this.tourOpener?.focus?.({ preventScroll: true }); this.announce('Visite terminée');
   }
   bindTour() {
     for (const b of document.querySelectorAll('#btn-tour, #btn-tour2')) b.addEventListener('click', () => (this.touring ? this.endTour() : this.startTour()));
@@ -719,7 +728,7 @@ export class UI {
   restoreState(e) {
     const w = this.world, rig = w.rig;
     if (e.v != null && SPEEDS[e.v]) { this.speedIdx = e.v; $('#speed').value = e.v; $('#speed-out').textContent = SPEEDS[e.v][1]; }
-    if (e.t != null) this.goToTime(e.t);
+    if (e.t != null) this.goToTime(e.t, true);
     if (e.s && SITES.some((x) => x.id === e.s)) this.selectSite(e.s);
     else if (e.b) { const o = w.bodies.find((x) => x.name === e.b); if (o) this.select(o.idx, true); }
     if (e.az != null) rig.az = e.az;
@@ -739,7 +748,7 @@ export class UI {
       let ok = false;
       try { await Promise.race([navigator.clipboard.writeText(location.href), new Promise((_, no) => setTimeout(no, 900))]); ok = true; } catch { /* repli ci-dessous */ }
       if (!ok) { const a = document.createElement('textarea'); a.value = location.href; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch { /* sans effet */ } a.remove(); }
-      const msg = ok ? 'Copié' : 'Adresse'; b.setAttribute('aria-live', 'polite');
+      const msg = ok ? 'Copié' : 'Adresse'; this.announce(ok ? 'Lien copié dans le presse-papiers' : 'Copie impossible : l\'adresse est dans la barre du navigateur');
       if (t) { t.textContent = msg; setTimeout(() => { t.textContent = 'Lien'; }, 1600); } else { b.textContent = '✓ ' + msg; setTimeout(() => { b.textContent = orig; }, 1600); }
     });
     window.addEventListener('hashchange', () => { if (location.hash !== this._hash) { this._hash = location.hash; this.restoreState(decoderEtat(location.hash)); } });

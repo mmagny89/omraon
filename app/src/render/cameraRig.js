@@ -13,12 +13,24 @@ export class CameraRig {
     this.enabled = true;
     this.ptrs = new Map(); this.moved = 0; this.pinch = 0;
     this.onClick = null;
+    this.reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches; // transitions de caméra instantanées
+    dom.addEventListener('keydown', (e) => this.key(e));
     dom.addEventListener('pointerdown', (e) => this.down(e));
     dom.addEventListener('pointermove', (e) => this.move(e));
     dom.addEventListener('pointerup', (e) => this.up(e));
     dom.addEventListener('pointercancel', (e) => this.up(e, true));
     dom.addEventListener('wheel', (e) => { e.preventDefault(); if (this.enabled) this.zoom(e.deltaY * 0.0011); }, { passive: false });
     dom.addEventListener('dblclick', (e) => this.onDouble && this.onDouble(e.clientX, e.clientY));
+  }
+  /** Clavier (la vue 3D est focalisable) : flèches = tourner (Maj : plus vite), +/− ou Page haut/bas = zoom. */
+  key(e) {
+    if (!this.enabled || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key, step = e.shiftKey ? 0.25 : 0.08;
+    if (k === 'ArrowLeft') this.az += step; else if (k === 'ArrowRight') this.az -= step;
+    else if (k === 'ArrowUp') this.el = Math.min(1.55, this.el + step); else if (k === 'ArrowDown') this.el = Math.max(-1.55, this.el - step);
+    else if (k === '+' || k === '=' || k === 'PageUp') this.zoom(-0.25); else if (k === '-' || k === '_' || k === 'PageDown') this.zoom(0.25);
+    else return;
+    e.preventDefault();
   }
   zoom(dl) { this.logTarget = Math.max(Math.log(this.minDist), Math.min(Math.log(this.maxDist), this.logTarget + dl)); }
   down(e) {
@@ -54,7 +66,7 @@ export class CameraRig {
   focus(idx, targetPos, radiusUnits, dist) {
     const prev = this.focusAbs.slice();
     this.focusIdx = idx;
-    this.trans = { s: 0, dur: 1.6, off: [prev[0] - targetPos[0], prev[1] - targetPos[1], prev[2] - targetPos[2]] };
+    this.trans = { s: 0, dur: this.reduced ? 0.01 : 1.6, off: [prev[0] - targetPos[0], prev[1] - targetPos[1], prev[2] - targetPos[2]] };
     this.minDist = Math.max(1e-3, radiusUnits * 1.25);
     this.logTarget = Math.log(Math.max(this.minDist, dist));
   }
@@ -63,7 +75,7 @@ export class CameraRig {
     let w = 0;
     if (this.trans) { this.trans.s += dt / this.trans.dur; w = 1 - ease(this.trans.s); if (this.trans.s >= 1) this.trans = null; }
     for (let k = 0; k < 3; k++) this.focusAbs[k] = targetPos[k] + (this.trans ? this.trans.off[k] * w : 0);
-    const rate = this.trans ? 3.2 : 11;
+    const rate = this.reduced ? 1e3 : this.trans ? 3.2 : 11;
     this.logD += (this.logTarget - this.logD) * (1 - Math.exp(-dt * rate));
     this.dist = Math.exp(this.logD);
     const c = Math.cos(this.el), d = this.dist;

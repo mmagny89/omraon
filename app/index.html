@@ -8,8 +8,13 @@
   <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
-  <canvas id="view" role="img" aria-label="Vue 3D du système d'Omraon"></canvas>
-  <div id="labels" aria-hidden="true"></div>
+  <a class="skip" href="#info">Aller à la fiche du corps</a><a class="skip" href="#view">Aller à la vue 3D</a>
+  <main id="scene">
+    <canvas id="view" role="img" tabindex="0" aria-label="Vue 3D du système d'Omraon" aria-describedby="view-help"></canvas>
+    <p id="view-help" class="sr-only">Flèches : tourner la vue. Plus et moins, ou Page haut et Page bas : zoom. Les corps et les sites se choisissent dans la liste (bouton Corps).</p>
+    <div id="labels" aria-hidden="true"></div>
+  </main>
+  <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
 
   <header id="top">
     <button type="button" id="btn-bodies" class="tb" aria-pressed="true" title="Liste des corps et des sites"><span class="ic">☰</span><span class="t">Corps</span></button>
@@ -30,7 +35,7 @@
   <button type="button" id="ui-show" title="Afficher l'interface (touche H)">👁 Interface</button>
 
   <aside id="bodies" aria-label="Corps célestes"><button type="button" class="panel-x" data-close="left" aria-label="Fermer la liste">×</button><input id="list-q" type="search" placeholder="Chercher…" aria-label="Chercher dans la liste des corps" autocomplete="off"><div id="list"></div></aside>
-  <aside id="info" aria-label="Fiche du corps sélectionné"><button type="button" class="panel-x" data-close="right" aria-label="Fermer la fiche">×</button><div id="voyage" hidden><h3>Le Mai en route</h3><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
+  <aside id="info" tabindex="-1" aria-label="Fiche du corps sélectionné"><button type="button" class="panel-x" data-close="right" aria-label="Fermer la fiche">×</button><div id="voyage" hidden><h2>Le Mai en route</h2><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
   <div id="info-head"></div>
   <div id="site-tools" hidden>
     <button type="button" id="ground-btn" class="wide-btn">👁 Vue à hauteur d'yeux (horizon)</button>
