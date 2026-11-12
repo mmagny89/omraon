@@ -28,9 +28,10 @@
 
   <aside id="bodies" aria-label="Corps célestes"><button type="button" class="panel-x" data-close="left" aria-label="Fermer la liste">×</button><div id="list"></div></aside>
   <aside id="info" aria-label="Fiche du corps sélectionné"><button type="button" class="panel-x" data-close="right" aria-label="Fermer la fiche">×</button><div id="voyage" hidden><h3>Le Mai en route</h3><div id="voy-body"></div><div class="actions"><button type="button" id="voy-follow">Suivre le Mai</button><button type="button" id="voy-cancel">Annuler le voyage</button></div></div>
+  <div id="info-head"></div>
   <div id="site-tools" hidden>
     <button type="button" id="ground-btn" class="wide-btn">👁 Vue à hauteur d'yeux (horizon)</button>
-    <details id="sky-box" open><summary>Ciel vu d'ici</summary>
+    <details id="sky-box"><summary>Ciel vu d'ici</summary>
       <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option><option value="free">Libre (glisser)</option></select></label>
       <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option><option value="custom" hidden>—</option></select></label></div>
       <canvas id="sky" role="img" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div><div class="note" style="font-size:11px;color:var(--mute)">Glisser : tourner et incliner · molette ou pincement : champ · double-clic : recentrer sur l'étoile</div>

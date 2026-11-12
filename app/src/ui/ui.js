@@ -486,7 +486,9 @@ export class UI {
     const site = this.currentSite(), rec = this.world.siteEls?.get(site.id);
     const type = { surface: 'Base au sol', orbit: 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
     const yy = Math.floor(this.target / DAYS_PER_YEAR), pm = this.pop && yy !== 0 ? this.pop.at(yy) : null, p0 = this.pop?.at(0);
-    let h = `<h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''} · ${site.population.toLocaleString('fr-FR')} humains${site.tyts ? ' + ' + site.tyts.toLocaleString('fr-FR') + ' Tyts' : ''}</div><p>${site.role}</p>`;
+    const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
+    let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains')}${site.tyts ? tl(nf(site.tyts), 'Tyts') : ''}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
+    h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
       h += yy < site.founded ? `<p class="note">À l'An ${String(yy).replace('-', '−')} : la colonie n'est pas encore fondée (An ${String(site.founded).replace('-', '−')}).</p>` : `<p class="note">À l'An ${String(yy).replace('-', '−')} (colonie fondée An ${String(site.founded).replace('-', '−')}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
@@ -494,10 +496,10 @@ export class UI {
     if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (données dans app/src/data/sites.js).</p>`;
     if (rec?.st) {
       const rep = siteReport({ sim: this.sim, el: (i) => this.world.bodies[i].el }, site, rec.st, this.target);
-      for (const sec of rep.sections) h += `<h3>${sec.title}</h3><dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl>`;
+      for (const sec of rep.sections) h += this.begin(sec.title, true) + `<dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;
       h += rep.notes.map((t) => `<p class="note">${t}</p>`).join('');
     }
-    return h + '<h3 style="margin-top:18px">Corps</h3>';
+    return h + '<div class="divider">Corps d\'accueil</div>';
   }
 
   markList() {
@@ -512,6 +514,7 @@ export class UI {
     $('#play').addEventListener('click', () => { this.playing = !this.playing; $('#play').textContent = this.playing ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', this.playing ? 'Pause' : 'Lecture'); });
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
+    $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
     const tog = (id, fn) => $(id).addEventListener('change', (e) => fn(e.target.checked));
     tog('#t-orbits', (v) => (w.opts.orbits = v)); tog('#t-labels', (v) => (w.opts.labels = v));
     tog('#t-belt', (v) => (w.opts.belt = v)); tog('#t-edge', (v) => (w.opts.edge = v));
@@ -628,6 +631,14 @@ export class UI {
     return rows;
   }
 
+  /** Ouvre une section repliable de la fiche ; l'état ouvert/fermé choisi par l'utilisateur survit aux rafraîchissements. */
+  begin(titre, ouvert) {
+    const o = this.secState?.[titre] ?? ouvert;
+    return `<details class="sec" data-sec="${titre}"${o ? ' open' : ''}><summary>${titre}</summary>`;
+  }
+  tile(valeur, libelle, sous = '') { return `<div class="tile"><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
+  jourCourt(d) { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j`; }
+
   // Valeurs physiques dérivées en direct ; appelé ~4 fois par seconde.
   renderInfo() {
     const w = this.world, sim = this.sim, o = w.bodies[this.selected], b = o.b, d = b.def, star = sim.bodies[0];
@@ -635,23 +646,27 @@ export class UI {
     const dStar = (i) => Math.hypot(rp[3 * i] - rp[0], rp[3 * i + 1] - rp[1], rp[3 * i + 2] - rp[2]);
     const names = d.names || {};
     let h = this.selectedSite ? this.siteHtml() : '';
-    h += `<h2>${d.name}</h2><div class="sub">${b.type === 'star' ? 'Étoile (F6V)' : b.type === 'planet' ? (d.kind === 'gas' ? 'Planète gazeuse' : 'Planète tellurique') : 'Lune de ' + sim.bodies[b.parent].def.name}</div>`;
-    h += `<h3>Noms</h3><dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl>`;
-    h += `<p>${d.role}</p>`;
-    const bk = bulk(b.mass, b.radiusKm);
-    h += `<h3>Physique</h3><dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
+    const kind = b.type === 'star' ? 'Étoile (F6V)' : b.type === 'planet' ? (d.kind === 'gas' ? 'Planète gazeuse' : 'Planète tellurique') : 'Lune de ' + sim.bodies[b.parent].def.name;
+    const bk = bulk(b.mass, b.radiusKm), hab = b.type === 'star' ? null : assess(this.ctx(), b.idx);
+    const sid = b.type === 'moon' ? o.el?.period : o.protDays, tile = (...a) => this.tile(...a);
+    const di0 = b.type === 'star' ? 0 : dStar(b.type === 'planet' ? b.idx : b.parent);
+    const tiles = b.type === 'star'
+      ? tile(`${f(b.radiusKm / 1e3, 0)} k km`, 'Rayon') + tile(`${d.teff} K`, 'Température') + tile(`${f(this.L, 2)} L☉`, 'Luminosité') + tile(fmtMass(b.mass), 'Masse')
+      : tile(`${f(bk.gSurf / 9.80665, 2)} g`, 'Gravité') + tile(sid ? this.jourCourt(sid) : '—', 'Jour', sid ? `${fmtTerre(sid)} Terre` : '') + tile(`${f(b.radiusKm, 0)} km`, 'Rayon') + tile(`${f(equilibriumTemp(star.def, di0, d.albedo ?? 0.3) - 273.15, 0)} °C`, 'T équilibre');
+    h += `<header class="hero"><span class="swatch" style="background:${d.color || '#9fb4d8'}"></span><div><h2>${d.name}</h2><div class="sub">${kind}</div></div>${hab ? `<span class="chip ${hab.level}">${hab.label}</span>` : ''}</header><p class="lead">${d.role}</p><div class="tiles">${tiles}</div>`;
+    h += this.begin('Noms', false) + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
+    h += this.begin('Physique', true) + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
     h += this.dayRows(o, b);
     if (o.protDays && b.type === 'planet' && o.flat > 1e-4) h += row('Aplatissement', f(o.flat, 4));
     if (b.type !== 'star') h += row('Inclinaison de l\'axe', `${f(b.tilt / DEG, 1)}°`);
     if (b.type === 'star') h += row('Température', `${d.teff} K`) + row('Luminosité', `${f(this.L, 2)} L☉`);
-    h += '</dl>';
+    h += '</dl></details>';
     if (b.type === 'star') {
       const hz = this.hz;
-      h += `<h3>Zone habitable (Kopparapu 2013)</h3><dl>${row('Conservative', `${f(hz.conservative[0], 2)} – ${f(hz.conservative[1], 2)} UA`)}${row('Optimiste', `${f(hz.optimistic[0], 2)} – ${f(hz.optimistic[1], 2)} UA`)}${row('Ceinture Nunzir', `${BELT.aMin} – ${BELT.aMax} UA`)}</dl>`;
-      h += `<p class="note">${BELT.role}</p>`;
+      h += this.begin('Zone habitable (Kopparapu 2013)', true) + `<dl>${row('Conservative', `${f(hz.conservative[0], 2)} – ${f(hz.conservative[1], 2)} UA`)}${row('Optimiste', `${f(hz.optimistic[0], 2)} – ${f(hz.optimistic[1], 2)} UA`)}${row('Ceinture Nunzir', `${BELT.aMin} – ${BELT.aMax} UA`)}</dl><p class="note">${BELT.role}</p></details>`;
     } else if (o.el) {
       const e = o.el, par = sim.bodies[b.parent];
-      h += `<h3>Orbite (osculatrice, en direct)</h3><dl>`;
+      h += this.begin('Orbite (en direct)', true) + '<dl>';
       if (b.type === 'planet') {
         h += row('Demi-grand axe', `${f(e.a, 4)} UA`) + row('Distance actuelle', `${f(dStar(b.idx), 4)} UA`) + row('Périhélie / aphélie', `${f(e.rp, 3)} / ${f(e.ra, 3)} UA`);
         h += row('Période', fmtDur(e.period)) + row('Excentricité', f(e.e, 4)) + row('Inclinaison (écliptique)', `${f(e.i / DEG, 2)}°`) + row('Longitude du périhélie ϖ', `${f(((e.varpi / DEG) % 360 + 360) % 360, 3)}°`);
@@ -660,28 +675,33 @@ export class UI {
         const inc = Math.acos((e.h[0] * pole[0] + e.h[1] * pole[1] + e.h[2] * pole[2]) / hm) / DEG;
         h += row('Demi-grand axe', `${f(e.a * AU_KM, 0)} km (${f(e.a * AU_KM / par.radiusKm, 1)} R)`) + row('Période', fmtDur(e.period)) + row('Excentricité', f(e.e, 4)) + row('Inclinaison (équateur)', `${f(inc, 2)}°`);
       }
-      h += '</dl>';
+      h += '</dl></details>';
       // dynamique
       if (b.type === 'planet') {
         const pa = par.def.orbit, rh = hillRadius(e.a, e.e, sim.mEff[b.idx], star.mass);
-        h += `<h3>Dynamique</h3><dl>${row('Rayon de Hill', `${f(rh, 4)} UA (${f(rh * AU_KM / 1e6, 2)} M km)`)}</dl>`;
+        h += this.begin('Dynamique', false) + `<dl>${row('Rayon de Hill', `${f(rh, 4)} UA (${f(rh * AU_KM / 1e6, 2)} M km)`)}</dl></details>`;
         void pa;
       } else {
         const pi = par.idx, pe = o && w.bodies[pi].el;
         const rh = hillRadius(pe.a, pe.e, sim.mEff[pi], star.mass), lim = stableSatelliteLimit(rh, pe.e, o.el.e);
         const rho = bulk(b.mass, b.radiusKm).rho, rhoP = bulk(par.mass, par.radiusKm).rho;
         const roche = rocheLimitKm(par.radiusKm, rhoP, rho), ratio = (o.el.a / rh);
-        h += `<h3>Dynamique</h3><dl>${row('a / rayon de Hill', `${f(ratio, 3)} (limite ${f(lim / rh, 2)})`, o.el.a < lim ? 'ok' : 'warn')}${row('Limite de Roche', `${f(roche, 0)} km`, o.el.a * AU_KM > roche ? 'ok' : 'warn')}</dl>`;
+        h += this.begin('Dynamique', false) + `<dl>${row('a / rayon de Hill', `${f(ratio, 3)} (limite ${f(lim / rh, 2)})`, o.el.a < lim ? 'ok' : 'warn')}${row('Limite de Roche', `${f(roche, 0)} km`, o.el.a * AU_KM > roche ? 'ok' : 'warn')}</dl></details>`;
       }
       // thermique
       const di = b.type === 'planet' ? dStar(b.idx) : dStar(b.parent);
       const Teq = equilibriumTemp(star.def, di, d.albedo ?? 0.3), S = insolation(this.L, di);
       const [hi, ho] = this.hz.conservative, [oi, oo] = this.hz.optimistic;
       const zone = di >= hi && di <= ho ? ['dans la zone habitable', 'ok'] : di >= oi && di <= oo ? ['zone habitable optimiste', 'ok'] : di < oi ? ['trop proche', 'warn'] : ['trop loin', 'warn'];
-      h += `<h3>Thermique</h3><dl>${row('Éclairement', `${f(S, 3)} × Terre`)}${row('T équilibre (A=' + (d.albedo ?? 0.3) + ')', `${f(Teq, 0)} K (${f(Teq - 273.15, 0)} °C)`)}${row('Position', zone[0], zone[1])}</dl>`;
+      h += this.begin('Thermique', false) + `<dl>${row('Éclairement', `${f(S, 3)} × Terre`)}${row('T équilibre (A=' + (d.albedo ?? 0.3) + ')', `${f(Teq, 0)} K (${f(Teq - 273.15, 0)} °C)`)}${row('Position', zone[0], zone[1])}</dl>`;
       if (d.id === 'kebet') h += `<p class="note">Kebet reçoit l'éclairement d'une planète en bordure de zone habitable ; la rotation synchrone et l'effet de serre de son atmosphère décident du reste.</p>`;
+      h += '</details>';
     }
-    h += this.habitabilityHtml(b);
+    h += this.begin('Habitabilité', true) + this.habitabilityHtml(b) + '</details>';
+    let head = '';
+    if (h.includes('\u0001')) [head, h] = h.split('\u0001');
+    const hd = $('#info-head');
+    if (hd.dataset.h !== head) { hd.innerHTML = head; hd.dataset.h = head; }
     this.info = h;
     const el = $('#info-live');
     if (el.dataset.h !== h) { const sc = el.scrollTop; el.innerHTML = h; el.dataset.h = h; el.scrollTop = sc; }
