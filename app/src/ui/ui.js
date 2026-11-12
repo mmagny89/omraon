@@ -143,12 +143,16 @@ export class UI {
       `<div class="track" id="frise-track" role="slider" tabindex="0" aria-valuemin="${Y0}" aria-valuemax="${Y1}" aria-valuenow="0" aria-label="Date en années (An 0 = début de l\'Ère confédérale ; le présent est l\'An 300) ; flèches : ±1 an, Maj : ±10 ans">` +
       eras.map(([a, b2, c, t]) => `<div class="seg ${c}" style="width:${pct(b2) - pct(a)}%" data-tip="${esc(tipTexte(t))}"></div>`).join('') + '</div>' +
       EVENTS.map((e) => `<button type="button" class="tick" data-year="${e.year}" style="left:${pct(e.year)}%" data-tip="${esc(tipTexte(`${e.label} · ${fmtAn(e.year)}`, e.note))}" aria-label="${e.label}"></button>`).join('') +
-      labels.map(([y, t]) => `<span class="lab" style="left:${Math.min(94, Math.max(6, pct(y)))}%">${t}</span>`).join('') + '<div class="cursor" id="frise-cursor"></div>';
-    this.friseDom = { track: $('#frise-track'), cursor: $('#frise-cursor'), read: $('#frise-read'), Y0, Y1, pct };
+      labels.map(([y, t]) => `<span class="lab" style="left:${Math.min(94, Math.max(6, pct(y)))}%">${t}</span>`).join('') + '<div class="ghost" id="frise-ghost" hidden></div><div class="cursor" id="frise-cursor"></div>';
+    this.friseDom = { track: $('#frise-track'), cursor: $('#frise-cursor'), ghost: $('#frise-ghost'), read: $('#frise-read'), Y0, Y1, pct };
     const yearAt = (e) => { const r = this.friseDom.track.getBoundingClientRect(); return Y0 + Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (Y1 - Y0); };
     let drag = false;
     this.friseDom.track.addEventListener('pointerdown', (e) => { drag = true; this.friseDragging = true; this.friseDom.track.setPointerCapture(e.pointerId); const y = yearAt(e); this.friseLabel(Math.round(y)); this.friseDom.cursor.style.left = pct(y) + '%'; });
     this.friseDom.track.addEventListener('pointermove', (e) => { if (!drag) return; const y = yearAt(e); this.friseLabel(Math.round(y)); this.friseDom.cursor.style.left = pct(y) + '%'; });
+    // survol à la souris : l'année sous le pointeur s'affiche dans la ligne de lecture, avec un repère fantôme ; le curseur ne bouge pas
+    const finSurvol = () => { if (!this.friseHover) return; this.friseHover = false; this.friseDom.ghost.hidden = true; this.friseLabel(this._friseYear ?? 0); };
+    this.friseDom.track.addEventListener('pointermove', (e) => { if (drag || e.pointerType !== 'mouse') return; const y = yearAt(e); this.friseHover = true; this.friseLabel(Math.round(y)); this.friseDom.ghost.hidden = false; this.friseDom.ghost.style.left = pct(y) + '%'; });
+    this.friseDom.track.addEventListener('pointerleave', finSurvol);
     const end = (e) => { if (!drag) return; drag = false; this.friseDragging = false; this.goTo(Math.round(yearAt(e))); };
     this.friseDom.track.addEventListener('pointerup', end); this.friseDom.track.addEventListener('pointercancel', () => { drag = false; this.friseDragging = false; });
     this.friseDom.track.addEventListener('keydown', (e) => {
@@ -171,7 +175,7 @@ export class UI {
     const { cursor, track, Y0, Y1, pct } = this.friseDom, y = Math.max(Y0, Math.min(Y1, yearFloat));
     cursor.style.left = pct(y) + '%'; track.setAttribute('aria-valuenow', Math.round(yearFloat));
     const yi = Math.floor(yearFloat);
-    if (yi !== this._friseYear) { this._friseYear = yi; this.friseLabel(yi); this.popAtDate(yi); this.popCursor(yi); }
+    if (yi !== this._friseYear) { this._friseYear = yi; if (!this.friseHover) this.friseLabel(yi); this.popAtDate(yi); this.popCursor(yi); }
   }
 
   /** Va à l'année donnée (0 = présent, affiché An 300) : recalcule les positions des planètes à cette date. */

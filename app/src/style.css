@@ -207,6 +207,8 @@ body.ground #frise, body.ground #options { display: none !important; }
 #frise .tick::before { content: ''; position: absolute; left: 8px; top: 0; width: 2px; height: 20px; background: #ffd27a; box-shadow: 0 0 4px rgba(255,200,100,.8); }
 #frise .tick:hover::before, #frise .tick:focus-visible::before { background: #fff; }
 #frise .lab { position: absolute; top: 34px; transform: translateX(-50%); font-size: 10px; color: #cdd7ec; white-space: nowrap; text-shadow: 0 0 4px #000; pointer-events: none; }
+#frise .ghost { position: absolute; top: 12px; width: 2px; height: 24px; margin-left: -1px; background: rgba(255,255,255,.5); pointer-events: none; border-radius: 1px; }
+#frise .ghost[hidden] { display: none; }
 #frise .cursor { position: absolute; top: 12px; width: 3px; height: 24px; margin-left: -1px; background: #fff; box-shadow: 0 0 8px #fff; pointer-events: none; border-radius: 2px; }
 @media (max-width: 860px) {
   .tb .t { display: none; } .tb { padding: 6px 10px; min-width: 44px; justify-content: center; }
