@@ -455,6 +455,16 @@ test('traducteur : mot à mot sur le canon, rien d\'inventé', () => {
   assert.equal(versTyt('je dors', idx).resultat, 'shu [dors]'); assert.equal(versTyt('', idx).resultat, '');
 });
 
+test('population : génocide du monde natal et contrôle des naissances tyt', () => {
+  const m = simulatePopulation({}), P = m.params, g = m.summary.genocide;
+  assert.ok(m.at(-501).N > 3e7 && m.at(-496).N < m.at(-501).N * 0.05, 'le monde natal s\'effondre après −500');
+  assert.ok(Math.abs(g.victims / (g.victims + g.survivors) - 0.99) < 0.02 && simulatePopulation({ genocideToll: 0 }).at(-490).N > m.at(-501).N);
+  assert.equal(m.at(-501).reductions + m.at(-501).prevented, 0, 'aucun contrôle avant le crime');
+  assert.ok(m.at(0).cumPrevented > 0 && m.at(0).cumReductions > 0 && m.at(100).cumReductions > m.at(0).cumReductions, 'les cumuls croissent');
+  assert.equal(simulatePopulation({ tytMode: 'nature' }).at(0).cumPrevented, 0, 'mode subi : rien n\'est empêché');
+  assert.ok(m.series.year.every((y, i) => i === 0 || m.series.cumReductions[i] >= m.series.cumReductions[i - 1]) && P.crimeYear === -500);
+});
+
 import { AMBIANCES_SITES, ambianceFor } from '../app/src/data/ambiances.js';
 test('ambiances : chaque entrée propre à un lieu est complète, non canon, et choisie pour son site', () => {
   const ids = new Set(ST.map((s) => s.id));

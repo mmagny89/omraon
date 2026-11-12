@@ -148,9 +148,12 @@
         <label>Demi-vie du désespoir (ans) <input id="pop-dh" type="number" min="20" step="20" value="460" inputmode="numeric"></label>
         <label>Vérité rapportée à l'An <input id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
         <label>… force (0–1) <input id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
+        <label>Monde natal tyt avant le génocide <input id="pop-nat" type="number" min="1000" step="1000000" value="30000000" inputmode="numeric"></label>
+        <label>… part exterminée (%) <input id="pop-toll" type="number" min="0" max="100" step="1" value="99" inputmode="numeric"></label>
         <button type="button" id="pop-reset" class="wide">Valeurs calées sur les documents</button>
       </div>
-      <canvas id="pop-c1" role="img" aria-label="Populations humaine et tyt"></canvas><canvas id="pop-c2" role="img" aria-label="Contrôle, désespoir et éveil"></canvas>
+      <p id="pop-hv" class="note" aria-live="off">Survolez une courbe pour lire les chiffres d'une année.</p>
+      <canvas id="pop-c1" role="img" aria-label="Populations humaine et tyt du système, Tyts du monde natal, contrôle des humains sur les Tyts, génocide du monde natal"></canvas><canvas id="pop-c3" role="img" aria-label="Naissances tyt décidées, naissances empêchées et Tyts éliminés par an"></canvas><canvas id="pop-c2" role="img" aria-label="Contrôle, désespoir et éveil"></canvas>
       <div id="pop-sum" class="note"></div><table id="pop-at"></table>
     </details>
     <details id="reseau"><summary>Réseau de communication</summary>

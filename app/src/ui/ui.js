@@ -195,17 +195,17 @@ export class UI {
 
   // ---------- Population et dégel ----------
   buildPop() {
-    const ids = { n0: 'N0', h: 'humansNow', t0: 'T0', ratio: 'tytRatio', know: 'knowledgeHalfLife', ctl: 'controlNeeded', dh: 'despairHalfLife', ts: 'truthStrength' };
-    const setInputs = () => { for (const [k, p] of Object.entries(ids)) $('#pop-' + k).value = POP_DEFAULTS[p]; $('#pop-growth').value = POP_DEFAULTS.tytGrowth * 100; $('#pop-mode').value = POP_DEFAULTS.tytMode; $('#pop-ty').value = ''; };
+    const ids = { nat: 'nativeN0', n0: 'N0', h: 'humansNow', t0: 'T0', ratio: 'tytRatio', know: 'knowledgeHalfLife', ctl: 'controlNeeded', dh: 'despairHalfLife', ts: 'truthStrength' };
+    const setInputs = () => { for (const [k, p] of Object.entries(ids)) $('#pop-' + k).value = POP_DEFAULTS[p]; $('#pop-growth').value = POP_DEFAULTS.tytGrowth * 100; $('#pop-toll').value = POP_DEFAULTS.genocideToll * 100; $('#pop-mode').value = POP_DEFAULTS.tytMode; $('#pop-ty').value = ''; };
     let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => this.recomputePop(), 120); };
     document.querySelectorAll('#pop input, #pop select').forEach((el) => el.addEventListener('input', again));
     $('#pop-reset').addEventListener('click', () => { setInputs(); this.recomputePop(); });
-    this.recomputePop();
+    this.recomputePop(); this.popHover();
   }
 
   readPop() {
     const g = (id) => parseFloat($(id).value), ty = g('#pop-ty'), v = (x, d) => (Number.isFinite(x) ? x : d);
-    return { N0: v(g('#pop-n0'), 10000), humansNow: v(g('#pop-h'), 500000), T0: v(g('#pop-t0'), 4000), tytMode: $('#pop-mode').value, tytRatio: v(g('#pop-ratio'), 1.2), tytGrowth: v(g('#pop-growth'), 0.8) / 100,
+    return { nativeN0: v(g('#pop-nat'), 30e6), genocideToll: Math.min(1, Math.max(0, v(g('#pop-toll'), 99) / 100)), N0: v(g('#pop-n0'), 10000), humansNow: v(g('#pop-h'), 500000), T0: v(g('#pop-t0'), 4000), tytMode: $('#pop-mode').value, tytRatio: v(g('#pop-ratio'), 1.2), tytGrowth: v(g('#pop-growth'), 0.8) / 100,
       knowledgeHalfLife: v(g('#pop-know'), 220), controlNeeded: v(g('#pop-ctl'), 0.6), despairHalfLife: v(g('#pop-dh'), 460), truthYear: Number.isFinite(ty) ? ty - AN_PRESENT : 1e9, truthStrength: v(g('#pop-ts'), 0.6) };
   }
 
@@ -213,33 +213,64 @@ export class UI {
     this.pop = simulatePopulation(this.readPop()); this._popYear = null;
     const m = this.pop, s = m.summary, f = (x) => Math.round(x).toLocaleString('fr-FR'), yr = (y) => (y == null ? 'jamais' : fmtAn(y));
     $('#pop-sum').innerHTML = `Croissance humaine ≈ <b>${(m.growth * 100).toFixed(2)} %/an</b> (canon : 0,6–0,8). Au présent : <b>${f(s.humansNow)}</b> humains ${s.canonHumans ? '✓ (300 000–800 000)' : '✗ hors canon'}, <b>${f(s.tytsNow)}</b> Tyts (${s.ratioNow.toFixed(2)} Tyts par humain ${s.canonRatio ? '✓' : '✗'}).<br>` +
+      `Génocide du monde natal (${yr(s.genocide.year)}, hors système) : <b>${f(s.genocide.victims)}</b> victimes, <b>${f(s.genocide.survivors)}</b> survivants. Contrôle des naissances jusqu'au présent : <b>${f(s.preventedByNow)}</b> naissances empêchées, <b>${f(s.reductionsByNow)}</b> Tyts éliminés (réductions) ; effectifs et conversion des Tyts du système : conception.<br>` +
       `Le contrôle se délite dès <b>${yr(s.thawYear)}</b>, tombe à 50 % en <b>${yr(s.thawHalf)}</b> ; point de bascule (combattants éveillés > gardes) : <b>${yr(s.tippingYear)}</b>.`;
     this.drawPopCharts(); const yy = Math.floor(this.target / DAYS_PER_YEAR); this.popAtDate(yy); this.popCursor(yy, false);
   }
 
   drawPopCharts() {
-    const m = this.pop, S = m.series, y0 = S.year[0], y1 = S.year[S.year.length - 1];
-    const setup = (id) => { const cv = $(id), dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth || 320, H = 130; cv.width = W * dpr; cv.height = H * dpr; const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); return { g, W, H }; };
-    const X = (W, y) => 34 + ((y - y0) / (y1 - y0)) * (W - 42);
-    const frame = (g, W, H, ticks) => { g.strokeStyle = 'rgba(160,185,230,.2)'; g.fillStyle = '#8d9bb8'; g.font = '10px system-ui'; g.lineWidth = 1; for (const [y, lab] of [[-500, '−500'], [-300, '−300'], [0, '0'], [60, '60']]) if (y >= y0 && y <= y1) { g.beginPath(); g.moveTo(X(W, y), 6); g.lineTo(X(W, y), H - 16); g.stroke(); g.fillText(lab, X(W, y) - 8, H - 4); } ticks(); };
-    // 1) populations (échelle logarithmique)
-    { const { g, W, H } = setup('#pop-c1'), lo = Math.log10(2000), hi = Math.log10(Math.max(2e6, ...S.H, ...S.T)), Y = (v) => 6 + (1 - (Math.log10(Math.max(v, 2000)) - lo) / (hi - lo)) * (H - 22);
-      frame(g, W, H, () => { for (const v of [1e4, 1e5, 1e6]) { g.beginPath(); g.moveTo(34, Y(v)); g.lineTo(W - 8, Y(v)); g.stroke(); g.fillText(v >= 1e6 ? '1 M' : v >= 1e5 ? '100 k' : '10 k', 2, Y(v) + 3); } });
-      for (const [arr, col] of [[S.H, '#ffbf6b'], [S.T, '#6fd3a0']]) { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); S.year.forEach((y, i) => { const px = X(W, y), py = Y(arr[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); }
-      g.fillStyle = '#ffbf6b'; g.fillText('humains', W - 90, 16); g.fillStyle = '#6fd3a0'; g.fillText('Tyts', W - 90, 28); this._pc1 = { W, H, X }; }
+    const m = this.pop, S = m.series, P = m.params, y0 = S.year[0], y1 = S.year[S.year.length - 1];
+    const setup = (id, h = 130) => { const cv = $(id), dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth || 320; cv.width = W * dpr; cv.height = h * dpr; cv.style.height = h + 'px'; const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, h); return { g, W, H: h }; };
+    const X = (W, y) => 34 + ((y - y0) / (y1 - y0)) * (W - 50);
+    const an = (y) => fmtAn(y).slice(3); // « An 300 » → « 300 »
+    const frame = (g, W, H, ticks, top = 6) => { g.strokeStyle = 'rgba(160,185,230,.2)'; g.fillStyle = '#8d9bb8'; g.font = '10px system-ui'; g.lineWidth = 1; for (const y of [P.arrivalYear, P.crimeYear, P.forgetStart, 0, y1]) if (y >= y0 && y <= y1) { g.beginPath(); g.moveTo(X(W, y), top); g.lineTo(X(W, y), H - 16); g.stroke(); g.fillText(an(y), Math.min(W - 26, X(W, y) - 8), H - 4); } ticks(); };
+    const line = (g, W, Y, arr, col, w = 2, dash = []) => { g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash); g.beginPath(); S.year.forEach((y, i) => { const px = X(W, y), py = Y(arr[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); g.setLineDash([]); };
+    const legend = (g, W, items) => { g.font = '10px system-ui'; items.forEach(([lab, col], k) => { g.fillStyle = col; g.fillText(lab, 38, 16 + k * 11); }); };
+    const logAxis = (g, W, H, Y, vals) => { for (const v of vals) { g.beginPath(); g.moveTo(34, Y(v)); g.lineTo(W - 16, Y(v)); g.stroke(); g.fillText(v >= 1e6 ? `${v / 1e6} M` : v >= 1e3 ? `${v / 1e3} k` : String(v), 2, Y(v) + 3); } };
+    // 1) effectifs (log), contrôle (axe de droite, 0–100 %), génocide du monde natal
+    { const { g, W, H } = setup('#pop-c1', 230), TOP = 66, lo = Math.log10(2000), hi = Math.log10(Math.max(1e8, ...S.N)), Y = (v) => TOP + (1 - (Math.log10(Math.max(v, 2000)) - lo) / (hi - lo)) * (H - 16 - TOP), Yc = (v) => TOP + (1 - v) * (H - 16 - TOP);
+      frame(g, W, H, () => logAxis(g, W, H, Y, [1e4, 1e5, 1e6, 1e7]), TOP);
+      const xg = X(W, P.crimeYear); g.fillStyle = 'rgba(255,107,122,.16)'; g.fillRect(xg, TOP, Math.max(2, X(W, P.crimeYear + P.genocideYears) - xg), H - 16 - TOP);
+      line(g, W, Y, S.N, '#c78bff', 1.5, [4, 3]); line(g, W, Y, S.H, '#ffbf6b'); line(g, W, Y, S.T, '#6fd3a0'); line(g, W, Yc, S.C, '#6fb4ff', 1.5, [2, 3]);
+      legend(g, W, [['humains', '#ffbf6b'], ['Tyts du système', '#6fd3a0'], ['Tyts du monde natal (hors système)', '#c78bff'], ['contrôle des humains sur les Tyts (0–100 %)', '#6fb4ff'], ['génocide du monde natal', '#ff6b7a']]);
+      this._pc1 = { W, H, X }; }
     // 2) dynamique (0–1)
     { const { g, W, H } = setup('#pop-c2'), Y = (v) => 6 + (1 - v) * (H - 22);
-      frame(g, W, H, () => { for (const v of [0, 0.5, 1]) { g.beginPath(); g.moveTo(34, Y(v)); g.lineTo(W - 8, Y(v)); g.stroke(); g.fillText(`${v * 100}%`, 2, Y(v) + 3); } });
-      for (const [arr, col, lab, dy] of [[S.C, '#6fb4ff', 'contrôle', 16], [S.D, '#ff6b7a', 'désespoir', 28], [S.A, '#6fd3a0', 'Tyts éveillés', 40]]) { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); S.year.forEach((y, i) => { const px = X(W, y), py = Y(arr[i]); i ? g.lineTo(px, py) : g.moveTo(px, py); }); g.stroke(); g.fillStyle = col; g.fillText(lab, W - 90, dy); }
+      frame(g, W, H, () => { for (const v of [0, 0.5, 1]) { g.beginPath(); g.moveTo(34, Y(v)); g.lineTo(W - 16, Y(v)); g.stroke(); g.fillText(`${v * 100}%`, 2, Y(v) + 3); } });
+      for (const [arr, col, lab, dy] of [[S.C, '#6fb4ff', 'contrôle', 16], [S.D, '#ff6b7a', 'désespoir', 28], [S.A, '#6fd3a0', 'Tyts éveillés', 40]]) { line(g, W, Y, arr, col); g.fillStyle = col; g.fillText(lab, 38, dy); }
       this._pc2 = { W, H, X }; }
+    // 3) flux annuels de Tyts du système : naissances décidées, naissances empêchées, Tyts éliminés (log)
+    { const { g, W, H } = setup('#pop-c3', 180), TOP = 44, top = Math.max(1e5, ...S.births, ...S.reductions), lo = 0, hi = Math.log10(top), Y = (v) => TOP + (1 - (Math.log10(Math.max(v, 1)) - lo) / (hi - lo)) * (H - 16 - TOP);
+      frame(g, W, H, () => logAxis(g, W, H, Y, [1, 10, 100, 1e3, 1e4].filter((v) => v <= top)), TOP);
+      line(g, W, Y, S.births, '#6fd3a0'); line(g, W, Y, S.prevented, '#ffbf6b'); line(g, W, Y, S.reductions, '#ff6b7a');
+      legend(g, W, [['naissances décidées par an', '#6fd3a0'], ['naissances empêchées par an', '#ffbf6b'], ['Tyts éliminés par an', '#ff6b7a']]);
+      this._pc3 = { W, H, X }; }
   }
 
   popCursor(year, redraw = true) {
     if (!this.pop) return;
     if (redraw) this.drawPopCharts();
-    for (const [id, key] of [['#pop-c1', '_pc1'], ['#pop-c2', '_pc2']]) {
+    for (const [id, key] of [['#pop-c1', '_pc1'], ['#pop-c2', '_pc2'], ['#pop-c3', '_pc3']]) {
       const o = this[key]; if (!o) continue; const cv = $(id), g = cv.getContext('2d'), dpr = cv.width / o.W, ys = this.pop.series.year;
       g.setTransform(dpr, 0, 0, dpr, 0, 0); g.strokeStyle = '#fff'; g.lineWidth = 1.5; const x = o.X(o.W, Math.max(ys[0], Math.min(ys[ys.length - 1], year))); g.beginPath(); g.moveTo(x, 4); g.lineTo(x, o.H - 16); g.stroke();
+      if (this._popHover != null && this._popHoverId === id) { g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1; const xh = o.X(o.W, this._popHover); g.beginPath(); g.moveTo(xh, 4); g.lineTo(xh, o.H - 16); g.stroke(); }
+    }
+  }
+
+  /** Survol des courbes à la souris : chiffres de l'année sous le pointeur dans #pop-hv. */
+  popHover() {
+    const hv = $('#pop-hv'), f = (x) => Math.round(x).toLocaleString('fr-FR');
+    const fin = () => { this._popHover = null; this._popHoverId = null; hv.textContent = 'Survolez une courbe pour lire les chiffres d\'une année.'; this.popCursor(Math.floor(this.target / DAYS_PER_YEAR)); };
+    for (const [id, key] of [['#pop-c1', '_pc1'], ['#pop-c2', '_pc2'], ['#pop-c3', '_pc3']]) {
+      const cv = $(id);
+      cv.addEventListener('pointermove', (e) => {
+        if (e.pointerType !== 'mouse' || !this.pop) return; const o = this[key], S = this.pop.series, r = cv.getBoundingClientRect();
+        const y = Math.round(S.year[0] + (((e.clientX - r.left) - 34) / (o.W - 50)) * (S.year[S.year.length - 1] - S.year[0])), yy = Math.max(S.year[0], Math.min(S.year[S.year.length - 1], y)), a = this.pop.at(yy);
+        this._popHover = yy; this._popHoverId = id;
+        hv.innerHTML = `<b>${fmtAn(yy)}</b> · humains ${f(a.H)} · Tyts ${f(a.T)} · monde natal ${f(a.N)} · contrôle ${(a.C * 100).toFixed(0)} % · naissances ${f(a.births)}/an, empêchées ${f(a.prevented)}/an · éliminés ${f(a.reductions)}/an`;
+        this.popCursor(Math.floor(this.target / DAYS_PER_YEAR));
+      });
+      cv.addEventListener('pointerleave', fin);
     }
   }
 
