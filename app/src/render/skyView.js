@@ -1,3 +1,4 @@
+import { ringProfile } from './textures.js';
 // Dessin du ciel vu d'un site (canvas 2D, projection équirectangulaire locale : azimut en abscisse, hauteur en ordonnée).
 const TWO_PI = Math.PI * 2;
 const wrap = (a) => { a = (a + Math.PI) % TWO_PI; if (a < 0) a += TWO_PI; return a - Math.PI; };
@@ -5,6 +6,12 @@ const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
 const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+
+const ringCache = new Map();
+const ringStrips = (o) => { let p = ringCache.get(o.name); if (!p) { p = ringProfile(o.rings, 48); ringCache.set(o.name, p); } return p; };
+const dotv = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const crossv = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const unitv = (a) => { const n = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / n, a[1] / n, a[2] / n]; };
 
 let STARS = null;
 function stars() {
@@ -58,17 +65,43 @@ export function drawSky(canvas, sky, opts) {
     g.fillStyle = gr; g.fillRect(0, Math.max(0, hy), W, H - Math.max(0, hy));
     g.strokeStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.moveTo(0, hy); g.lineTo(W, hy); g.stroke();
   }
+  // anneau d'un corps : moitié arrière avant le disque, moitié avant après (même profil que le rendu 3D)
+  const { east, north, up } = sky.frame;
+  const proj = (v) => { const L = Math.hypot(v[0], v[1], v[2]); return [X(Math.atan2(dotv(v, east), dotv(v, north))), Y(Math.asin(clamp(dotv(v, up) / L, -1, 1)))]; };
+  const drawRing = (o, part) => {
+    const dh = unitv(o.d);
+    let e1 = crossv(o.pole, dh); if (Math.hypot(e1[0], e1[1], e1[2]) < 1e-6) e1 = crossv(o.pole, [1, 0, 0]);
+    e1 = unitv(e1);
+    const e2 = crossv(o.pole, e1), strips = ringStrips(o), K = strips.length, { inner, outer, opacity } = o.rings;
+    const lit = 0.35 + 0.65 * Math.abs(dotv(o.pole, o.sunDir)), th0 = part === 'front' ? 0 : Math.PI, M = 40;
+    const thin = Math.abs(dotv(o.pole, dh)) * (outer * o.R / o.dist) * ppr < 3; // vu presque de profil : on trace un trait pour qu'il reste visible
+    const at = (rho, th) => proj([o.d[0] + rho * (Math.cos(th) * e1[0] + Math.sin(th) * e2[0]), o.d[1] + rho * (Math.cos(th) * e1[1] + Math.sin(th) * e2[1]), o.d[2] + rho * (Math.cos(th) * e1[2] + Math.sin(th) * e2[2])]);
+    g.save();
+    if (opts.surface) { g.beginPath(); g.rect(0, 0, W, clamp(hy, 0, H)); g.clip(); }
+    for (let k = 0; k < K; k++) {
+      const a = strips[k].a * opacity; if (a < 0.02) continue;
+      const r0 = (inner + (k / K) * (outer - inner)) * o.R, r1 = (inner + ((k + 1) / K) * (outer - inner)) * o.R, c = strips[k].c;
+      g.beginPath();
+      for (let i = 0; i <= M; i++) { const [x, y] = at(r1, th0 + Math.PI * i / M); if (i) g.lineTo(x, y); else g.moveTo(x, y); }
+      for (let i = M; i >= 0; i--) { const [x, y] = at(r0, th0 + Math.PI * i / M); g.lineTo(x, y); }
+      g.closePath(); g.fillStyle = `rgba(${Math.round(c[0] * lit)},${Math.round(c[1] * lit)},${Math.round(c[2] * lit)},${a})`; g.fill();
+      if (thin) { g.strokeStyle = g.fillStyle; g.lineWidth = 1.1; g.stroke(); }
+    }
+    g.restore();
+  };
   // corps, du plus lointain au plus proche
   const labels = [];
   for (const o of [...sky.objs].sort((a, b) => b.dist - a.dist)) {
-    const x = X(o.az), y = Y(o.el), r = Math.max(o.angR * ppr, o.type === 'star' ? 2.2 : 1.7);
-    if (x < -r - 40 || x > W + r + 40 || y < -r - 20 || y > H + r + 20) continue;
+    const x = X(o.az), y = Y(o.el), r = Math.max(o.angR * ppr, o.type === 'star' ? 2.2 : 1.7), rr = o.rings ? r * o.rings.outer : r;
+    if (x < -rr - 40 || x > W + rr + 40 || y < -rr - 20 || y > H + rr + 20) continue;
+    if (o.rings) drawRing(o, 'back');
     if (o.type === 'star') {
       const gl = g.createRadialGradient(x, y, 0, x, y, Math.max(16, r * 7)); gl.addColorStop(0, 'rgba(255,245,220,.95)'); gl.addColorStop(0.2, 'rgba(255,225,170,.35)'); gl.addColorStop(1, 'rgba(255,200,120,0)');
       g.fillStyle = gl; g.beginPath(); g.arc(x, y, Math.max(16, r * 7), 0, TWO_PI); g.fill();
       g.fillStyle = '#fffaf0'; g.beginPath(); g.arc(x, y, r, 0, TWO_PI); g.fill();
     } else if (r < 2.6) { g.fillStyle = o.color; g.beginPath(); g.arc(x, y, r, 0, TWO_PI); g.fill(); }
     else phaseDisc(g, x, y, r, o.color, o.frac, -o.limb);
+    if (o.rings) drawRing(o, 'front');
     if (o.type !== 'star' && (r > 2.6 || o.type === 'planet')) labels.push([o.name, x + r + 3, y - r * 0.2]);
   }
   g.font = '11px system-ui, sans-serif'; g.fillStyle = '#e6ecf8'; g.shadowColor = '#000'; g.shadowBlur = 3;

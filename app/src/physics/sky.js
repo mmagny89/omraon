@@ -43,7 +43,9 @@ export function computeSky(sim, site, st) {
       const s = [sun[0] - pos[0], sun[1] - pos[1], sun[2] - pos[2]], o = [-d[0], -d[1], -d[2]];
       frac = (1 + dot(s, o) / (norm(s) * norm(o))) / 2;
     }
-    objs.push({ idx: j, name: b.def.name, type: b.type, color: b.def.color || '#ffe2b0', az, el, angR, frac, dist, d });
+    const o = { idx: j, name: b.def.name, type: b.type, color: b.def.color || '#ffe2b0', az, el, angR, frac, dist, d };
+    if (b.def.rings) Object.assign(o, { rings: b.def.rings, R, pole: poleVector(b.tilt, b.node), sunDir: unit([sun[0] - pos[0], sun[1] - pos[1], sun[2] - pos[2]]) }); // anneau : plan équatorial du corps
+    objs.push(o);
   }
   const star = objs.find((o) => o.type === 'star');
   // direction du soleil dans le plan du ciel (pour orienter les phases)

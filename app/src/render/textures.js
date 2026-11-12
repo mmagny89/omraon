@@ -115,22 +115,38 @@ export function makeBodyTexture(styleName, seed, w = 512, h = 256, withEmissive 
  * Profil radial d'un anneau (1024 × 1 px, RGBA) : bandes de bruit, divisions et bords adoucis.
  * rings : { inner, outer, color, gaps: [[r0, r1]] en rayons planétaires, seed }.
  */
+const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+/** Opacité (0–1) et couleur (RGB 0–255) de l'anneau à la fraction radiale u (0 = bord intérieur, 1 = bord extérieur). */
+function ringAt(n, rings, base, u) {
+  const r = rings.inner + u * (rings.outer - rings.inner);
+  let a = 0.62 + 0.7 * n.fbm(u * 16, 0.3, 0.7, 4);
+  a *= 0.88 + 0.24 * n.fbm(u * 70, 1.1, 0.2, 3);
+  for (const [g0, g1] of rings.gaps || []) a *= 1 - (sstep(g0 - 0.01, g0 + 0.01, r) - sstep(g1 - 0.01, g1 + 0.01, r));
+  a *= sstep(0, 0.05, u) * sstep(1, 0.93, u);
+  const shade = 0.86 + 0.22 * n.fbm(u * 24 + 4, 2.2, 0.5, 3);
+  return { a: clamp01(a), c: [base[0] * shade, base[1] * shade, base[2] * shade] };
+}
+
+/**
+ * Profil radial d'un anneau (1024 × 1 px, RGBA) : bandes de bruit, divisions et bords adoucis.
+ * rings : { inner, outer, color, gaps: [[r0, r1]] en rayons planétaires, seed }.
+ */
 export function makeRingTexture(rings, seed = 1, w = 1024) {
   const n = makeNoise((rings.seed ?? seed) + 101), cv = document.createElement('canvas'); cv.width = w; cv.height = 1;
-  const ctx = cv.getContext('2d'), img = ctx.createImageData(w, 1), base = hex(rings.color), span = rings.outer - rings.inner;
-  const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(w, 1), base = hex(rings.color);
   for (let i = 0; i < w; i++) {
-    const u = (i + 0.5) / w, r = rings.inner + u * span;
-    let a = 0.62 + 0.7 * n.fbm(u * 16, 0.3, 0.7, 4);
-    a *= 0.88 + 0.24 * n.fbm(u * 70, 1.1, 0.2, 3);
-    for (const [g0, g1] of rings.gaps || []) a *= 1 - (sstep(g0 - 0.01, g0 + 0.01, r) - sstep(g1 - 0.01, g1 + 0.01, r));
-    a *= sstep(0, 0.05, u) * sstep(1, 0.93, u);
-    const shade = 0.86 + 0.22 * n.fbm(u * 24 + 4, 2.2, 0.5, 3), k = 4 * i;
-    img.data[k] = base[0] * shade; img.data[k + 1] = base[1] * shade; img.data[k + 2] = base[2] * shade; img.data[k + 3] = 255 * clamp01(a);
+    const { a, c } = ringAt(n, rings, base, (i + 0.5) / w), k = 4 * i;
+    img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255 * a;
   }
   ctx.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
   return tex;
+}
+
+/** Même profil, en K bandes concentriques [{ a, c }], pour le dessin 2D du ciel (même graine que la texture 3D). */
+export function ringProfile(rings, k = 48) {
+  const n = makeNoise((rings.seed ?? 1) + 101), base = hex(rings.color);
+  return Array.from({ length: k }, (_, i) => ringAt(n, rings, base, (i + 0.5) / k));
 }
 
 export function makeCloudTexture(seed, w = 512, h = 256) {
