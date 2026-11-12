@@ -436,3 +436,6 @@ body.ui-hidden #tour { display: none; }
 .pill.iceberg { color: #8fd0ff; border-color: rgba(143, 208, 255, .5); } .pill.ouvert { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
 .lore-l .pill { justify-self: start; margin: 2px 0; }
 #list small.pj { margin-left: auto; color: var(--accent); } #list small.pj + small { margin-left: 6px; }
+
+#date { cursor: help; }
+#info .wide-btn { width: 100%; margin: 8px 0 4px; }

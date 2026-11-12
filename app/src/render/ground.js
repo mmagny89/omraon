@@ -139,7 +139,8 @@ export class GroundView {
       const kind = this.pendingLook || 'auto'; this.pendingLook = null; this.initDone = true;
       const parent = sky.objs.find((o) => o.name === (this.body?.type === 'moon' ? sim.bodies[this.body.parent].def.name : null));
       const tgt = kind === 'north' ? { az: 0 } : kind === 'parent' && parent ? parent : kind === 'star' ? star : (star && star.el > -0.05 ? star : parent || star);
-      this.yaw = -(tgt.az || 0); if (kind !== 'auto') this.pitch = clamp(this.site.type === 'orbit' ? -0.2 : 0.05 + (tgt.el > 0.1 ? Math.min(tgt.el, 0.9) * 0.6 : 0), -1.2, 1.2);
+      this.yaw = tgt.az || 0; // cap = azimut (nord → est) : la caméra regarde (sin yaw, ·, −cos yaw), comme toScene place les astres ; l'ancien « −az » visait l'azimut symétrique
+      if (kind !== 'auto') this.pitch = clamp(this.site.type === 'orbit' ? -0.2 : 0.05 + (tgt.el > 0.1 ? Math.min(tgt.el, 0.9) * 0.6 : 0), -1.2, 1.2);
     }
     // astres
     const seen = new Set(), M = new THREE.Matrix4(), tmpQ = new THREE.Quaternion(), Mbasis = new THREE.Matrix4().makeBasis(toScene([1, 0, 0]), toScene([0, 1, 0]), toScene([0, 0, 1])), Mq = new THREE.Quaternion().setFromRotationMatrix(Mbasis);

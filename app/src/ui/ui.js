@@ -25,7 +25,7 @@ import { STATUTS, statutSection } from './statut.js';
 import { fusionner, liaison } from './comparaison.js';
 import { PERSONNAGES, VESTIGES } from '../data/lore.js';
 import { GLOSSAIRE } from '../data/glossaire.js';
-import { glossaireComplet, filtrer, auLieu } from './lore.js';
+import { glossaireComplet, filtrer, auLieu, moisConfederal } from './lore.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -533,6 +533,7 @@ export class UI {
     let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
     h += this.loreHtml(site.body, site.id);
+    if (site.id === 'kebet-temples') h += this.liturgieHtml();
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
       h += yy < site.founded ? `<p class="note">À l'An ${String(yy).replace('-', '−')} : la colonie n'est pas encore fondée (An ${String(site.founded).replace('-', '−')}).</p>` : `<p class="note">À l'An ${String(yy).replace('-', '−')} (colonie fondée An ${String(site.founded).replace('-', '−')}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
@@ -564,7 +565,7 @@ export class UI {
     this.bindCarnet();
     for (const a of document.querySelectorAll('a.skip')) a.addEventListener('click', (e) => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.focus(); }); // liens d'évitement sans toucher à l'adresse (#t=…)
     this.bindTour();
-    $('#info-live').addEventListener('click', (e) => { const sb = e.target.closest?.('[data-site-open]'); if (sb) this.selectSite(sb.dataset.siteOpen); });
+    $('#info-live').addEventListener('click', (e) => { const sb = e.target.closest?.('[data-site-open]'); if (sb) this.selectSite(sb.dataset.siteOpen); if (e.target.closest?.('[data-eclipse-vivre]') && this.selectedSite) this.vivreEclipse(this.selectedSite); });
     $('#info-live').addEventListener('click', (e) => { const t = e.target.closest?.('.evts button[data-t]'); if (t) this.goToTime(+t.dataset.t); });
     $('#list-q').addEventListener('input', () => this.filterList());
     $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
@@ -723,6 +724,34 @@ export class UI {
     const tabs = ['gl', 'pj', 'vs'], sel = (t) => { for (const x of tabs) { $('#lt-' + x).setAttribute('aria-selected', x === t); $('#lt-' + x).tabIndex = x === t ? 0 : -1; $('#lore-' + x).hidden = x !== t; } };
     $('#lore-tabs').addEventListener('click', (e) => { const b = e.target.closest('[role=tab]'); if (b) sel(b.id.slice(3)); });
     $('#lore-tabs').addEventListener('keydown', (e) => { const i = tabs.findIndex((x) => $('#lt-' + x).getAttribute('aria-selected') === 'true'); if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; sel(n); $('#lt-' + n).focus(); } });
+  }
+
+  // ---------- Temples solaires d'Osaon : liturgie, éclipses, calendrier ----------
+  /** Prochaines éclipses d'un corps (début, durée), en cache par tranche de date. */
+  eclipsesProches(corps, n = 3) {
+    const key = `${corps}:${Math.floor(this.target / 0.4)}`;
+    if (this._ecKey !== key || this._ecSim !== this.sim || (this._ec?.[0] && this._ec[0].t <= this.target)) {
+      this._ec = runEphemeris(this.sim, 12, { rot: this.rotParams(), kinds: { eclipses: true, alignments: false, apsides: false, sun: false }, max: 200 }).filter((e) => e.who === corps && e.t > this.target).slice(0, n);
+      this._ecKey = key; this._ecSim = this.sim;
+    }
+    return this._ec;
+  }
+  liturgieHtml() {
+    const ec = this.eclipsesProches('Kebet'), cm = moisConfederal(this.target, jourKebet());
+    const items = ec.map((e) => `<li><button type="button" data-t="${e.t}"><b>${e.type}</b><span>Zirkan masque l'étoile ${fmtDuree(e.duration, { minutes: true })}</span><small>${this.fmtT(e.t)} · dans ${fmtDuree(e.t - this.target)}</small></button></li>`).join('');
+    return this.begin('Liturgie solaire', true, 'canon') + `<p class="note">Temples solaires immenses, ouverts sur le ciel pour capter Omraon : disques d'or, lumière en nappes, le sommet du blanc-et-doré (doc 13, Quotidien sensoriel — Kebet).</p>`
+      + (ec.length ? `<ul class="evts">${items}</ul><button type="button" class="wide-btn" data-eclipse-vivre>☀ Vivre la prochaine éclipse depuis les temples</button>` : '<p class="note">Aucune éclipse proche.</p>') + '</details>'
+      + this.begin('Calendrier confédéral', false, 'conception') + `<dl>${row('Aujourd\'hui', `${cm.mois} (mois ${cm.rang} sur 13)`)}${row('Jour du mois', `${cm.jour} sur ${cm.nbJours}`)}</dl><p class="note">Le lore donne 13 mois aux noms tyts fossilisés (doc 03) mais pas leur durée : l'année est ici partagée en 13 mois égaux, l'An 0 commençant au premier jour d'Aset. Pas de fêtes définies : « fête de l'Arrivée », cycle solaire (pistes du lore).</p></details>`;
+  }
+  /** Saute au milieu de la prochaine éclipse de Kebet, ouvre la vue à hauteur d'yeux au site et regarde l'étoile. */
+  vivreEclipse(siteId) {
+    const site = SITES.find((x) => x.id === siteId), ev = this.eclipsesProches(site.body, 1)[0]; if (!ev) return;
+    this.restoreState({ t: ev.t + (ev.duration || 0) / 2, s: siteId, p: true });
+    setTimeout(() => {
+      this.enterGround(); const g = this.world.ground; g?.lookAt('star'); if (g) g.fov = 75;
+      setTimeout(() => { const sk = this.world.groundInfo?.sky; if (g && sk) g.pitch = Math.min(1.45, Math.max(-0.2, sk.sunEl)); }, 250); // l'étoile (cachée par Zirkan) au centre de l'image
+      this.announce(`Éclipse vue depuis ${site.name}`);
+    }, 700);
   }
 
   // ---------- Ceinture Nunzir ----------
@@ -1022,6 +1051,8 @@ export class UI {
       const { an, jour, h, min, s } = decouperDate(t), p2 = (n) => String(n).padStart(2, '0');
       const clock = this.speedIdx <= 2 ? `${p2(h)}:${p2(min)}:${p2(s)}` : `${p2(h)} h`; // secondes seulement aux vitesses lisibles
       $('#date').textContent = `An ${String(an).replace('-', '−')} · jour ${jour} · ${clock}`;
+      const cm = moisConfederal(t, jourKebet()), tip = tipTexte('Calendrier confédéral', `${cm.mois} · mois ${cm.rang} sur 13<br>jour ${cm.jour} sur ${cm.nbJours}<br><small>13 mois égaux : leur durée et le début de l\'année sont de conception</small>`);
+      if ($('#date').dataset.tip !== tip) $('#date').dataset.tip = tip;
     }
     this.friseUpdate(t / DAYS_PER_YEAR);
     if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }
