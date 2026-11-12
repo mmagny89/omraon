@@ -794,7 +794,7 @@ export class UI {
   /** Écrit l'état dans l'adresse (sans empiler l'historique) ; appelé quelques fois par seconde. */
   syncHash() {
     const h = '#' + encoderEtat(this.etatCourant());
-    if (h !== this._hash) { this._hash = h; history.replaceState(null, '', h); }
+    if (h !== this._hash) { this._hash = h; try { history.replaceState(null, '', h); } catch { /* contexte sans historique (cadre, mode privé) : le lien se copie quand même */ } }
   }
   bindLink() {
     for (const b of document.querySelectorAll('#btn-link, #btn-link2')) b.addEventListener('click', async () => {

@@ -3,6 +3,7 @@ import { makeNoise } from './noise.js';
 import { glowTexture } from './textures.js';
 import { computeSky } from '../physics/sky.js';
 import { AU_KM } from '../physics/constants.js';
+import { lightMods, makeRingMesh } from './eclairage.js';
 
 const D = 1e8; // distance des astres dans la scène (m) ; ils sont mis à leur diamètre angulaire réel
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -43,7 +44,7 @@ export class GroundView {
     this.stars = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(p, 3)), new THREE.PointsMaterial({ size: 1.6, sizeAttenuation: false, color: 0xffffff, transparent: true, depthWrite: false, fog: false }));
     this.scene.add(this.stars);
     this.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false })); this.scene.add(this.glow);
-    this.bodyMeshes = new Map(); this.terrain = null; this.extra = [];
+    this.bodyMeshes = new Map(); this.ringMeshes = new Map(); this.terrain = null; this.extra = [];
     this.showNames = false; this.showCards = true; this.lbl = new Map(); this.tmpV = new THREE.Vector3(); this.porthole = false;
     this.noise = makeNoise(77);
     // saisie (souris, tactile)
@@ -57,6 +58,23 @@ export class GroundView {
     });
     const up = (e) => this.ptrs.delete(e.pointerId); cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
     cv.addEventListener('wheel', (e) => { if (!this.active) return; e.preventDefault(); this.fov = clamp(this.fov * Math.exp(e.deltaY * 0.001), 20, 110); }, { passive: false });
+  }
+
+  /** Éclairage partagé avec la vue 3D : terminateur adouci, lumières nocturnes et ombre d'anneau si le corps en a, anneau en maillage séparé. */
+  equiper(m, src, idx) {
+    const rg = src.b.def.rings, hasLights = !!src.lit?.userData.u?.uSunDirW;
+    if (rg) { this.ringMeshes.set(idx, makeRingMesh(rg, src.ringTex)); this.scene.add(this.ringMeshes.get(idx)); }
+    lightMods(m.material, src.b.def.kind === 'gas' ? 0.3 : src.b.def.atmosphere ? 0.22 : 0.12, false, rg ? { tex: src.ringTex, inner: rg.inner, outer: rg.outer, k: rg.opacity } : null, hasLights);
+    if (hasLights) m.material.emissiveIntensity = 1.5;
+  }
+  /** Met à jour les uniformes d'un corps du ciel : direction du Soleil à son niveau, lumières nocturnes, anneau (orientation, ombres). */
+  majEclairage(m, src, idx, sunDir, Mq, rS, shadow) {
+    const u = m.material.userData.u; if (u?.uSunDirW) { u.uSunDirW.value.copy(sunDir); u.uShadow.value = shadow; }
+    const ring = this.ringMeshes.get(idx); if (!ring) return;
+    const ru = ring.material.uniforms, q = new THREE.Quaternion().copy(Mq).multiply(src.qFrame);
+    ring.visible = m.visible; ring.position.copy(m.position); ring.scale.set(rS, rS, rS); ring.quaternion.copy(q);
+    ru.uN.value.set(0, 0, 1).applyQuaternion(q); ru.uC.value.copy(m.position); ru.uR.value = rS; ru.uSun.value.copy(m.position).addScaledVector(sunDir, D * 100);
+    if (u?.uRingN) { u.uRingN.value.copy(ru.uN.value); u.uC.value.copy(m.position); u.uSunW.value.copy(ru.uSun.value); u.uRingR.value = rS; }
   }
 
   clearExtras() {
@@ -104,7 +122,7 @@ export class GroundView {
     this.world.rig.enabled = false;
   }
 
-  exit() { for (const el of this.lbl.values()) el.remove(); this.lbl.clear(); this.active = false; this.clearExtras(); this.world.rig.enabled = true; for (const m of this.bodyMeshes.values()) this.scene.remove(m); this.bodyMeshes.clear(); }
+  exit() { for (const el of this.lbl.values()) el.remove(); this.lbl.clear(); this.active = false; this.clearExtras(); this.world.rig.enabled = true; for (const m of this.bodyMeshes.values()) this.scene.remove(m); this.bodyMeshes.clear(); for (const r of this.ringMeshes.values()) { this.scene.remove(r); r.geometry.dispose(); r.material.dispose(); } this.ringMeshes.clear(); }
 
   lookAt(kind) { this.pendingLook = kind; }
 
@@ -132,18 +150,22 @@ export class GroundView {
         const map = src.mesh.material.map;
         m = new THREE.Mesh(this.sphere, o.type === 'star' ? new THREE.MeshBasicMaterial({ color: 0xfff6e8, fog: false }) : new THREE.MeshStandardMaterial({ fog: false, map, roughness: 1, metalness: 0, color: map ? 0xffffff : new THREE.Color(o.color), emissiveMap: src.mesh.material.emissiveMap || null, emissive: src.mesh.material.emissiveMap ? 0xffffff : 0x000000, emissiveIntensity: 0.6 }));
         m.frustumCulled = false; this.scene.add(m); this.bodyMeshes.set(o.idx, m);
+        if (o.type !== 'star') this.equiper(m, src, o.idx);
       }
       const dir = toScene(o.d).normalize(), r = Math.max(D * Math.tan(o.angR), 1);
       m.position.copy(dir).multiplyScalar(D); m.scale.set(r, r, r * (1 - (src.flat || 0)));
       tmpQ.copy(src.mesh.quaternion); m.quaternion.copy(Mq).multiply(tmpQ);
+      if (o.type !== 'star' && star) this.majEclairage(m, src, o.idx, toScene([star.d[0] - o.d[0], star.d[1] - o.d[1], star.d[2] - o.d[2]]).normalize(), Mq, r, 1);
     }
     for (const [i, m] of this.bodyMeshes) if (!seen.has(i) && !(this.site.type === 'orbit' && i === st.idx)) m.visible = false; else m.visible = true;
+    for (const [i, r] of this.ringMeshes) r.visible = !!this.bodyMeshes.get(i)?.visible; // l'anneau suit la visibilité de son corps
     // le corps sous la station : sphère réelle sous l'observateur
     if (this.site.type === 'orbit' && this.body) {
       const i = st.idx; let m = this.bodyMeshes.get(i); const src = w.bodies[i];
-      if (!m) { const map = src.mesh.material.map; m = new THREE.Mesh(this.sphere, new THREE.MeshStandardMaterial({ fog: false, map, roughness: 1, metalness: 0, emissiveMap: src.mesh.material.emissiveMap || null, emissive: src.mesh.material.emissiveMap ? 0xffffff : 0x000000, emissiveIntensity: 0.6 })); m.frustumCulled = false; this.scene.add(m); this.bodyMeshes.set(i, m); }
+      if (!m) { const map = src.mesh.material.map; m = new THREE.Mesh(this.sphere, new THREE.MeshStandardMaterial({ fog: false, map, roughness: 1, metalness: 0, emissiveMap: src.mesh.material.emissiveMap || null, emissive: src.mesh.material.emissiveMap ? 0xffffff : 0x000000, emissiveIntensity: 0.6 })); m.frustumCulled = false; this.scene.add(m); this.bodyMeshes.set(i, m); this.equiper(m, src, i); }
       m.position.copy(toScene([-up[0], -up[1], -up[2]]).multiplyScalar(st.radiusKm * 1000)); m.scale.set(this.R, this.R, this.R * (1 - (src.flat || 0)));
       m.quaternion.copy(Mq).multiply(tmpQ.copy(src.mesh.quaternion)); m.visible = true;
+      if (star) { const Rau = st.radiusKm / AU_KM; this.majEclairage(m, src, i, toScene([star.d[0] + up[0] * Rau, star.d[1] + up[1] * Rau, star.d[2] + up[2] * Rau]).normalize(), Mq, this.R, 1 - ecl); }
     }
     // lumière
     if (star) {
