@@ -40,6 +40,7 @@ Toute commande Docker passe par la **clé de service** `web`, jamais par le `con
 - **Kebet fait référence pour les jours et les heures affichés** (`physics/calendrier.js`) : 1 jour = période de Kebet (≈ 1,28 j terrestre), 24 h par jour, minute et seconde proportionnelles. Le temps interne reste en jours terrestres ; seul l'affichage convertit. Ne jamais écrire `* 24` ou `* 86400` pour afficher une durée : passer par `fmtDuree` / `fmtSecondes`, qui donnent le jour de Kebet puis l'équivalent entre parenthèses (« 1,00 j (1,28 j Terre) »).
 - Physique : `physics/` n'importe ni Three.js ni le DOM (les tests tournent sous Node seul). L'intégrateur est symétrique donc réversible : ne pas le casser (test « saut dans le temps »).
 - Une modification de donnée se vérifie par `npm test` (stabilité des lunes, énergie, canon), une modification d'interface dans un vrai navigateur (390 px et desktop).
+- **Toute décision qui ajoute ou change du lore** (valeur inventée, canon précisé, nom provisoire) s'inscrit dans `docs/modifications-lore.md` : date, canon d'origine, choix, statut, fichier. C'est le document que l'autrice relit pour mettre le roman et la simulation à jour.
 - Ce dépôt n'a que la branche `main`. Commits Conventional Commits, sans mention d'outil ; jamais de push sans demande.
 
 ## Décisions actées

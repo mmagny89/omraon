@@ -329,7 +329,7 @@ test('population : arrivée, croissance et présent dans le canon', () => {
   assert.ok(Math.abs(n.H / 500000 - 1) < 0.01, `${n.H}`);
   assert.ok(m.growth > 0.005 && m.growth < 0.009, `${m.growth}`); // ~0,7 %/an
   assert.ok(m.summary.canonHumans);
-  assert.ok(n.ratio > 1 && n.ratio < 1.3, `${n.ratio}`); // Tyts plus nombreux que les humains (mode « gestion », ratio visé 1,2)
+  assert.ok(n.ratio > 0.6 && n.ratio < 0.8, `${n.ratio}`); // Tyts minoritaires (mode « gestion », ratio visé 0,7 : conception, voir docs/modifications-lore.md)
 });
 test('dégel : contrôle intact jusqu\'à la perte du savoir, puis déclin ; désespoir né du génocide qui s\'estompe', () => {
   const m = simulatePopulation({});
@@ -453,6 +453,13 @@ test('traducteur : mot à mot sur le canon, rien d\'inventé', () => {
   assert.equal(versFrancais('xyzzy', idx).resultat, '[xyzzy]', 'inconnu : signalé, jamais deviné');
   assert.equal(versTyt('mon amour', idx).resultat, 'sunazu'); assert.equal(versTyt("le feu et l'eau", idx).resultat, 'Pyr ka Nunn');
   assert.equal(versTyt('je dors', idx).resultat, 'shu [dors]'); assert.equal(versTyt('', idx).resultat, '');
+});
+
+test('population : hybrides humain/Tyt très rares, mères mortes en couche', () => {
+  const m = simulatePopulation({}), a = m.at(0);
+  assert.ok(a.Y > 10 && a.Y < 300 && a.Y < a.T * 0.001, `hybrides ${a.Y}`); assert.ok(m.at(100).Y > a.Y && m.at(-560).Y === 0);
+  assert.ok(Math.abs(a.maternalDeaths / a.hybBirths - 0.15) < 1e-9 && a.hybBirths < a.hybConceptions && a.cumMaternal > 10 && a.cumHybrids > a.Y);
+  assert.equal(simulatePopulation({ hybridContact: 0 }).at(100).Y, 0);
 });
 
 test('population : génocide du monde natal, survivants en petits groupes, contrôle des naissances tyt', () => {

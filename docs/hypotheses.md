@@ -27,7 +27,7 @@
 | Sites | 18 emplacements, populations et Tyts (`invented: true`) | `data/sites.js` |
 | Accélération des vaisseaux | 8 g (≈ 35 UA en 6 jours), repos moteur d'un jour | `physics/transfers.js`, `physics/flight.js` |
 | Réseau | taux de diffusion locale, répression, graines, filtre du Consortium (~65 %) | `physics/network.js` |
-| Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 1,2, coefficients d'éveil | `physics/population.js` |
+| Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 0,7 (voir `modifications-lore.md`), contrôle requis 1,04, coefficients d'éveil, hybrides humain/Tyt | `physics/population.js` |
 | Habitabilité | seuils vert/orange/rouge, gravité 0,6–1,5 g, dose visée 0,2 mSv/j, etc. | `physics/habitability.js`, `physics/habitat.js` |
 | Troyens de Zirkan | 400 astéroïdes, activés par défaut (non canon) | `physics/simulation.js` |
 
@@ -35,7 +35,7 @@
 - **Planète en cours de colonisation (Mouvement II)** : Shukal, aux confins autour de Roukir ; à confirmer.
 - **Calendrier affiché** : jour = jour de Kebet (période orbitale calculée, ≈ 1,28 j terrestre), 24 h par jour, minute et seconde proportionnelles ; l'année reste de 365,25 j terrestres (≈ 285 jours de Kebet, le dernier est partiel). La limite de 6 jours de l'hyperpropulsion reste en jours terrestres (≈ 4,7 jours de Kebet). Conception : le roman ne chiffre pas ce calendrier. `physics/calendrier.js`.
 - **Journée de Kebet** : 1,28 j (rotation synchrone) ; le document parle d'un « vrai cycle jour/nuit ».
-- **Nombre de Tyts** : géré (ratio visé 1,2) ou subi (croissance sous contrainte), au choix dans le panneau.
+- **Nombre de Tyts** : géré (ratio visé 0,7) ou subi (croissance sous contrainte), au choix dans le panneau.
 
 ## Rendu (conception, sans effet sur la physique)
 
@@ -57,4 +57,6 @@
 - **Traducteur tyt ⇄ français** (`ui/traducteur.js`) : outil de conception, pas une langue. Mot à mot sur le seul glossaire (canon) ; seules morphologies admises : composés à trait d'union, suffixes `-an` (pluriel) et `-ku` (agent), alias « courant ». Aucun mot, aucune conjugaison ni ordre des mots n'est inventé : tout mot absent ressort entre crochets. Le français → tyt ne trouve que les mots dont le sens du glossaire contient le terme (premier sens de chaque entrée) ; plusieurs candidats sont listés.
 - **Origine de la frise** : l'An 0 est le début de l'Ère confédérale ; le présent est l'An 300 parce que l'ère dure ~300 ans dans la chronologie (fin des Siècles Sombres à −300 du présent). Le roman ne donne pas d'année absolue du présent : à remplacer si besoin en changeant `AN_PRESENT` (`data/chronologie.js`). Le temps interne, les liens partagés (`t=` en jours depuis le présent) et la physique ne changent pas ; seul l'affichage convertit.
 - **Génocide du monde natal et contrôle des naissances tyt** (`physics/population.js`, panneau Population) : le canon donne le génocide (An −200, hors système) mais aucun chiffre. Choix : génocide très franc (monde natal à 30 millions de Tyts, vidé en une demi-année) ; ne subsistent que trois petits groupes, assez nombreux pour refaire des générations sans consanguinité : les Tyts déjà sur Kebet (`T0`, ≈ 5 400 au crime), des prisonniers de guerre (2 000, supposés livrés au système et asservis avec eux, donc ajoutés aux Tyts du système au crime) et les Tyts partis sur Terre (1 500, hors système, simple croissance naturelle). Effectifs réglables dans le panneau. Flux du système, de conception : naissances décidées (production vers le ratio visé, ou croissance subie), naissances empêchées (le potentiel naturel `tytGrowth × T` retenu par les humains, jamais avant le crime ni en mode subi), Tyts éliminés (la « réduction » : proportionnelle à l'éveil, plus l'excédent sur le ratio visé). Le document dit « produire ou réduire » sans équations.
+- **Hybrides humain/Tyt** (`physics/population.js`, panneau Population) : n'existent pas dans les documents ; invention : conceptions = `hybridContact × √(H·T) / 1e6` par an (30 pour 1 M × 1 M), 40 % menées à terme, 15 % des mères mortes en couche, un enfant sur deux atteint l'âge adulte, mortalité adulte 3 %/an, stérilité. Résultat au présent : ≈ 66 vivants. Voir `modifications-lore.md`.
+- **Ratio Tyts / humains 0,7** : décision de l'autrice (2026-11-12) ; `controlNeeded` passe de 0,6 à 1,04 pour garder un présent « à un point de bascule » (contrôle ≈ 56 %). Le test n'exige plus « Tyts plus nombreux que les humains ».
 - **Ambiances de onze lieux** : le lore ne détaille le sensoriel que pour Kebet, Sethis et Roushan ; les autres lieux sont déduits de leur fonction (docs 01, 03, 04, 05) et de la physique (pesanteur, lumière, froid). À valider ou remplacer par de vrais textes (`AMBIANCES_SITES`).

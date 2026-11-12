@@ -247,7 +247,7 @@ body.ground #bar { z-index: 6; position: fixed; }
 .pop-fig { margin: 8px 0; } .pop-fig figcaption { display: grid; gap: 2px; margin-bottom: 4px; } .pop-fig figcaption b { color: var(--text); } .pop-fig figcaption span { color: var(--mute); font-size: 11.5px; }
 .pop-lg { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 11.5px; color: #cfd8ec; }
 .pop-lg li { display: inline-flex; align-items: center; gap: 5px; } .pop-lg i { display: inline-block; width: 16px; height: 3px; border-radius: 2px; flex: none; } .pop-lg i.d { background-image: repeating-linear-gradient(90deg, transparent 0 4px, rgba(10,14,26,.9) 4px 6px); }
-#pop-c1, #pop-c2, #pop-c3 { width: 100%; height: 130px; display: block; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.25); margin: 6px 0; }
+#pop-c1, #pop-c2, #pop-c3, #pop-c4 { width: 100%; height: 130px; display: block; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.25); margin: 6px 0; }
 #pop-at { width: 100%; border-collapse: collapse; font-size: 12px; } #pop-at td { padding: 3px 5px; border-bottom: 1px solid var(--line); } #pop-at td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
 #pop-at .ok { color: var(--ok); } #pop-at .warn { color: var(--warn); } #pop-at .bad { color: #ff6b7a; }
 @media (max-width: 860px) { #pop .grid { grid-template-columns: 1fr; } #pop label, #pop input[type=number], #pop select { min-height: 44px; } }

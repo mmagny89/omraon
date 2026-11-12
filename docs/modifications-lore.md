@@ -1,0 +1,55 @@
+# Modifications du lore — ce que la simulation ajoute ou change
+
+Ce document liste tout ce que la simulation **invente, précise ou modifie** par rapport aux documents du roman (00–13). Il sert à deux choses : reporter dans le roman ce que vous retenez, et corriger la simulation quand le lore change.
+
+- **Canon** : fixé par les documents. **Décidé** : tranché par l'autrice pendant le développement. **Conception** : valeur choisie faute de canon, modifiable. **Provisoire** : placeholder à remplacer.
+- La colonne **Décision** est la vôtre : mettez `validé`, `rejeté` ou `à revoir`. Une entrée `rejeté` se retire du code (colonne « Où »).
+- Les choix purement physiques ou graphiques (orbites, rendu, anneaux de glace…) sont dans [`hypotheses.md`](hypotheses.md) ; ici, seulement ce qui touche au récit.
+- **Règle du projet** : toute décision qui ajoute ou change du lore s'inscrit ici, avec sa date.
+
+## Comment mettre à jour quand le lore change
+
+1. Trouver l'entrée ci-dessous et lire la colonne **Où** : chaque valeur est une constante nommée, une ligne à changer.
+2. Modifier la valeur, lancer `npm test` (les tests de population, de chronologie et de lore tombent si un ordre de grandeur sort du canon).
+3. Changer le statut de l'entrée (et sa date) ici, puis mettre à jour `hypotheses.md` si la valeur y figure aussi.
+
+## Chronologie et calendrier
+
+| # | Date | Sujet | Canon | Ce que fait la simulation | Statut | Où | Décision |
+|---|---|---|---|---|---|---|---|
+| 1 | 2026-11-12 | Origine des années | « An 0 = présent » (hypothèse initiale du projet, jamais dans le lore) | **An 0 = début de l'Ère confédérale** (fin des Siècles Sombres) ; départ de la Terre An −660, arrivée An −260, double basculement An −200 | Décidé | `data/chronologie.js` | |
+| 2 | 2026-11-12 | Année du présent | Le roman ne donne pas d'année absolue | **An 300**, déduit de la durée de l'ère (300 ans entre la fin des Siècles Sombres et le présent) ; réveils à l'An 298 | Conception, à valider | `AN_PRESENT` dans `data/chronologie.js` | |
+| 3 | 2026-11-12 | Âge du système | « Plus vieux que celui du Soleil » | Étoile G0V de **5,8 Gyr** (durée de vie ≈ 7,9 Gyr) | Canon précisé, valeur de conception | `data/omraon.js` | |
+| 4 | 2026-11-12 | Calendrier confédéral | Treize mois nommés (docs 02 et 03), ni durée ni fêtes | **13 mois égaux** (≈ 22 jours de Kebet) ; le présent (An 300) commence au premier jour d'Aset | Conception | `data/lore.js`, `moisConfederal` dans `ui/lore.js` | |
+| 5 | 2026-11-12 | Jour affiché | « Vrai cycle jour/nuit » sur Kebet | Le **jour de Kebet** (≈ 1,28 j terrestre, 24 h) fait référence pour tout affichage ; l'année reste de 365,25 j terrestres | Décidé | `physics/calendrier.js` | |
+
+## Peuples, démographie, contrôle
+
+| # | Date | Sujet | Canon | Ce que fait la simulation | Statut | Où | Décision |
+|---|---|---|---|---|---|---|---|
+| 6 | 2026-11-12 | Génocide du monde natal tyt | Génocide en l'An −200, hors système ; aucun chiffre | **30 millions** de Tyts avant ; monde natal **vidé en une demi-année** ; ne restent que trois petits groupes | Décidé (franc, trois groupes) ; chiffres de conception | `nativeN0`, `genocideYears` dans `physics/population.js` | |
+| 7 | 2026-11-12 | Survivants du génocide | Quelques milliers de Tyts en pèlerinage sur Kebet à l'arrivée | Tyts de Kebet (4 000 à l'arrivée, ≈ 5 400 au crime) ; **2 000 prisonniers de guerre** (livrés au système, asservis avec eux) ; **1 500 Tyts partis sur Terre** (hors système). Peu nombreux mais assez pour éviter la consanguinité | Décidé ; effectifs de conception ; sort des prisonniers supposé | `T0`, `warPrisoners`, `earthTyts` | |
+| 8 | 2026-11-12 | Rapport Tyts / humains | « Tyts plus nombreux dans le travail servile » (doc 02, à relire : total ou seulement parmi les asservis ?) | **0,7 Tyt par humain** au présent (≈ 330 000 Tyts pour 500 000 humains), au lieu de 1,2 | Décidé, en tension possible avec le canon | `tytRatio` | |
+| 9 | 2026-11-12 | Contrôle des humains sur les Tyts | Le contrôle tient par la surveillance et se délite quand le savoir se perd | Contrôle requis recalé à **1,04** pour que le présent reste « à un point de bascule » (≈ 56 % de contrôle, bascule An 311) avec le ratio 0,7 | Conception | `controlNeeded` | |
+| 10 | 2026-11-12 | Contrôle des naissances tyt | « Produire ou réduire » (doc Économie), sans équations | Trois flux : **naissances décidées**, **naissances empêchées** (le potentiel naturel retenu par les humains, dès le crime), **Tyts éliminés** (la « réduction ») | Décidé (principe) ; équations de conception | `flows` dans `physics/population.js` | |
+| 11 | 2026-11-12 | Hybrides humain/Tyt | Aucun dans les documents (le lien de sang, `tarn`, relie « en secret » Tyts et humains) | **Très rares** : ≈ 66 vivants au présent sur ≈ 830 000 habitants, ≈ 700 nés depuis l'arrivée. 40 % des grossesses aboutissent, **15 % des mères meurent en couche**, un enfant sur deux atteint l'âge adulte, mortalité adulte 3 %/an (problèmes génétiques) ; **stériles** | Décidé (existence, rareté, mortalité) ; tous les chiffres de conception | `hybridContact`, `hybridTerm`, `maternalDeath`, `hybridChild`, `hybridMortality` | |
+| 12 | 2026-11-11 | Dégel : savoir, désespoir, éveil | Le système est « à un point de bascule » au présent | Demi-vie du savoir 220 ans dès −300, désespoir 95 % puis demi-vie 460 ans, coefficients d'éveil et de révolte | Conception | `physics/population.js` | |
+
+## Lieux, personnages, langue
+
+| # | Date | Sujet | Canon | Ce que fait la simulation | Statut | Où | Décision |
+|---|---|---|---|---|---|---|---|
+| 13 | 2026-11-12 | Placement des personnages | Doc 08 : origines, lieu exact parfois non tranché | Placement **provisoire** de Théa, Mira, du père Tarnel (cité-mine de Sethis), d'Onkel (repaire de la ceinture), de Heru (port orbital de Kebet), des agents (siège du Consortium) | Provisoire | `data/lore.js` | |
+| 14 | 2026-11-12 | Ambiances de onze lieux | Sensoriel détaillé seulement pour Kebet, Sethis, Roushan | Textes déduits de la fonction du lieu et de la physique, **non canon** | Conception | `data/ambiances.js` | |
+| 15 | 2026-11-12 | Traducteur tyt | Glossaire du doc 02 (≈ 65 mots) | Mot à mot sur ce glossaire seul ; suffixes `-an` et `-ku`, composés à trait d'union ; **aucun mot, aucune règle inventés** | Canon | `ui/traducteur.js` | |
+| 16 | 2026-11-11 | Sites habités | Populations par ordre de grandeur (doc Échelles) | 18 sites et leurs populations (`invented: true`) | Conception | `data/sites.js` | |
+| 17 | 2026-11-11 | Shukal | Planète des confins, nom non fixé | **Nom provisoire** ; 0,06 M⊕, orbite de 9,5 M km autour de Roushan | Provisoire | `data/omraon.js` | |
+
+## À trancher dans le roman
+
+Questions que la simulation a dû poser sans réponse du lore :
+
+- Quelle année absolue pour le présent (entrée 2) ?
+- « Tyts plus nombreux » : au total, ou parmi les travailleurs asservis seulement (entrée 8) ?
+- Où sont les prisonniers de guerre après le génocide (entrée 7) ? Les hybrides sont-ils vraiment stériles (entrée 11) ?
+- Les hybrides sont-ils connus des humains, des Tyts, ou cachés (le lien de sang est « secret ») ?

@@ -141,25 +141,30 @@
         <label>Humains au présent <input id="pop-h" type="number" min="5000" step="10000" value="500000" inputmode="numeric"></label>
         <label>Tyts à l'arrivée <input id="pop-t0" type="number" min="100" step="500" value="4000" inputmode="numeric"></label>
         <label>Nombre de Tyts <select id="pop-mode"><option value="gestion">Géré (production / réduction)</option><option value="nature">Subi (croissance sous contrainte)</option></select></label>
-        <label>Ratio Tyts / humains visé <input id="pop-ratio" type="number" min="0.1" step="0.1" value="1.2" inputmode="decimal"></label>
+        <label>Ratio Tyts / humains visé <input id="pop-ratio" type="number" min="0.1" step="0.1" value="0.7" inputmode="decimal"></label>
         <label>Croissance subie (%/an) <input id="pop-growth" type="number" min="0" step="0.1" value="0.8" inputmode="decimal"></label>
         <label>Demi-vie du savoir de contrôle (ans) <input id="pop-know" type="number" min="20" step="10" value="220" inputmode="numeric"></label>
-        <label>Capacité de contrôle requise <input id="pop-ctl" type="number" min="0.1" step="0.05" value="0.6" inputmode="decimal"></label>
+        <label>Capacité de contrôle requise <input id="pop-ctl" type="number" min="0.1" step="0.05" value="1.04" inputmode="decimal"></label>
         <label>Demi-vie du désespoir (ans) <input id="pop-dh" type="number" min="20" step="20" value="460" inputmode="numeric"></label>
         <label>Vérité rapportée à l'An <input id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
         <label>… force (0–1) <input id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
         <label>Monde natal tyt avant le génocide <input id="pop-nat" type="number" min="1000" step="1000000" value="30000000" inputmode="numeric"></label>
         <label>Prisonniers de guerre épargnés <input id="pop-pow" type="number" min="0" step="100" value="2000" inputmode="numeric"></label>
         <label>Tyts partis sur Terre <input id="pop-earth" type="number" min="0" step="100" value="1500" inputmode="numeric"></label>
+        <label>Hybrides : conceptions par an (1 M d'humains × 1 M de Tyts) <input id="pop-hc" type="number" min="0" step="5" value="30" inputmode="numeric"></label>
+        <label>Hybrides : mères mortes en couche (%) <input id="pop-hm" type="number" min="0" max="100" step="1" value="15" inputmode="numeric"></label>
         <button type="button" id="pop-reset" class="wide">Valeurs calées sur les documents</button>
       </div>
       <p id="pop-hv" class="note" aria-live="off">Survolez une courbe pour lire les chiffres d'une année.</p>
       <figure class="pop-fig"><figcaption><b>Effectifs et contrôle</b><span>Nombre de personnes (échelle logarithmique, à gauche) · contrôle des humains sur les Tyts (0 à 100 %) · abscisse : année de l'Ère confédérale · barre blanche : date de la frise</span></figcaption>
-        <ul class="pop-lg"><li><i style="background:#ffbf6b"></i>humains</li><li><i style="background:#6fd3a0"></i>Tyts du système (Kebet et prisonniers, puis leurs descendants)</li><li><i class="d" style="background:#c78bff"></i>Tyts du monde natal (hors système)</li><li><i class="d" style="background:#6fb4ff"></i>contrôle des humains sur les Tyts</li><li><i class="d" style="background:#ff6b7a"></i>génocide du monde natal : le monde est vidé</li><li><i class="d" style="background:#f78fd0"></i>Tyts survivants partis sur Terre (hors système)</li></ul>
+        <ul class="pop-lg"><li><i style="background:#ffbf6b"></i>humains</li><li><i style="background:#6fd3a0"></i>Tyts du système (Kebet et prisonniers, puis leurs descendants)</li><li><i class="d" style="background:#c78bff"></i>Tyts du monde natal (hors système)</li><li><i class="d" style="background:#6fb4ff"></i>contrôle des humains sur les Tyts</li><li><i class="d" style="background:#ff6b7a"></i>génocide du monde natal : le monde est vidé</li><li><i class="d" style="background:#f78fd0"></i>Tyts survivants partis sur Terre (hors système)</li><li><i style="background:#b8f060"></i>hybrides humain/Tyt vivants (très peu nombreux)</li></ul>
         <canvas id="pop-c1" role="img" aria-label="Populations humaine et tyt du système, Tyts du monde natal et de la Terre, contrôle des humains sur les Tyts, génocide du monde natal"></canvas></figure>
       <figure class="pop-fig"><figcaption><b>Contrôle des naissances tyt</b><span>Flux par an, échelle logarithmique : ce que les humains décident, retiennent ou éliminent chez les Tyts du système</span></figcaption>
         <ul class="pop-lg"><li><i style="background:#6fd3a0"></i>naissances décidées</li><li><i style="background:#ffbf6b"></i>naissances empêchées (potentiel naturel retenu)</li><li><i style="background:#ff6b7a"></i>Tyts éliminés (réductions)</li></ul>
         <canvas id="pop-c3" role="img" aria-label="Naissances tyt décidées, naissances empêchées et Tyts éliminés par an"></canvas></figure>
+      <figure class="pop-fig"><figcaption><b>Hybrides humain/Tyt</b><span>Nombre par an ou en stock, échelle logarithmique : la plupart des grossesses n'aboutissent pas, les accouchements tuent souvent la mère, les enfants et adultes meurent jeunes de leurs problèmes génétiques</span></figcaption>
+        <ul class="pop-lg"><li><i style="background:#b8f060"></i>hybrides vivants</li><li><i class="d" style="background:#6fb4ff"></i>conceptions par an</li><li><i style="background:#ffbf6b"></i>naissances menées à terme par an</li><li><i style="background:#ff6b7a"></i>mères mortes en couche par an</li></ul>
+        <canvas id="pop-c4" role="img" aria-label="Hybrides humain et tyt : stock vivant, conceptions, naissances et mères mortes en couche par an"></canvas></figure>
       <figure class="pop-fig"><figcaption><b>Dégel du contrôle</b><span>Part de 0 à 100 % : le savoir de contrôle se perd, le désespoir s'estompe, les Tyts s'éveillent</span></figcaption>
         <ul class="pop-lg"><li><i style="background:#6fb4ff"></i>contrôle effectif</li><li><i style="background:#ff6b7a"></i>désespoir des Tyts</li><li><i style="background:#6fd3a0"></i>Tyts éveillés</li></ul>
         <canvas id="pop-c2" role="img" aria-label="Contrôle, désespoir et éveil des Tyts"></canvas></figure>
