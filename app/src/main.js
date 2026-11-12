@@ -5,6 +5,7 @@ import { habitableZone, starLuminosity } from './physics/derived.js';
 import { World } from './render/world.js';
 import { UI } from './ui/ui.js';
 import { SITES } from './data/sites.js';
+import { decoderEtat } from './ui/lien.js';
 import { calibrerJour } from './physics/calendrier.js';
 import { kebetIsLand } from './render/textures.js';
 
@@ -35,6 +36,7 @@ world.setSites(SITES, (id) => ui.selectSite(id));
 const ui = new UI(sim, world);
 ui.view('inner');
 world.rig.logD = world.rig.logTarget; // pas d'animation au démarrage
+{ const e = decoderEtat(location.hash); if (Object.keys(e).length) ui.restoreState(e); } // vue partagée par adresse
 
 const rebuild = () => {
   const s = newSim();

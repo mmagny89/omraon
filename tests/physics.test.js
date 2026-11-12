@@ -361,3 +361,11 @@ test('calendrier de Kebet : le jour de Kebet fait référence pour jours et heur
   assert.deepEqual([d.an, d.jour, d.h, d.min, d.s], [0, 3, 12, 0, 30]);
   assert.match(fmtDuree(j), /^24\.0 h \(30\.\d h Terre\)$/); assert.match(fmtDuree(j * 5), /^5\.00 j \(\d\.\d\d j Terre\)$/); assert.match(fmtSecondes(j * 3600), /^60 min \(.* Terre\)$/); assert.match(fmtSecondes(j * 10800), /^3\.0 h \(.* Terre\)$/);
 });
+
+import { encoderEtat, decoderEtat } from '../app/src/ui/lien.js';
+test('lien partageable : aller-retour, bornes et valeurs hostiles', () => {
+  const e = { t: 1234.56789, b: 'Kebet', s: 'kebet-quartiers', az: 0.6, el: 0.55, d: 14.25, v: 3, p: true };
+  assert.deepEqual(decoderEtat('#' + encoderEtat(e)), { t: 1234.5679, b: 'Kebet', s: 'kebet-quartiers', az: 0.6, el: 0.55, d: 14.25, v: 3, p: true });
+  assert.deepEqual(decoderEtat('#t=abc&el=9&d=1e9&b=<script>&s=%E0%A4%A&p=2&x=1&=3'), {}, 'tout ce qui est illisible ou hors bornes est ignoré');
+  assert.deepEqual(decoderEtat(''), {}); assert.equal(encoderEtat({ t: NaN }), '');
+});

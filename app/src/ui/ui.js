@@ -18,6 +18,7 @@ import { planVoyage } from '../physics/flight.js';
 import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
+import { encoderEtat, decoderEtat } from './lien.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -548,6 +549,7 @@ export class UI {
     $('#play').addEventListener('click', () => { this.playing = !this.playing; $('#play').textContent = this.playing ? '❚❚' : '▶'; $('#play').setAttribute('aria-label', this.playing ? 'Pause' : 'Lecture'); });
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
+    this.bindLink();
     $('#list-q').addEventListener('input', () => this.filterList());
     $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
     const tog = (id, fn) => $(id).addEventListener('change', (e) => fn(e.target.checked));
@@ -666,6 +668,42 @@ export class UI {
     return rows;
   }
 
+  // ---------- Lien partageable ----------
+  /** État de la vue courante (date, corps, site, caméra, vitesse). */
+  etatCourant() {
+    const w = this.world, rig = w.rig;
+    return { t: this.target, b: w.bodies[this.selected]?.name, s: this.selectedSite || undefined, az: rig.az, el: rig.el, d: rig.logTarget, v: this.speedIdx, p: !this.playing };
+  }
+  /** Applique un état décodé (valeurs déjà validées par decoderEtat ; un site ou un corps inconnu est ignoré). */
+  restoreState(e) {
+    const w = this.world, rig = w.rig;
+    if (e.v != null && SPEEDS[e.v]) { this.speedIdx = e.v; $('#speed').value = e.v; $('#speed-out').textContent = SPEEDS[e.v][1]; }
+    if (e.t != null) this.goToTime(e.t);
+    if (e.s && SITES.some((x) => x.id === e.s)) this.selectSite(e.s);
+    else if (e.b) { const o = w.bodies.find((x) => x.name === e.b); if (o) this.select(o.idx, true); }
+    if (e.az != null) rig.az = e.az;
+    if (e.el != null) rig.el = e.el;
+    if (e.d != null) { rig.logTarget = e.d; rig.logD = e.d; }
+    this.playing = !e.p; $('#play').textContent = this.playing ? '❚❚' : '▶';
+  }
+  /** Écrit l'état dans l'adresse (sans empiler l'historique) ; appelé quelques fois par seconde. */
+  syncHash() {
+    const h = '#' + encoderEtat(this.etatCourant());
+    if (h !== this._hash) { this._hash = h; history.replaceState(null, '', h); }
+  }
+  bindLink() {
+    const b = $('#btn-link'), t = b.querySelector('.t');
+    b.addEventListener('click', async () => {
+      this.syncHash();
+      let ok = false;
+      try { await Promise.race([navigator.clipboard.writeText(location.href), new Promise((_, no) => setTimeout(no, 900))]); ok = true; } catch { /* repli ci-dessous */ }
+      if (!ok) { const a = document.createElement('textarea'); a.value = location.href; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch { /* sans effet */ } a.remove(); }
+      t.textContent = ok ? 'Copié' : 'Adresse'; b.setAttribute('aria-live', 'polite');
+      setTimeout(() => { t.textContent = 'Lien'; }, 1600);
+    });
+    window.addEventListener('hashchange', () => { if (location.hash !== this._hash) { this._hash = location.hash; this.restoreState(decoderEtat(location.hash)); } });
+  }
+
   /** Ouvre une section repliable de la fiche ; l'état ouvert/fermé choisi par l'utilisateur survit aux rafraîchissements. */
   begin(titre, ouvert) {
     const o = this.secState?.[titre] ?? ouvert;
@@ -764,6 +802,8 @@ export class UI {
     if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }
     if (this.world.ground?.active) this.updateGround(dt);
     this.netAcc = (this.netAcc || 0) + dt; if (this.net && this.netAcc > 0.2) { this.netAcc = 0; this.updateNetMarkers(); }
+    const pb = $('#play'), ptxt = this.playing ? '❚❚' : '▶', plab = this.playing ? 'Pause' : 'Lecture'; if (pb.textContent !== ptxt || pb.getAttribute('aria-label') !== plab) { pb.textContent = ptxt; pb.setAttribute('aria-label', plab); } // le bouton reflète toujours l'état réel
+    this.hashAcc = (this.hashAcc || 0) + dt; if (this.hashAcc > 1 && !this.calculating) { this.hashAcc = 0; this.syncHash(); }
     this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
     if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }
     if (this.selectedSite && this.sceneAcc > 2.5) { this.sceneAcc = 0; this.refreshScene(); }
