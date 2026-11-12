@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { makeNoise } from './noise.js';
 
+const TWO_PI_LOCAL = Math.PI * 2;
 const hex = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -147,6 +148,37 @@ export function makeRingTexture(rings, seed = 1, w = 1024) {
 export function ringProfile(rings, k = 48) {
   const n = makeNoise((rings.seed ?? 1) + 101), base = hex(rings.color);
   return Array.from({ length: k }, (_, i) => ringAt(n, rings, base, (i + 0.5) / k));
+}
+
+/**
+ * Carte des lumières nocturnes d'un monde habité : un foyer par site au sol (rayon ∝ √population) et des hameaux
+ * semés autour, sur les terres seulement. Exagérée pour être lisible à l'échelle de la planète ; hameaux = invention de rendu.
+ * sites : [{ lat, lon, population }] ; seed : graine de la texture du corps (même terre émergée que kebetIsLand).
+ */
+export function makeLightsTexture(seed, sites, w = 1024, h = 512) {
+  const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+  const g = cv.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, w, h); g.globalCompositeOperation = 'lighter';
+  let s = (seed * 2654435761) >>> 0; const rnd = () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296);
+  const px = (lon) => (((lon % 360) + 360) % 360) / 360 * w, py = (lat) => (0.5 - lat / 180) * h;
+  const blob = (lat, lon, r, a) => {
+    for (const dx of [-w, 0, w]) {
+      const x = px(lon) + dx, y = py(lat), gr = g.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, `rgba(255,222,160,${a})`); gr.addColorStop(0.35, `rgba(255,190,110,${a * 0.35})`); gr.addColorStop(1, 'rgba(255,170,90,0)');
+      g.fillStyle = gr; g.fillRect(x - r, y - r, 2 * r, 2 * r);
+    }
+  };
+  for (const site of sites) {
+    const pop = site.population, spread = 4 + 4 * Math.log10(Math.max(1, pop / 1000)), n = Math.round(Math.sqrt(pop) / 2.2);
+    for (let i = 0; i < n; i++) { // hameaux autour du foyer, sur terre
+      for (let t = 0; t < 12; t++) {
+        const d = spread * rnd() ** 1.4, a = rnd() * TWO_PI_LOCAL, lat = site.lat + d * Math.sin(a), lon = site.lon + d * Math.cos(a) / Math.max(0.3, Math.cos(site.lat * Math.PI / 180));
+        if (Math.abs(lat) < 80 && kebetIsLand(seed, lat, lon)) { blob(lat, lon, 1.2 + 1.5 * rnd(), 0.3 + 0.4 * rnd()); break; }
+      }
+    }
+    blob(site.lat, site.lon, (0.8 + Math.sqrt(pop) / 110) * (w / 360), 0.9);
+  }
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = THREE.RepeatWrapping;
+  return tex;
 }
 
 export function makeCloudTexture(seed, w = 512, h = 256) {
