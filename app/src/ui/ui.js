@@ -19,6 +19,7 @@ import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
 import { encoderEtat, decoderEtat } from './lien.js';
+import { etapesVisite } from './visite.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -550,6 +551,7 @@ export class UI {
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
     this.bindLink();
+    this.bindTour();
     $('#info-live').addEventListener('click', (e) => { const t = e.target.closest?.('.evts button[data-t]'); if (t) this.goToTime(+t.dataset.t); });
     $('#list-q').addEventListener('input', () => this.filterList());
     $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
@@ -667,6 +669,43 @@ export class UI {
       rows += row(`Jour vu depuis ${p.def.name}`, 'infini : ' + p.def.name + ' est fixe dans le ciel');
     }
     return rows;
+  }
+
+  // ---------- Visite guidée ----------
+  startTour() {
+    if (this.touring) return;
+    this.touring = true; this.tourSteps = etapesVisite(this); this.tourSaved = this.etatCourant();
+    const cl = document.body.classList; this.tourHadLeft = cl.contains('hide-left'); cl.add('hide-left', 'touring');
+    $('#tour').hidden = false; this.tourGo(0);
+  }
+  tourGo(i) {
+    const st = this.tourSteps, n = st.length; if (!st) return;
+    this.tourIdx = Math.max(0, Math.min(n - 1, i)); const s = st[this.tourIdx];
+    if (s.vue) this.view(s.vue);
+    this.restoreState({ v: 0, ...s.etat });
+    const dots = st.map((_, k) => `<button type="button" class="pip${k === this.tourIdx ? ' on' : ''}" data-go="${k}" aria-label="Étape ${k + 1} : ${esc(st[k].titre)}"${k === this.tourIdx ? ' aria-current="step"' : ''}></button>`).join('');
+    $('#tour').innerHTML = `<div class="t-n">Étape ${this.tourIdx + 1} / ${n}</div><h2>${s.titre}</h2><div class="t-body">${s.texte()}</div>`
+      + `<div class="t-dots">${dots}</div><div class="t-act"><button type="button" data-tour="prev"${this.tourIdx === 0 ? ' disabled' : ''}>◀ Précédent</button>`
+      + `<button type="button" data-tour="${this.tourIdx === n - 1 ? 'end' : 'next'}" class="main">${this.tourIdx === n - 1 ? 'Terminer' : 'Suivant ▶'}</button><button type="button" data-tour="end" class="quit" aria-label="Quitter la visite">✕</button></div>`;
+    $('#tour').querySelector('.main').focus({ preventScroll: true });
+  }
+  endTour() {
+    if (!this.touring) return;
+    this.touring = false; $('#tour').hidden = true;
+    const cl = document.body.classList; cl.remove('touring'); if (!this.tourHadLeft) cl.remove('hide-left');
+    this.restoreState(this.tourSaved); // retour à la vue d'avant la visite
+  }
+  bindTour() {
+    $('#btn-tour').addEventListener('click', () => (this.touring ? this.endTour() : this.startTour()));
+    $('#tour').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.go != null) this.tourGo(+b.dataset.go);
+      else if (b.dataset.tour === 'next') this.tourGo(this.tourIdx + 1); else if (b.dataset.tour === 'prev') this.tourGo(this.tourIdx - 1); else if (b.dataset.tour === 'end') this.endTour();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (!this.touring || e.target.closest?.('input, select, textarea, #frise-track')) return;
+      if (e.key === 'ArrowRight') { e.preventDefault(); this.tourGo(this.tourIdx + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); this.tourGo(this.tourIdx - 1); } else if (e.key === 'Escape') this.endTour();
+    });
   }
 
   // ---------- Lien partageable ----------

@@ -291,6 +291,23 @@ body.ground #bar { z-index: 6; position: fixed; }
 @media (prefers-reduced-motion: reduce) { #list button.tgl::before { transition: none; } }
 #list small { flex: none; white-space: nowrap; }
 
+/* Visite guidée */
+#tour { top: auto; position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 8; width: min(560px, calc(100vw - 24px)); max-height: 46vh; overflow-y: auto; padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line); background: rgba(10, 14, 26, .94); backdrop-filter: blur(10px); box-shadow: 0 10px 30px rgba(0, 0, 0, .5); }
+#tour[hidden] { display: none; }
+#tour .t-n { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+#tour h2 { margin: 2px 0 6px; font-size: 18px; }
+#tour .t-body { color: #cfd8ec; } #tour .t-body ul { margin: 0 0 6px; padding-left: 18px; } #tour .t-body li { margin: 3px 0; }
+#tour .t-dots { display: flex; gap: 2px; margin: 10px 0 4px; }
+#tour .t-dots .pip { flex: 1; min-height: 28px; padding: 0; border: 0; background: none; cursor: pointer; position: relative; }
+#tour .t-dots .pip::after { content: ""; position: absolute; left: 2px; right: 2px; top: 50%; height: 4px; margin-top: -2px; border-radius: 2px; background: var(--line); }
+#tour .t-dots .pip.on::after { background: var(--accent); }
+#tour .t-act { display: flex; gap: 8px; align-items: center; }
+#tour .t-act button { min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: rgba(160, 185, 230, .08); color: inherit; font: inherit; cursor: pointer; }
+#tour .t-act button.main { flex: 1; border-color: var(--accent); color: var(--accent); }
+#tour .t-act button:disabled { opacity: .4; cursor: default; }
+#tour .t-act button:focus-visible, #tour .t-dots .pip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+body.ui-hidden #tour { display: none; }
+
 /* Prochains événements d'une fiche */
 #info .evts { list-style: none; margin: 0; padding: 0; }
 #info .evts button { display: grid; width: 100%; min-height: 44px; text-align: left; gap: 0; padding: 6px 8px; border: 0; border-top: 1px solid var(--line); background: none; color: inherit; font: inherit; border-radius: 6px; cursor: pointer; }
