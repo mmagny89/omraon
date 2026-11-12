@@ -15,7 +15,7 @@ statique : aucun serveur applicatif, aucune ressource externe.
 
 ```sh
 docker compose up -d --wait   # https://localhost (certificat auto-signé de Caddy)
-npm test                      # 40 tests de physique, de calcul et de cohérence avec le canon
+npm test                      # 51 tests de physique, de calcul et de cohérence avec le canon
 ```
 
 Stack statique d'agence (Caddy seul, ni PHP ni Node) : le site vit dans `app/`, sans étape de build ; Three.js est copié dans `app/vendor/` (importmap).
