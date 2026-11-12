@@ -397,3 +397,19 @@ test('comparateur : fusion de deux rapports et liaison entre deux sites', () => 
   assert.ok(Math.abs(L.lumiereS - 499) < 1 && L.km > 1.49e8 && L.km < 1.50e8, `lumière ${L.lumiereS}`);
   assert.ok(L.volS > 0 && L.volS < 86400 * 6, `1 UA en hyperpropulsion : ${L.volS} s`);
 });
+
+import { etapesVisite } from '../app/src/ui/visite.js';
+import { ringProfile } from '../app/src/render/textures.js';
+import { PLANETS as PLN } from '../app/src/data/omraon.js';
+test('garde-fous du rendu : profil d\'anneau déterministe, divisions creusées, étapes de visite valides', () => {
+  const rg = PLN.find((p) => p.id === 'roushan').rings, a = ringProfile(rg, 96), b = ringProfile(rg, 96);
+  assert.deepEqual(a, b, 'même graine, même profil');
+  assert.ok(a.every((s) => s.a >= 0 && s.a <= 1 && s.c.every((v) => v >= 0 && v <= 255)), 'opacité et couleur bornées');
+  const idx = (r) => Math.floor(((r - rg.inner) / (rg.outer - rg.inner)) * 96), gap = a[idx(1.885)].a, ring = Math.max(...a.slice(idx(1.5), idx(1.8)).map((s) => s.a));
+  assert.ok(gap < 0.05 && ring > 0.3, `division creusée (${gap.toFixed(3)}) face à l'anneau (${ring.toFixed(2)})`);
+  assert.ok(a[0].a < a[10].a && a[95].a < a[85].a, 'bords adoucis');
+  const noms = new Set(['Omraon', ...PLN.flatMap((p) => [p.name, ...(p.moons || []).map((m) => m.name)])]);
+  const ui = { L: 2.5, hz: { conservative: [1.4, 2.5] } };
+  const steps = etapesVisite(ui); assert.equal(steps.length, 9);
+  for (const s of steps) { assert.ok(noms.has(s.etat.b), `corps inconnu : ${s.etat.b}`); assert.ok(s.titre && s.texte(ui).length > 40, `texte vide : ${s.titre}`); }
+});
