@@ -54,3 +54,4 @@
 - **Icebergs** : la terraformation de Kebet, la faune native, la balise d'Astir sont des indices (« à ne jamais tout expliquer ») ; un interrupteur les masque.
 - **Calendrier confédéral** : le lore (docs 02 et 03) donne 13 mois nommés mais ni leur durée ni les fêtes ; ici 13 mois égaux (≈ 22 jours de Kebet), l'An 0 commençant au premier jour d'Aset (`ui/lore.js`, `moisConfederal`). À remplacer dès que le lore tranche.
 - **Vue à hauteur d'yeux : correction** : `lookAt` (étoile, planète parente) visait l'azimut symétrique (`yaw = −az`) ; le cap affiché suit maintenant l'azimut réel.
+- **Ambiances de onze lieux** : le lore ne détaille le sensoriel que pour Kebet, Sethis et Roushan ; les autres lieux sont déduits de leur fonction (docs 01, 03, 04, 05) et de la physique (pesanteur, lumière, froid). À valider ou remplacer par de vrais textes (`AMBIANCES_SITES`).

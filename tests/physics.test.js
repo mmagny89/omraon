@@ -439,3 +439,18 @@ test('lore : calendrier de 13 mois, personnages et vestiges bien placés, aucune
   const tout = JSON.stringify([GLOSSAIRE, PERSONNAGES, VESTIGES]);
   assert.ok(!/\b(égypt\w*|Horus|Isis|Osiris|Aton|Atoum|Khépri|Nephthys|Maât|Sopdou|Tefnout)\b/i.test(tout), 'les racines égyptiennes ne s\'affichent jamais');
 });
+
+import { AMBIANCES_SITES, ambianceFor } from '../app/src/data/ambiances.js';
+test('ambiances : chaque entrée propre à un lieu est complète, non canon, et choisie pour son site', () => {
+  const ids = new Set(ST.map((s) => s.id));
+  for (const [id, a] of Object.entries(AMBIANCES_SITES)) {
+    assert.ok(ids.has(id), `site inconnu : ${id}`); assert.equal(a.canon, false, `${id} : le lore n'a pas de Quotidien sensoriel pour ce lieu`);
+    for (const k of ['voir', 'entendre', 'sentir', 'toucher', 'corps']) assert.ok(Array.isArray(a[k]) && a[k].length >= 1 && a[k].every((t) => t.length > 10), `${id}.${k}`);
+    assert.ok(a.titre && a.faussenote && a.source, id);
+    assert.equal(ambianceFor(ST.find((s) => s.id === id)).titre, a.titre);
+  }
+  assert.ok(Object.keys(AMBIANCES_SITES).length >= 10);
+  assert.equal(ambianceFor(ST.find((s) => s.id === 'sethis-cite-b')).canon, true, 'Sethis garde son ambiance canon');
+  assert.equal(ambianceFor(ST.find((s) => s.id === 'kebet-quartiers')).canon, true);
+  assert.ok(!/\b(égypt\w*|Horus|Isis|Osiris|Maât|Sopdou|Tefnout)\b/i.test(JSON.stringify(AMBIANCES_SITES)));
+});

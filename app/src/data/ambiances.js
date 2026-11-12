@@ -71,9 +71,114 @@ export const SITE_EXTRA = {
   'astir-balise': ['Observatoire et phare des vaisseaux vers Kebet ; logements d\'ouvriers-navetteurs.'],
 };
 
+// Ambiances propres à un lieu (non canon : le lore n'a de « Quotidien sensoriel » que pour Kebet, Sethis et Roushan). Chaque entrée
+// déduit les sens de la fonction du lieu décrite dans les documents (01 Bible géographique, 03 Corporations, 04 Politique, 05 Vie quotidienne)
+// et de sa physique (pesanteur, lumière, froid) : une banque d'images à valider, pas un canon. Les scènes la marquent « non canon ».
+export const AMBIANCES_SITES = {
+  'naksun-octroi': {
+    canon: false, source: '01 Système (Naksun), 04 Politique, 05 Vie quotidienne', titre: 'Octroi de Naksun — le seuil taxé',
+    voir: ['Files de vaisseaux à l\'arrêt devant les portiques ; cargaisons ouvertes, scellées, tamponnées ; colonnes de Tyts-esclaves comptés au passage.', 'Écrans de recensement, balises, uniformes de douaniers des corporations de commerce.'],
+    entendre: ['Appels de numéros de passage, scanners qui claquent, sas, pas cadencés ; le murmure de l\'attente.'],
+    sentir: ['Métal froid, huile de portique, odeur de soute ouverte, air recyclé.'],
+    toucher: ['Rampes, barrières, poignées tièdes de mains innombrables.'],
+    corps: ['L\'attente comme discipline : on apprend à ne pas se faire remarquer à la fouille.'],
+    faussenote: 'On y compte tout ce qui monte des mines : les minerais, et les êtres.',
+  },
+  'mahat-tribunaux': {
+    canon: false, source: '01 Système (Mahat), 04 Politique', titre: 'Tribunaux de Mahat — la justice des corporations',
+    voir: ['Couloirs gris, salles d\'audience sobres, archives douanières en rayonnages ; fuyards et fraudeurs en attente, sous l\'œil des greffiers.'],
+    entendre: ['Voix basses, appels de dossiers, battants de portes lourds ; le silence qui suit un verdict.'],
+    sentir: ['Papier, poussière de rayonnage, désinfectant de cellule.'],
+    toucher: ['Bancs durs, ferrures, sol lisse usé par des milliers de pas ; pesanteur très faible sur cette petite lune.'],
+    corps: ['Une peur contenue : parler fort ne sert à rien, la peine est souvent écrite d\'avance.'],
+    faussenote: 'Le nom promet l\'ordre et la justice ; la justice qu\'on y rend est celle des corporations.',
+  },
+  'sedbou-garnison': {
+    canon: false, source: '01 Système (Sedbou)', titre: 'Garnison de Sedbou — la lune-caserne',
+    voir: ['Baraquements alignés, postes de guet tournés vers Sethis, cellules sans fenêtre ; écrans de surveillance des mines.'],
+    entendre: ['Ordres brefs, bottes sur le métal, verrous ; un bourdonnement de surveillance qui ne s\'arrête jamais.'],
+    sentir: ['Graisse d\'arme, sueur, cantine, métal froid.'],
+    toucher: ['Grilles, banquettes de métal ; pesanteur quasi nulle sur une si petite lune.'],
+    corps: ['La tension de ceux qui gardent, et de ceux qui sont gardés.'],
+    faussenote: 'Sinistre : d\'ici on surveille les esclaves de Sethis, et personne ne regarde ailleurs.',
+  },
+  'kalpra-mines': {
+    canon: false, source: '01 Système (Kalpra), 03 Corporations', titre: 'Mines de Kalpra — la pierre-brûlée',
+    voir: ['Coupole blindée sur une roche cuite, étoile écrasante derrière des vitres sombres ; puits, rails, foreuses ; très peu de monde.'],
+    entendre: ['Foreuses sourdes, pompes de refroidissement, craquements de la roche qui se dilate.'],
+    sentir: ['Roche chaude, ozone, métal surchauffé, air filtré un peu rance.'],
+    toucher: ['Parois tièdes ou brûlantes, gants épais ; une pesanteur plus faible que sur Terre.'],
+    corps: ['La chaleur épuise ; on dort en sous-sol pour fuir le rayonnement.'],
+    faussenote: 'Le plus près du feu : un monde qu\'on exploite sans jamais l\'habiter vraiment.',
+  },
+  'iasha-relais': {
+    canon: false, source: '01 Système (Iasha), 13 Quotidien Kebet', titre: 'Relais d\'Iasha — premier arrêt avant le Jardin',
+    voir: ['Docks de transit au-dessus de Kebet, hublots sur le monde vert et sur Zirkan ; navettes de descente, files d\'ouvriers-navetteurs.'],
+    entendre: ['Annonces de navettes, sas, voix de pilotes, rumeurs de dortoirs.'],
+    sentir: ['Air de station, sueur, cuisine chaude.'],
+    toucher: ['Pesanteur très faible, rampes, couchettes superposées.'],
+    corps: ['La fatigue des allers-retours : le jour de la station n\'est pas celui de Kebet.'],
+    faussenote: 'Le paradis ne veut pas voir ceux qui le réparent : ils logent ici, à distance.',
+  },
+  'astir-balise': {
+    canon: false, source: '01 Système (Astir)', titre: 'Balise d\'Astir — le phare',
+    voir: ['Antennes et instruments sur une petite lune grise ; des vaisseaux guidés vers Kebet ; logements d\'ouvriers-navetteurs creusés dans la roche.'],
+    entendre: ['Bourdonnement d\'émetteurs, pulsations de balise, pompes.'],
+    sentir: ['Air filtré, métal, ozone d\'électronique.'],
+    toucher: ['Pesanteur très faible, câbles et rampes.'],
+    corps: ['Des veilles longues, les yeux sur les écrans.'],
+    faussenote: 'Une balise qui guide vers Kebet depuis longtemps : vestige possible des Anciens (iceberg, à ne pas expliquer).',
+  },
+  'kebet-orbite': {
+    canon: false, source: '01 Système (Kebet, Iasha), 13 Quotidien Kebet', titre: 'Port orbital de Kebet — la douane avant le Jardin',
+    voir: ['Docks clairs côté passagers, coursives de service côté ouvriers ; hublots sur le monde vert ; navettes de descente.'],
+    entendre: ['Annonces feutrées côté Haut, vacarme des soutes côté service.'],
+    sentir: ['Air filtré et parfumé côté passagers, huile et sueur côté service.'],
+    toucher: ['Rotation douce, rampes polies d\'un côté, métal usé de l\'autre.'],
+    corps: ['Deux corps dans la même station : ceux qui descendent, et ceux qui font tourner.'],
+    faussenote: 'Le Jardin est là, sous le hublot : tout proche, et réservé.',
+  },
+  'nunka-glace': {
+    canon: false, source: '01 Système (Nunka)', titre: 'Exploitation de glace de Nunka — l\'eau-pierre',
+    voir: ['Plaines de glace claire, galeries creusées dans le blanc bleuté, convoyeurs de blocs, cuves et tuyauteries givrées ; une étoile lointaine et faible.'],
+    entendre: ['Craquements de glace, scies thermiques, compresseurs ; l\'écho des galeries creuses.'],
+    sentir: ['Froid sec, ozone, eau de fonte, métal givré.'],
+    toucher: ['Parois glacées, gants épais, pesanteur faible.'],
+    corps: ['Le froid mord : mains gercées, haleine blanche.'],
+    faussenote: 'Sans cette eau, les cités de Roushan s\'arrêtent : un ravitaillement vital qu\'on tient pour acquis.',
+  },
+  'roukir-poste': {
+    canon: false, source: '01 Système (Roukir)', titre: 'Poste des confins — la dernière lumière',
+    voir: ['Postes de guet, antennes tournées vers le noir, douane du dehors ; le soleil réduit à une étoile parmi les autres.'],
+    entendre: ['Silence radio entrecoupé de grésillements ; sas, pompes, veilleurs.'],
+    sentir: ['Air recyclé froid, café de synthèse, huile.'],
+    toucher: ['Pesanteur faible, froid contre les parois.'],
+    corps: ['Ennui et vigilance : des gens loin de tout, qui regardent le vide.'],
+    faussenote: 'Au-delà, il n\'y a plus de système : le vide où entrent et sortent contrebandiers et pirates.',
+  },
+  'shukal-colonie': {
+    canon: false, source: '01 Système (Roukir, confins), 06 Structure (Mouvement II)', titre: 'Colonie de Shukal — le monde en chantier (nom provisoire)',
+    voir: ['Dômes provisoires et modules posés sur une roche grise sans atmosphère, chantiers, engins ; un monde en cours de colonisation, peu surveillé.'],
+    entendre: ['Engins de chantier étouffés par les parois, pompes, voix en combinaison.'],
+    sentir: ['Air neuf des modules, plastique chaud, poussière de roche.'],
+    toucher: ['Pesanteur faible, gants de combinaison.'],
+    corps: ['Trop peu de monde pour un si grand dehors.'],
+    faussenote: 'Nom et nature provisoires : le roman n\'a pas encore tranché ce monde.',
+  },
+  'shukal-arret': {
+    canon: false, source: '06 Structure (Mouvement II)', titre: 'Piste d\'arrêt forcé — loin des regards',
+    voir: ['Une piste de fortune au bord d\'un chantier désert, sur un monde peu surveillé ; le dehors immobile.'],
+    entendre: ['Le vent n\'existe pas : seulement la structure qui craque et ses propres pas.'],
+    sentir: ['Air d\'abri, métal froid, poussière.'],
+    toucher: ['Pesanteur faible, combinaison raide.'],
+    corps: ['L\'adrénaline retombée, la fatigue d\'après.'],
+    faussenote: 'Un endroit où personne ne vient : c\'est pour cela qu\'on s\'y arrête.',
+  },
+};
+
 export function ambianceFor(site) {
   const id = site.id;
   const key = id.startsWith('kebet') && site.type !== 'orbit' ? 'kebet' : id.startsWith('sethis') ? 'sethis' : id.startsWith('roushan') ? 'roushan'
     : site.type === 'heliocentric' ? 'ceinture' : site.type === 'orbit' ? 'station' : 'base';
-  return { key, ...AMBIANCES[key], extra: SITE_EXTRA[id] || [] };
+  return { key: AMBIANCES_SITES[id] ? id : key, ...(AMBIANCES_SITES[id] || AMBIANCES[key]), extra: SITE_EXTRA[id] || [] };
 }
