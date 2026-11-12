@@ -21,6 +21,7 @@ import { UNIT } from '../render/world.js';
 import { encoderEtat, decoderEtat } from './lien.js';
 import { etapesVisite } from './visite.js';
 import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug } from './carnet.js';
+import { STATUTS, statutSection } from './statut.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -533,7 +534,7 @@ export class UI {
     if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (données dans app/src/data/sites.js).</p>`;
     if (rec?.st) {
       const rep = siteReport({ sim: this.sim, el: (i) => this.world.bodies[i].el }, site, rec.st, this.target);
-      for (const sec of rep.sections) h += this.begin(sec.title, true) + `<dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;
+      for (const sec of rep.sections) h += this.begin(sec.title, true, statutSection(sec.title)) + `<dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;
       h += rep.notes.map((t) => `<p class="note">${t}</p>`).join('');
     }
     return h + '<div class="divider">Corps d\'accueil</div>';
@@ -821,13 +822,13 @@ export class UI {
       const detail = e.duration != null ? `${e.who} ← ${e.by}, ${fmtDuree(e.duration, { minutes: true })}` : e.by ? `${e.who} – ${e.by}` : e.who;
       return `<li><button type="button" data-t="${e.t}"><b>${e.type}</b><span>${detail}</span><small>${this.fmtT(e.t)} · dans ${fmtDuree(e.t - this.target)}</small></button></li>`;
     }).join('');
-    return `${this.begin('Prochains événements', true)}<ul class="evts">${items}</ul><p class="note">Cliquer saute à la date.</p></details>`;
+    return `${this.begin('Prochains événements', true, 'calcule')}<ul class="evts">${items}</ul><p class="note">Cliquer saute à la date.</p></details>`;
   }
 
   /** Ouvre une section repliable de la fiche ; l'état ouvert/fermé choisi par l'utilisateur survit aux rafraîchissements. */
-  begin(titre, ouvert) {
-    const o = this.secState?.[titre] ?? ouvert;
-    return `<details class="sec" data-sec="${titre}"${o ? ' open' : ''}><summary>${titre}</summary>`;
+  begin(titre, ouvert, statut = null) {
+    const o = this.secState?.[titre] ?? ouvert, st = statut && STATUTS[statut];
+    return `<details class="sec" data-sec="${titre}"${o ? ' open' : ''}><summary${st ? ` data-tip="${esc(st.tip)}"` : ''}><span>${titre}</span>${st ? `<em class="pill ${statut}">${st.label}</em>` : ''}</summary>`;
   }
   tile(valeur, libelle, sous = '', info = '') { return `<div class="tile"${info ? tipAttr(info) : ''}><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
   jourCourt(d) { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j`; }
@@ -852,8 +853,8 @@ export class UI {
         + tile(`${f(b.radiusKm, 0)} km`, 'Rayon', '', tipR)
         + tile(`${f(tEq, 0)} °C`, 'T équilibre', '', tipJauge({ titre: 'Température d\'équilibre', texte: `${f(tEq, 0)} °C · ${f(tEq + 273.15, 0)} K`, v: tEq, min: -250, max: 500, bandes: [{ de: 0, a: 100, cls: 'ok', label: 'eau liquide à 1 bar' }], marques: [{ v: 15, label: 'Terre (moy.)' }], note: 'Sans effet de serre ni chaleur interne.' }));
     h += `<header class="hero"><span class="swatch" style="background:${d.color || '#9fb4d8'}"></span><div><h2>${d.name}</h2><div class="sub">${kind}</div></div>${hab ? `<span class="chip ${hab.level}">${hab.label}</span>` : ''}</header><p class="lead">${d.role}</p><div class="tiles">${tiles}</div>`;
-    h += this.begin('Noms', false) + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
-    h += this.begin('Physique', true) + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
+    h += this.begin('Noms', false, d.provisional ? 'provisoire' : 'canon') + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
+    h += this.begin('Physique', true, 'conception') + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
     h += this.dayRows(o, b);
     if (o.protDays && b.type === 'planet' && o.flat > 1e-4) h += row('Aplatissement', f(o.flat, 4));
     if (b.type !== 'star') h += row('Inclinaison de l\'axe', `${f(b.tilt / DEG, 1)}°`);
@@ -861,10 +862,10 @@ export class UI {
     h += '</dl></details>';
     if (b.type === 'star') {
       const hz = this.hz;
-      h += this.begin('Zone habitable (Kopparapu 2013)', true) + `<dl>${row('Conservative', `${f(hz.conservative[0], 2)} – ${f(hz.conservative[1], 2)} UA`)}${row('Optimiste', `${f(hz.optimistic[0], 2)} – ${f(hz.optimistic[1], 2)} UA`)}${row('Ceinture Nunzir', `${BELT.aMin} – ${BELT.aMax} UA`)}</dl><p class="note">${BELT.role}</p></details>`;
+      h += this.begin('Zone habitable (Kopparapu 2013)', true, 'calcule') + `<dl>${row('Conservative', `${f(hz.conservative[0], 2)} – ${f(hz.conservative[1], 2)} UA`)}${row('Optimiste', `${f(hz.optimistic[0], 2)} – ${f(hz.optimistic[1], 2)} UA`)}${row('Ceinture Nunzir', `${BELT.aMin} – ${BELT.aMax} UA`)}</dl><p class="note">${BELT.role}</p></details>`;
     } else if (o.el) {
       const e = o.el, par = sim.bodies[b.parent];
-      h += this.begin('Orbite (en direct)', true) + '<dl>';
+      h += this.begin('Orbite (en direct)', true, 'calcule') + '<dl>';
       if (b.type === 'planet') {
         h += row('Demi-grand axe', `${f(e.a, 4)} UA`) + row('Distance actuelle', `${f(dStar(b.idx), 4)} UA`) + row('Périhélie / aphélie', `${f(e.rp, 3)} / ${f(e.ra, 3)} UA`);
         h += row('Période', fmtDur(e.period)) + row('Excentricité', f(e.e, 4)) + row('Inclinaison (écliptique)', `${f(e.i / DEG, 2)}°`) + row('Longitude du périhélie ϖ', `${f(((e.varpi / DEG) % 360 + 360) % 360, 3)}°`);
@@ -877,26 +878,26 @@ export class UI {
       // dynamique
       if (b.type === 'planet') {
         const pa = par.def.orbit, rh = hillRadius(e.a, e.e, sim.mEff[b.idx], star.mass);
-        h += this.begin('Dynamique', false) + `<dl>${row('Rayon de Hill', `${f(rh, 4)} UA (${f(rh * AU_KM / 1e6, 2)} M km)`)}</dl></details>`;
+        h += this.begin('Dynamique', false, 'calcule') + `<dl>${row('Rayon de Hill', `${f(rh, 4)} UA (${f(rh * AU_KM / 1e6, 2)} M km)`)}</dl></details>`;
         void pa;
       } else {
         const pi = par.idx, pe = o && w.bodies[pi].el;
         const rh = hillRadius(pe.a, pe.e, sim.mEff[pi], star.mass), lim = stableSatelliteLimit(rh, pe.e, o.el.e);
         const rho = bulk(b.mass, b.radiusKm).rho, rhoP = bulk(par.mass, par.radiusKm).rho;
         const roche = rocheLimitKm(par.radiusKm, rhoP, rho), ratio = (o.el.a / rh);
-        h += this.begin('Dynamique', false) + `<dl>${row('a / rayon de Hill', `${f(ratio, 3)} (limite ${f(lim / rh, 2)})`, o.el.a < lim ? 'ok' : 'warn')}${row('Limite de Roche', `${f(roche, 0)} km`, o.el.a * AU_KM > roche ? 'ok' : 'warn')}</dl></details>`;
+        h += this.begin('Dynamique', false, 'calcule') + `<dl>${row('a / rayon de Hill', `${f(ratio, 3)} (limite ${f(lim / rh, 2)})`, o.el.a < lim ? 'ok' : 'warn')}${row('Limite de Roche', `${f(roche, 0)} km`, o.el.a * AU_KM > roche ? 'ok' : 'warn')}</dl></details>`;
       }
       // thermique
       const di = b.type === 'planet' ? dStar(b.idx) : dStar(b.parent);
       const Teq = equilibriumTemp(star.def, di, d.albedo ?? 0.3), S = insolation(this.L, di);
       const [hi, ho] = this.hz.conservative, [oi, oo] = this.hz.optimistic;
       const zone = di >= hi && di <= ho ? ['dans la zone habitable', 'ok'] : di >= oi && di <= oo ? ['zone habitable optimiste', 'ok'] : di < oi ? ['trop proche', 'warn'] : ['trop loin', 'warn'];
-      h += this.begin('Thermique', false) + `<dl>${row('Éclairement', `${f(S, 3)} × Terre`)}${row('T équilibre (A=' + (d.albedo ?? 0.3) + ')', `${f(Teq, 0)} K (${f(Teq - 273.15, 0)} °C)`)}${row('Position', zone[0], zone[1])}</dl>`;
+      h += this.begin('Thermique', false, 'calcule') + `<dl>${row('Éclairement', `${f(S, 3)} × Terre`)}${row('T équilibre (A=' + (d.albedo ?? 0.3) + ')', `${f(Teq, 0)} K (${f(Teq - 273.15, 0)} °C)`)}${row('Position', zone[0], zone[1])}</dl>`;
       if (d.id === 'kebet') h += `<p class="note">Kebet reçoit l'éclairement d'une planète en bordure de zone habitable ; la rotation synchrone et l'effet de serre de son atmosphère décident du reste.</p>`;
       h += '</details>';
     }
     h += this.prochainsEvenements(b);
-    h += this.begin('Habitabilité', true) + this.habitabilityHtml(b) + '</details>';
+    h += this.begin('Habitabilité', true, 'conception') + this.habitabilityHtml(b) + '</details>';
     let head = '';
     if (h.includes('\u0001')) [head, h] = h.split('\u0001');
     const hd = $('#info-head');

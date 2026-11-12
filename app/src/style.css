@@ -357,3 +357,11 @@ body.ui-hidden #tour { display: none; }
 #carnet-list div { min-width: 0; } #carnet-list b { display: block; overflow-wrap: anywhere; } #carnet-list small { color: var(--mute); }
 #carnet-list button { min-height: 44px; min-width: 44px; padding: 0 10px; }
 #carnet-nom { width: 100%; min-height: 44px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 8px; }
+
+/* Statut des informations (canon / conception / calculé / provisoire) */
+#info details.sec > summary > span { flex: 1; }
+.pill { font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; margin-right: 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); }
+.pill.canon { color: #8fd0ff; border-color: rgba(143, 208, 255, .5); }
+.pill.conception { color: var(--accent); border-color: rgba(255, 191, 107, .5); }
+.pill.provisoire { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
+#info details.sec > summary[data-tip] { cursor: help; }
