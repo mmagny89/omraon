@@ -676,6 +676,7 @@ export class UI {
     if (this.touring) return;
     this.touring = true; this.tourSteps = etapesVisite(this); this.tourSaved = this.etatCourant();
     const cl = document.body.classList; this.tourHadLeft = cl.contains('hide-left'); cl.add('hide-left', 'touring');
+    document.body.classList.remove('options-open'); // le panneau Options ne doit pas recouvrir la visite
     $('#tour').hidden = false; this.tourGo(0);
   }
   tourGo(i) {
@@ -696,7 +697,7 @@ export class UI {
     this.restoreState(this.tourSaved); // retour à la vue d'avant la visite
   }
   bindTour() {
-    $('#btn-tour').addEventListener('click', () => (this.touring ? this.endTour() : this.startTour()));
+    for (const b of document.querySelectorAll('#btn-tour, #btn-tour2')) b.addEventListener('click', () => (this.touring ? this.endTour() : this.startTour()));
     $('#tour').addEventListener('click', (e) => {
       const b = e.target.closest('button'); if (!b) return;
       if (b.dataset.go != null) this.tourGo(+b.dataset.go);
@@ -732,14 +733,14 @@ export class UI {
     if (h !== this._hash) { this._hash = h; history.replaceState(null, '', h); }
   }
   bindLink() {
-    const b = $('#btn-link'), t = b.querySelector('.t');
-    b.addEventListener('click', async () => {
+    for (const b of document.querySelectorAll('#btn-link, #btn-link2')) b.addEventListener('click', async () => {
+      const t = b.querySelector('.t'), orig = b.dataset.orig ??= b.textContent;
       this.syncHash();
       let ok = false;
       try { await Promise.race([navigator.clipboard.writeText(location.href), new Promise((_, no) => setTimeout(no, 900))]); ok = true; } catch { /* repli ci-dessous */ }
       if (!ok) { const a = document.createElement('textarea'); a.value = location.href; document.body.appendChild(a); a.select(); try { ok = document.execCommand('copy'); } catch { /* sans effet */ } a.remove(); }
-      t.textContent = ok ? 'Copié' : 'Adresse'; b.setAttribute('aria-live', 'polite');
-      setTimeout(() => { t.textContent = 'Lien'; }, 1600);
+      const msg = ok ? 'Copié' : 'Adresse'; b.setAttribute('aria-live', 'polite');
+      if (t) { t.textContent = msg; setTimeout(() => { t.textContent = 'Lien'; }, 1600); } else { b.textContent = '✓ ' + msg; setTimeout(() => { b.textContent = orig; }, 1600); }
     });
     window.addEventListener('hashchange', () => { if (location.hash !== this._hash) { this._hash = location.hash; this.restoreState(decoderEtat(location.hash)); } });
   }
