@@ -35,7 +35,7 @@ Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICEN
 | **Ciel et vue à hauteur d'yeux** | Ciel vu d'un site, interactif ; vue à la première personne avec horizon réel, hublot pour les stations, points cardinaux et noms des astres à la demande. |
 | **Fiche de scène** | Lumière, heure du jour, prochain lever ou éclipse, conditions, communications, puis la banque d'images des documents « Quotidien sensoriel ». |
 | **Éphémérides** | Éclipses, levers et couchers, alignements, périhélies sur 30 jours, 1 an ou 5 ans (précision ~1 minute) ; un clic saute à la date. |
-| **Chronologie** | An 0 = présent du roman ; frise de −960 à +60 ans, saut de date avec recalcul N-corps réversible, âge du système. |
+| **Chronologie** | An 0 = début de l'Ère confédérale, présent du roman = An 300 (conception) ; frise de l'An −660 à l'An 360, saut de date avec recalcul N-corps réversible, âge du système. |
 | **Réseau de communication** | Diffusion d'une information (piratage de Jax) selon trois topologies, ordre de coupure du Consortium à la vitesse de la lumière, bouche-à-oreille par vaisseaux. |
 | **Population et dégel** | De l'arche de 10 000 personnes au présent : humains, Tyts, contrôle, désespoir, éveil, révoltes, point de bascule ; populations des sites à la date de la frise. |
 

@@ -4,7 +4,7 @@ import { equilibriumTemp, insolation, starLuminosity, habitableZone, hillRadius,
 import { BELT, STAR } from '../data/omraon.js';
 import { assess, distanceForTemp } from '../physics/habitability.js';
 import { SITES } from '../data/sites.js';
-import { EVENTS, ERAS, eraAt, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
+import { EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
 import { siteReport } from '../physics/habitat.js';
 import { transfer, PROPULSION } from '../physics/transfers.js';
 import { computeSky } from '../physics/sky.js';
@@ -140,9 +140,9 @@ export class UI {
     const eras = [[-960, -560, 'out', 'Voyage des arches (hors système)'], [-560, -500, 'c1', 'La cohabitation'], [-500, -300, 'c2', 'Les Siècles Sombres'], [-300, 0, 'c3', 'Ère confédérale'], [0, 60, 'c4', 'Après le présent']];
     const labels = [[-960, 'Départ'], [-560, 'Arrivée'], [-500, 'Basculement'], [-300, 'Fin des Siècles Sombres'], [0, 'Présent']];
     fr.innerHTML = `<div class="read" id="frise-read"></div>` +
-      `<div class="track" id="frise-track" role="slider" tabindex="0" aria-valuemin="${Y0}" aria-valuemax="${Y1}" aria-valuenow="0" aria-label="Date en années (An 0 = présent du roman) ; flèches : ±1 an, Maj : ±10 ans">` +
+      `<div class="track" id="frise-track" role="slider" tabindex="0" aria-valuemin="${Y0}" aria-valuemax="${Y1}" aria-valuenow="0" aria-label="Date en années (An 0 = début de l\'Ère confédérale ; le présent est l\'An 300) ; flèches : ±1 an, Maj : ±10 ans">` +
       eras.map(([a, b2, c, t]) => `<div class="seg ${c}" style="width:${pct(b2) - pct(a)}%" data-tip="${esc(tipTexte(t))}"></div>`).join('') + '</div>' +
-      EVENTS.map((e) => `<button type="button" class="tick" data-year="${e.year}" style="left:${pct(e.year)}%" data-tip="${esc(tipTexte(`${e.label} · An ${String(e.year).replace('-', '−')}`, e.note))}" aria-label="${e.label}"></button>`).join('') +
+      EVENTS.map((e) => `<button type="button" class="tick" data-year="${e.year}" style="left:${pct(e.year)}%" data-tip="${esc(tipTexte(`${e.label} · ${fmtAn(e.year)}`, e.note))}" aria-label="${e.label}"></button>`).join('') +
       labels.map(([y, t]) => `<span class="lab" style="left:${Math.min(94, Math.max(6, pct(y)))}%">${t}</span>`).join('') + '<div class="cursor" id="frise-cursor"></div>';
     this.friseDom = { track: $('#frise-track'), cursor: $('#frise-cursor'), read: $('#frise-read'), Y0, Y1, pct };
     const yearAt = (e) => { const r = this.friseDom.track.getBoundingClientRect(); return Y0 + Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (Y1 - Y0); };
@@ -162,7 +162,7 @@ export class UI {
 
   friseLabel(year) {
     const era = eraAt(year), ev = EVENTS.filter((e) => Math.abs(e.year - year) <= 8).sort((a, b) => Math.abs(a.year - year) - Math.abs(b.year - year))[0];
-    this.friseDom.read.innerHTML = `<b>An ${String(year).replace('-', '−')}</b> — ${era.label}${ev ? ` <span>· ${ev.label}</span>` : ''}${era.outside ? ' <span>· les arches sont en route, pas encore d\'humains</span>' : ''} <span>· âge du système ${systemAgeGyr(STAR, year).toFixed(6)} Gyr</span>`;
+    this.friseDom.read.innerHTML = `<b>${fmtAn(year)}</b> — ${era.label}${ev ? ` <span>· ${ev.label}</span>` : ''}${era.outside ? ' <span>· les arches sont en route, pas encore d\'humains</span>' : ''} <span>· âge du système ${systemAgeGyr(STAR, year).toFixed(6)} Gyr</span>`;
   }
 
   /** Place le curseur de la frise à la date simulée (appelé à chaque image). */
@@ -174,10 +174,10 @@ export class UI {
     if (yi !== this._friseYear) { this._friseYear = yi; this.friseLabel(yi); this.popAtDate(yi); this.popCursor(yi); }
   }
 
-  /** Va à l'année donnée (An 0 = présent) : recalcule les positions des planètes à cette date. */
+  /** Va à l'année donnée (0 = présent, affiché An 300) : recalcule les positions des planètes à cette date. */
   goTo(year) { this.friseLabel(year); this._friseYear = year; this.popAtDate(year); this.popCursor(year); this.goToTime(year * DAYS_PER_YEAR); }
 
-  /** Saute à la date t (jours depuis l'An 0). */
+  /** Saute à la date t (jours depuis le présent). */
   goToTime(t, silencieux = false) {
     this.cancelVoyage();
     this.calculating = true; $('#date').textContent = 'Calcul des positions…';
@@ -202,12 +202,12 @@ export class UI {
   readPop() {
     const g = (id) => parseFloat($(id).value), ty = g('#pop-ty'), v = (x, d) => (Number.isFinite(x) ? x : d);
     return { N0: v(g('#pop-n0'), 10000), humansNow: v(g('#pop-h'), 500000), T0: v(g('#pop-t0'), 4000), tytMode: $('#pop-mode').value, tytRatio: v(g('#pop-ratio'), 1.2), tytGrowth: v(g('#pop-growth'), 0.8) / 100,
-      knowledgeHalfLife: v(g('#pop-know'), 220), controlNeeded: v(g('#pop-ctl'), 0.6), despairHalfLife: v(g('#pop-dh'), 460), truthYear: Number.isFinite(ty) ? ty : 1e9, truthStrength: v(g('#pop-ts'), 0.6) };
+      knowledgeHalfLife: v(g('#pop-know'), 220), controlNeeded: v(g('#pop-ctl'), 0.6), despairHalfLife: v(g('#pop-dh'), 460), truthYear: Number.isFinite(ty) ? ty - AN_PRESENT : 1e9, truthStrength: v(g('#pop-ts'), 0.6) };
   }
 
   recomputePop() {
     this.pop = simulatePopulation(this.readPop()); this._popYear = null;
-    const m = this.pop, s = m.summary, f = (x) => Math.round(x).toLocaleString('fr-FR'), yr = (y) => (y == null ? 'jamais' : 'An ' + String(Math.round(y)).replace('-', '−'));
+    const m = this.pop, s = m.summary, f = (x) => Math.round(x).toLocaleString('fr-FR'), yr = (y) => (y == null ? 'jamais' : fmtAn(y));
     $('#pop-sum').innerHTML = `Croissance humaine ≈ <b>${(m.growth * 100).toFixed(2)} %/an</b> (canon : 0,6–0,8). Au présent : <b>${f(s.humansNow)}</b> humains ${s.canonHumans ? '✓ (300 000–800 000)' : '✗ hors canon'}, <b>${f(s.tytsNow)}</b> Tyts (${s.ratioNow.toFixed(2)} Tyts par humain ${s.canonRatio ? '✓' : '✗'}).<br>` +
       `Le contrôle se délite dès <b>${yr(s.thawYear)}</b>, tombe à 50 % en <b>${yr(s.thawHalf)}</b> ; point de bascule (combattants éveillés > gardes) : <b>${yr(s.tippingYear)}</b>.`;
     this.drawPopCharts(); const yy = Math.floor(this.target / DAYS_PER_YEAR); this.popAtDate(yy); this.popCursor(yy, false);
@@ -243,7 +243,7 @@ export class UI {
   popAtDate(year) {
     if (!this.pop) return;
     const a = this.pop.at(year), f = (x) => Math.round(x).toLocaleString('fr-FR'), pc = (x) => (x * 100).toFixed(x < 0.1 ? 1 : 0) + ' %', cl = (c) => (c > 0.8 ? 'ok' : c > 0.4 ? 'warn' : 'bad');
-    $('#pop-at').innerHTML = !a.arrived ? `<tr><td colspan="2">An ${String(year).replace('-', '−')} : l'arche est en route, personne dans le système.</td></tr>` :
+    $('#pop-at').innerHTML = !a.arrived ? `<tr><td colspan="2">${fmtAn(year)} : l'arche est en route, personne dans le système.</td></tr>` :
       [['Humains', f(a.H)], ['Tyts', f(a.T)], ['Tyts par humain', a.ratio.toFixed(2)], ['Savoir de contrôle', pc(a.K)], ['Contrôle effectif', `<span class="${cl(a.C)}">${pc(a.C)}</span>`], ['Désespoir des Tyts', pc(a.D)], ['Tyts éveillés', pc(a.A)], ['Révoltes par an', a.revolts.toFixed(2)], ['Rapport de force (combattants / gardes)', `<span class="${a.bascule >= 1 ? 'bad' : a.bascule > 0.5 ? 'warn' : 'ok'}">${a.bascule.toFixed(2)}</span>`]].map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
     this._popYear = year;
   }
@@ -387,7 +387,7 @@ export class UI {
   // ---------- Ciel, fiche de scène, éphémérides ----------
   fmtT(t) {
     const { an, jour, h } = decouperDate(t);
-    return `An ${String(an).replace('-', '−')} · jour ${jour} · ${String(h).padStart(2, '0')} h`;
+    return `${fmtAn(an)} · jour ${jour} · ${String(h).padStart(2, '0')} h`;
   }
   rotParams() { return this.world.bodies.map((o) => ({ phase0: o.phase0, protDays: o.protDays })); }
 
@@ -537,8 +537,8 @@ export class UI {
     if (site.id === 'kebet-temples') h += this.liturgieHtml();
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
-      h += yy < site.founded ? `<p class="note">À l'An ${String(yy).replace('-', '−')} : la colonie n'est pas encore fondée (An ${String(site.founded).replace('-', '−')}).</p>` : `<p class="note">À l'An ${String(yy).replace('-', '−')} (colonie fondée An ${String(site.founded).replace('-', '−')}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
-    } else if (pm && p0) h += pm.arrived ? `<p class="note">À l'An ${String(yy).replace('-', '−')} (modèle de population) : ≈ ${Math.round(site.population * pm.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * pm.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>` : `<p class="note">À l'An ${String(yy).replace('-', '−')} : personne n'est encore arrivé dans le système.</p>`;
+      h += yy < site.founded ? `<p class="note">À l'${fmtAn(yy)} : la colonie n'est pas encore fondée (${fmtAn(site.founded)}).</p>` : `<p class="note">À l'${fmtAn(yy)} (colonie fondée ${fmtAn(site.founded)}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
+    } else if (pm && p0) h += pm.arrived ? `<p class="note">À l'${fmtAn(yy)} (modèle de population) : ≈ ${Math.round(site.population * pm.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * pm.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>` : `<p class="note">À l'${fmtAn(yy)} : personne n'est encore arrivé dans le système.</p>`;
     if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (données dans app/src/data/sites.js).</p>`;
     if (rec?.st) {
       const rep = siteReport({ sim: this.sim, el: (i) => this.world.bodies[i].el }, site, rec.st, this.target);
@@ -812,7 +812,7 @@ export class UI {
   /** Date lisible : horloge de Kebet, puis jour terrestre entre parenthèses. */
   dateTexte() {
     const t = this.sim.t, y = Math.floor(t / DAYS_PER_YEAR), dd = t - y * DAYS_PER_YEAR;
-    return `${this.fmtT(t)} (An ${String(y).replace('-', '−')}, jour terrestre ${Math.floor(dd)})`;
+    return `${this.fmtT(t)} (${fmtAn(y)}, jour terrestre ${Math.floor(dd)})`;
   }
   telecharger(nom, contenu, type) {
     const url = URL.createObjectURL(contenu instanceof Blob ? contenu : new Blob([contenu], { type }));
@@ -1059,7 +1059,7 @@ export class UI {
     if (!this.calculating) {
       const { an, jour, h, min, s } = decouperDate(t), p2 = (n) => String(n).padStart(2, '0');
       const clock = this.speedIdx <= 2 ? `${p2(h)}:${p2(min)}:${p2(s)}` : `${p2(h)} h`; // secondes seulement aux vitesses lisibles
-      $('#date').textContent = `An ${String(an).replace('-', '−')} · jour ${jour} · ${clock}`;
+      $('#date').textContent = `${fmtAn(an)} · jour ${jour} · ${clock}`;
       const cm = moisConfederal(t, jourKebet()), tip = tipTexte('Calendrier confédéral', `${cm.mois} · mois ${cm.rang} sur 13<br>jour ${cm.jour} sur ${cm.nbJours}<br><small>13 mois égaux : leur durée et le début de l\'année sont de conception</small>`);
       if ($('#date').dataset.tip !== tip) $('#date').dataset.tip = tip;
     }

@@ -170,7 +170,11 @@ test('rapport de site : chaque site produit des sections finies', () => {
   }
 });
 
-import { EVENTS, eraAt, systemAgeGyr } from '../app/src/data/chronologie.js';
+import { EVENTS, eraAt, systemAgeGyr, fmtAn, anInterne } from '../app/src/data/chronologie.js';
+test('frise : An 0 = début de l\'Ère confédérale, présent = An 300', () => {
+  assert.equal(fmtAn(0), 'An 300'); assert.equal(fmtAn(-300), 'An 0'); assert.equal(fmtAn(-560), 'An −260'); assert.equal(fmtAn(-960), 'An −660'); assert.equal(anInterne(0), -300);
+  assert.equal(eraAt(-300).label.startsWith('Ère confédérale'), true, 'l\'ère commence à l\'An 0');
+});
 test('saut dans le temps : aller à −500 ans puis revenir ramène les planètes (réversibilité)', () => {
   const sim = make(); sim.computeRender(0);
   sim.enterRails();

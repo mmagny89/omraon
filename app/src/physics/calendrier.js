@@ -23,7 +23,7 @@ export const enJoursKebet = (d) => d / jourK;
 /** Secondes SI → secondes de Kebet (1 s de Kebet = jourK s SI, de sorte que 86 400 s de Kebet = 1 jour de Kebet). */
 export const enSecondesKebet = (s) => s / jourK;
 
-/** Date interne t (jours terrestres depuis l'An 0) → { an, jour, h, min, s } sur l'horloge de Kebet. */
+/** Date interne t (jours terrestres depuis le présent, An 300) → { an, jour, h, min, s } sur l'horloge de Kebet. */
 export function decouperDate(t) {
   const an = Math.floor(t / DAYS_PER_YEAR), k = (t - an * DAYS_PER_YEAR) / jourK, jour = Math.floor(k), fr = k - jour;
   return { an, jour, h: Math.floor(fr * HEURES_PAR_JOUR), min: Math.floor((fr * 1440) % 60), s: Math.floor((fr * 86400) % 60) };

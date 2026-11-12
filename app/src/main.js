@@ -26,7 +26,7 @@ const $ = (id) => document.getElementById(id);
 const ASTUCES = [
   'Touches : H masque l\'interface, P photographie la vue, Espace lance ou met en pause.',
   'Le jour de Kebet (24 h de Kebet, environ 1,28 jour Terre) est l\'unité de temps affichée.',
-  'Sur la frise du haut, cliquez ou glissez pour voyager dans le temps (An 0 = présent du roman).',
+  'Sur la frise du haut, cliquez ou glissez pour voyager dans le temps (An 0 = début de l\'Ère confédérale, présent = An 300).',
   'Le bouton Visite présente le système en neuf étapes, de l\'étoile à la chronologie.',
   'Le bouton Lien copie l\'adresse exacte de votre vue : date, lieu, caméra.',
 ];

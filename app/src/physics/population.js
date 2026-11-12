@@ -1,4 +1,4 @@
-// Modèle de population et de dégel du système d'Omraon (An 0 = présent du roman ; arrivée de l'arche en −560).
+// Modèle de population et de dégel du système d'Omraon (années internes : 0 = présent du roman, affiché An 300 ; arrivée de l'arche en −560, affichée An −260).
 // Calé sur les documents « Économie, théologie du travail et échelles » et « Chronologie » :
 //  - une seule arche d'environ 10 000 personnes ; ~300 000 à 800 000 humains au présent (croissance ≈ 0,6–0,8 %/an) ;
 //  - les Tyts partent de quelques milliers de pèlerins ; leur nombre est soit subi (croissance sous contrainte), soit géré (« produire » ou « réduire ») ;

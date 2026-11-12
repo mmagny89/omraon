@@ -5,8 +5,8 @@ const A = 365.25; // jours terrestres par année (canon du projet)
 const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 /**
- * Mois du calendrier confédéral à la date t (jours terrestres depuis l'An 0). Le lore donne 13 mois nommés mais pas leur durée :
- * l'année est partagée en 13 mois égaux et l'An 0 commence au premier jour d'Aset (conception). `jourK` : durée du jour de Kebet (jours terrestres).
+ * Mois du calendrier confédéral à la date t (jours terrestres depuis le présent, An 300). Le lore donne 13 mois nommés mais pas leur durée :
+ * l'année est partagée en 13 mois égaux et le présent (An 300) commence au premier jour d'Aset (conception). `jourK` : durée du jour de Kebet (jours terrestres).
  */
 export function moisConfederal(t, jourK) {
   const x = (((t % A) + A) % A / A) * MOIS.length, rang = Math.min(MOIS.length - 1, Math.floor(x)), dMois = A / MOIS.length / jourK;

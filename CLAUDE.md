@@ -36,7 +36,7 @@ Toute commande Docker passe par la **clé de service** `web`, jamais par le `con
 - **Canon contre conception.** Les documents du roman (00–13) fixent les ordres de grandeur, les noms, les propulsions, la chronologie. Toute autre valeur est une proposition de
   conception : la marquer (`invented`, `provisional`, « supposé ») et la lister dans `docs/hypotheses.md`.
 - Les racines égyptiennes des noms sont « jamais affichées » (bible) : ne jamais les mettre dans l'interface.
-- An 0 = présent du roman ; années de 365,25 jours terrestres ; arrivée de l'arche en −560.
+- An 0 = début de l'Ère confédérale (fin des Siècles Sombres) ; le présent du roman est l'An 300 (conception). En interne, temps et années restent comptés depuis le présent (0 = présent) ; seul l'affichage convertit, par `fmtAn` (`data/chronologie.js`). Années de 365,25 jours terrestres ; arrivée de l'arche en −560.
 - **Kebet fait référence pour les jours et les heures affichés** (`physics/calendrier.js`) : 1 jour = période de Kebet (≈ 1,28 j terrestre), 24 h par jour, minute et seconde proportionnelles. Le temps interne reste en jours terrestres ; seul l'affichage convertit. Ne jamais écrire `* 24` ou `* 86400` pour afficher une durée : passer par `fmtDuree` / `fmtSecondes`, qui donnent le jour de Kebet puis l'équivalent entre parenthèses (« 1,00 j (1,28 j Terre) »).
 - Physique : `physics/` n'importe ni Three.js ni le DOM (les tests tournent sous Node seul). L'intégrateur est symétrique donc réversible : ne pas le casser (test « saut dans le temps »).
 - Une modification de donnée se vérifie par `npm test` (stabilité des lunes, énergie, canon), une modification d'interface dans un vrai navigateur (390 px et desktop).

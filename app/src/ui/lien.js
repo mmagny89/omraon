@@ -1,5 +1,5 @@
 // État d'une vue ⇄ fragment d'adresse (#t=…&b=…&s=…&az=…&el=…&d=…&v=…&p=1). Pur, sans DOM : testable sous Node.
-// t : date (jours terrestres depuis l'An 0) · b : corps · s : site · az/el : angles de caméra (rad) · d : distance de caméra (log) · v : vitesse · p : pause.
+// t : date (jours terrestres depuis le présent du roman) · b : corps · s : site · az/el : angles de caméra (rad) · d : distance de caméra (log) · v : vitesse · p : pause.
 
 const NOMBRES = { t: [-1e7, 1e7], az: [-1e3, 1e3], el: [-1.6, 1.6], d: [-5, 40], v: [0, 99] };
 const r = (x, n) => String(Math.round(x * 10 ** n) / 10 ** n);

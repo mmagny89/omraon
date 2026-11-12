@@ -252,7 +252,7 @@ export class Simulation {
   }
 
   /**
-   * Saute à la date `target` (jours depuis l'An 0, négatif = passé). Planètes en N-corps (lunes sur rails), pas h2 ;
+   * Saute à la date `target` (jours depuis le présent, négatif = passé). Planètes en N-corps (lunes sur rails), pas h2 ;
    * le leapfrog est réversible, donc l'intégration vers le passé est aussi fiable que vers le futur.
    * La ceinture est regénérée à la nouvelle date (son détail n'a pas d'historique).
    */

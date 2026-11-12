@@ -2,13 +2,13 @@
 // le texte reprend les descriptions des données (canon) et des valeurs calculées ; ce qui est de conception est dit entre parenthèses.
 import { PLANETS, BELT, STAR } from '../data/omraon.js';
 import { SITES } from '../data/sites.js';
-import { EVENTS } from '../data/chronologie.js';
+import { EVENTS, fmtAn } from '../data/chronologie.js';
 import { fmtTerre, jourKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
 const planete = (id) => PLANETS.find((p) => p.id === id);
 const lune = (id) => PLANETS.flatMap((p) => p.moons || []).find((m) => m.id === id);
 const nf = (n) => n.toLocaleString('fr-FR');
-const an = (y) => `An ${String(y).replace('-', '−')}`;
+const an = fmtAn;
 
 export function etapesVisite(ui) {
   const kebetSites = SITES.filter((x) => x.body === 'Kebet' && x.type === 'surface');

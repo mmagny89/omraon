@@ -10,7 +10,7 @@
 | Propulsion | subluminique ~0,1 c ; hyperpropulsion ~0,95 c, ~6 jours continus au plus | Technologie |
 | Voyage des arches | 0,35 c, ~400 ans (≈ 140 années-lumière) | Technologie, Chronologie |
 | Population | une arche de ~10 000 ; 300 000–800 000 humains au présent ; Haut (Kebet) : dizaines de milliers ; Tyts plus nombreux dans le travail servile | Économie et échelles |
-| Chronologie | An 0 = présent ; −960 départ, −560 arrivée, −500 double basculement, −300 fin des Siècles Sombres, −2 réveils | Chronologie |
+| Chronologie | An 0 = début de l'Ère confédérale ; présent = An 300 (conception) ; −660 départ, −260 arrivée, −200 double basculement, 0 fin des Siècles Sombres, 298 réveils (le doc 10 donne ces écarts depuis le présent) | Chronologie |
 | Âge du système | **plus vieux que celui du Soleil (≈ 4,6 Gyr)** : l'étoile a abrité une ancienne civilisation | Lore (précisé par l'autrice) |
 | Délais de communication | minutes à heures entre mondes | Vie quotidienne |
 | Ambiances | Kebet, Sethis, Roushan (banque d'images) | Quotidien sensoriel |
@@ -55,4 +55,5 @@
 - **Calendrier confédéral** : le lore (docs 02 et 03) donne 13 mois nommés mais ni leur durée ni les fêtes ; ici 13 mois égaux (≈ 22 jours de Kebet), l'An 0 commençant au premier jour d'Aset (`ui/lore.js`, `moisConfederal`). À remplacer dès que le lore tranche.
 - **Vue à hauteur d'yeux : correction** : `lookAt` (étoile, planète parente) visait l'azimut symétrique (`yaw = −az`) ; le cap affiché suit maintenant l'azimut réel.
 - **Traducteur tyt ⇄ français** (`ui/traducteur.js`) : outil de conception, pas une langue. Mot à mot sur le seul glossaire (canon) ; seules morphologies admises : composés à trait d'union, suffixes `-an` (pluriel) et `-ku` (agent), alias « courant ». Aucun mot, aucune conjugaison ni ordre des mots n'est inventé : tout mot absent ressort entre crochets. Le français → tyt ne trouve que les mots dont le sens du glossaire contient le terme (premier sens de chaque entrée) ; plusieurs candidats sont listés.
+- **Origine de la frise** : l'An 0 est le début de l'Ère confédérale ; le présent est l'An 300 parce que l'ère dure ~300 ans dans la chronologie (fin des Siècles Sombres à −300 du présent). Le roman ne donne pas d'année absolue du présent : à remplacer si besoin en changeant `AN_PRESENT` (`data/chronologie.js`). Le temps interne, les liens partagés (`t=` en jours depuis le présent) et la physique ne changent pas ; seul l'affichage convertit.
 - **Ambiances de onze lieux** : le lore ne détaille le sensoriel que pour Kebet, Sethis et Roushan ; les autres lieux sont déduits de leur fonction (docs 01, 03, 04, 05) et de la physique (pesanteur, lumière, froid). À valider ou remplacer par de vrais textes (`AMBIANCES_SITES`).
