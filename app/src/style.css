@@ -291,6 +291,12 @@ body.ground #bar { z-index: 6; position: fixed; }
 @media (prefers-reduced-motion: reduce) { #list button.tgl::before { transition: none; } }
 #list small { flex: none; white-space: nowrap; }
 
+/* Prochains événements d'une fiche */
+#info .evts { list-style: none; margin: 0; padding: 0; }
+#info .evts button { display: grid; width: 100%; min-height: 44px; text-align: left; gap: 0; padding: 6px 8px; border: 0; border-top: 1px solid var(--line); background: none; color: inherit; font: inherit; border-radius: 6px; cursor: pointer; }
+#info .evts button:hover, #info .evts button:focus-visible { background: rgba(255, 191, 107, .1); outline: none; }
+#info .evts span { color: #cfd8ec; font-size: 12.5px; } #info .evts small { color: var(--mute); }
+
 /* Infobulles graphiques */
 #tip { position: fixed; left: 0; top: 0; z-index: 60; width: max-content; min-width: 190px; max-width: min(280px, calc(100vw - 16px)); pointer-events: none; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(10, 14, 26, .97); box-shadow: 0 8px 24px rgba(0, 0, 0, .5); font-size: 12.5px; }
 #tip[hidden] { display: none; }

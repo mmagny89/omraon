@@ -550,6 +550,7 @@ export class UI {
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
     this.bindLink();
+    $('#info-live').addEventListener('click', (e) => { const t = e.target.closest?.('.evts button[data-t]'); if (t) this.goToTime(+t.dataset.t); });
     $('#list-q').addEventListener('input', () => this.filterList());
     $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
     const tog = (id, fn) => $(id).addEventListener('change', (e) => fn(e.target.checked));
@@ -704,6 +705,22 @@ export class UI {
     window.addEventListener('hashchange', () => { if (location.hash !== this._hash) { this._hash = location.hash; this.restoreState(decoderEtat(location.hash)); } });
   }
 
+  /** Prochains événements du corps (éclipses pour une lune ; alignements et apsides pour une planète), cliquables. Calcul mis en cache par tranche de date. */
+  prochainsEvenements(b) {
+    if (b.type === 'star') return '';
+    const key = `${b.idx}:${Math.floor(this.target / (b.type === 'moon' ? 0.4 : 20))}`;
+    if (this._evKey !== key || this._evSim !== this.sim || (this._ev?.[0] && this._ev[0].t <= this.target)) { // nouvelle tranche de date, ou le premier événement vient de passer
+      const ev = runEphemeris(this.sim, b.type === 'moon' ? 12 : 900, { rot: this.rotParams(), kinds: { eclipses: true, alignments: true, apsides: true, sun: false }, max: 800 });
+      this._ev = ev.filter((e) => (e.who === b.def.name || e.by === b.def.name) && e.t > this.target).slice(0, 4); this._evKey = key; this._evSim = this.sim;
+    }
+    if (!this._ev.length) return '';
+    const items = this._ev.map((e) => {
+      const detail = e.duration != null ? `${e.who} ← ${e.by}, ${fmtDuree(e.duration, { minutes: true })}` : e.by ? `${e.who} – ${e.by}` : e.who;
+      return `<li><button type="button" data-t="${e.t}"><b>${e.type}</b><span>${detail}</span><small>${this.fmtT(e.t)} · dans ${fmtDuree(e.t - this.target)}</small></button></li>`;
+    }).join('');
+    return `${this.begin('Prochains événements', true)}<ul class="evts">${items}</ul><p class="note">Cliquer saute à la date.</p></details>`;
+  }
+
   /** Ouvre une section repliable de la fiche ; l'état ouvert/fermé choisi par l'utilisateur survit aux rafraîchissements. */
   begin(titre, ouvert) {
     const o = this.secState?.[titre] ?? ouvert;
@@ -775,6 +792,7 @@ export class UI {
       if (d.id === 'kebet') h += `<p class="note">Kebet reçoit l'éclairement d'une planète en bordure de zone habitable ; la rotation synchrone et l'effet de serre de son atmosphère décident du reste.</p>`;
       h += '</details>';
     }
+    h += this.prochainsEvenements(b);
     h += this.begin('Habitabilité', true) + this.habitabilityHtml(b) + '</details>';
     let head = '';
     if (h.includes('\u0001')) [head, h] = h.split('\u0001');

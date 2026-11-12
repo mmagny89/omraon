@@ -44,6 +44,7 @@ Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICEN
 - **Masquer toute l'interface** : bouton 🙈 ou touche **H** ; « 👁 Interface » ou H la ramène.
 - **Frise chronologique** en haut : ères colorées, événements cliquables, curseur de la date simulée ; cliquer ou glisser saute à la date (flèches ±1 an, Maj ±10 ans).
 - **Options masquées par défaut** (⚙, aussi dans la barre du bas) : paramètres et diagnostics, population et dégel, réseau, éphémérides.
+- **Prochains événements** dans la fiche d'un corps : les quatre prochaines éclipses d'une lune (une par jour de Kebet pour Kebet), les alignements et apsides d'une planète ; un clic saute à la date.
 - **Lien partageable** : le bouton 🔗 copie une adresse qui garde la date, le corps ou le site choisi, la caméra, la vitesse et la pause ; l'ouvrir restitue la même vue (l'adresse se met aussi à jour toute seule).
 - **Vitesses** : de « temps réel » (1 s/s, par défaut) et « 1 min/s » jusqu'à 1000 ans/s.
 - **Vue à hauteur d'yeux** : souris ou tactile pour tourner, molette ou pincement pour le champ, Échap pour quitter.
