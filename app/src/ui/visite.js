@@ -26,7 +26,7 @@ export function etapesVisite(ui) {
       texte: () => `${planete('sethis').role} Atmosphère ténue et poussiéreuse (${planete('sethis').habitat.pressureBar} bar, valeur de conception) : le voile ocre autour du disque.`,
     },
     {
-      titre: 'Nunzir et les confins', vue: 'system', etat: { b: 'Omraon', t: 0 },
+      titre: 'Nunzir et les confins', ceinture: true, etat: { t: 0 },
       texte: () => `${BELT.role} Entre ${BELT.aMin} et ${BELT.aMax} UA, quelques milliers de traceurs sans masse figurent la ceinture ; les troyens de Zirkan s'ajoutent sur son orbite. Rien de dense : la distance moyenne entre deux astéroïdes se compte en millions de kilomètres.`,
     },
     {

@@ -411,5 +411,5 @@ test('garde-fous du rendu : profil d\'anneau déterministe, divisions creusées,
   const noms = new Set(['Omraon', ...PLN.flatMap((p) => [p.name, ...(p.moons || []).map((m) => m.name)])]);
   const ui = { L: 2.5, hz: { conservative: [1.4, 2.5] } };
   const steps = etapesVisite(ui); assert.equal(steps.length, 9);
-  for (const s of steps) { assert.ok(noms.has(s.etat.b), `corps inconnu : ${s.etat.b}`); assert.ok(s.titre && s.texte(ui).length > 40, `texte vide : ${s.titre}`); }
+  for (const s of steps) { assert.ok(s.ceinture ? !s.etat.b : noms.has(s.etat.b), `corps inconnu : ${s.etat.b}`); assert.ok(s.titre && s.texte(ui).length > 40, `texte vide : ${s.titre}`); }
 });

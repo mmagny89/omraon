@@ -103,7 +103,7 @@ export class UI {
       }
       if (p.def.id === 'naksun') {
         const gb = group();
-        btn(gb, 'belt', `<span class="dot" style="color:#c8c8d0;background:#c8c8d0"></span>${BELT.name} (ceinture)`, {}, () => this.select(0, true));
+        btn(gb, 'belt', `<span class="dot" style="color:#c8c8d0;background:#c8c8d0"></span>${BELT.name} (ceinture)`, { belt: '1' }, () => { this.selectBelt(); this.closeLeftOnMobile(); this.announce(`${BELT.name}, ceinture : sélectionnée`); });
         const bs = sitesOf('Nunzir'); if (bs.length) { mk(gb, 'div', 'sub', 'Sites'); bs.forEach((x) => siteBtn(gb, x)); }
       }
     });
@@ -476,7 +476,7 @@ export class UI {
 
   selectSite(id) {
     const site = SITES.find((x) => x.id === id), w = this.world;
-    this.selectedSite = id; this.announce(`${site.name} sélectionné`);
+    this.selectedSite = id; this.belt = false; this.announce(`${site.name} sélectionné`);
     if (site.type === 'heliocentric') { this.selected = 0; w.focusOn(0, 3 * UNIT); } else { this.selected = w.bodies.find((o) => o.name === site.body).idx; w.focusOn(this.selected); }
     this.markList(); this.buildTransfer(); this.renderInfo();
     $('#site-tools').hidden = false; this.skyAcc = 1; this.sceneAcc = 9;
@@ -544,7 +544,7 @@ export class UI {
   markList() {
     this.world.siteEls?.forEach((rec, id) => rec.el.classList.toggle('sel', id === this.selectedSite));
     document.querySelectorAll('#list button').forEach((b) => {
-      b.classList.toggle('sel', b.dataset.site ? b.dataset.site === this.selectedSite : !this.selectedSite && b.dataset.idx !== undefined && +b.dataset.idx === this.selected);
+      b.classList.toggle('sel', b.dataset.belt ? !!this.belt : b.dataset.site ? b.dataset.site === this.selectedSite : !this.selectedSite && !this.belt && b.dataset.idx !== undefined && +b.dataset.idx === this.selected);
     });
   }
 
@@ -558,6 +558,7 @@ export class UI {
     this.bindCarnet();
     for (const a of document.querySelectorAll('a.skip')) a.addEventListener('click', (e) => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.focus(); }); // liens d'évitement sans toucher à l'adresse (#t=…)
     this.bindTour();
+    $('#info-live').addEventListener('click', (e) => { const sb = e.target.closest?.('[data-site-open]'); if (sb) this.selectSite(sb.dataset.siteOpen); });
     $('#info-live').addEventListener('click', (e) => { const t = e.target.closest?.('.evts button[data-t]'); if (t) this.goToTime(+t.dataset.t); });
     $('#list-q').addEventListener('input', () => this.filterList());
     $('#info-live').addEventListener('toggle', (e) => { const t = e.target; if (t.dataset?.sec) (this.secState ||= {})[t.dataset.sec] = t.open; }, true);
@@ -613,7 +614,7 @@ export class UI {
   }
 
   select(idx, fly) {
-    this.selected = idx;
+    this.selected = idx; this.belt = false;
     if (fly) this.world.focusOn(idx);
     this.selectedSite = null;
     this.markList();
@@ -676,6 +677,28 @@ export class UI {
       rows += row(`Jour vu depuis ${p.def.name}`, 'infini : ' + p.def.name + ' est fixe dans le ciel');
     }
     return rows;
+  }
+
+  // ---------- Ceinture Nunzir ----------
+  /** Sélectionne la ceinture : caméra cadrée sur son anneau (centré sur l'étoile, à ~4 UA) et fiche propre. */
+  selectBelt() {
+    this.belt = true; this.selected = 0; this.selectedSite = null;
+    this.world.focusOn(0, 4.2 * UNIT); this.world.rig.el = 0.8;
+    this.markList(); $('#transfer').hidden = true; $('#site-tools').hidden = true;
+    this.renderInfo(true);
+  }
+  /** Fiche de la ceinture : étendue, traceurs, résonances avec Zirkan (lacunes de Kirkwood), sites. */
+  beltHtml() {
+    const sim = this.sim, zi = sim.bodies.find((b) => b.def.id === 'zirkan'), aZ = this.world.bodies[zi.idx].el?.a ?? zi.def.orbit.a, nf = (n) => n.toLocaleString('fr-FR');
+    const tile = (...a) => this.tile(...a), width = BELT.aMax - BELT.aMin;
+    const tiles = tile(`${BELT.aMin}–${BELT.aMax} UA`, 'Étendue') + tile(`${f(width * AU_KM / 1e6, 0)} M km`, 'Largeur', `${f(width, 2)} UA`) + tile(nf(sim.pN), 'Traceurs simulés', 'sans masse, sans collisions entre eux') + tile(`${f(aZ, 2)} UA`, 'Zirkan voisine', `limite instable ≈ ${f(aZ - 0.33, 2)} UA (conception)`);
+    let h = `<header class="hero"><span class="swatch" style="background:#c8c8d0"></span><div><h2>${BELT.name}</h2><div class="sub">Ceinture d'astéroïdes</div></div></header><p class="lead">${BELT.role}</p><div class="tiles">${tiles}</div>`;
+    h += this.begin('Noms', false, 'canon') + `<dl>${row('Nom tyt sacré', BELT.names.tyt)}${row('Courant', BELT.names.tytCourant)}${row('Sens', `« ${BELT.names.sens} »`)}</dl></details>`;
+    const res = [[2, 1], [5, 2], [3, 1]].map(([p, q]) => ({ p, q, a: aZ * (q / p) ** (2 / 3) }));
+    h += this.begin('Résonances avec Zirkan', true, 'calcule') + `<dl>${res.map((r) => row(`${r.p}:${r.q}`, `${f(r.a, 3)} UA`, r.a >= BELT.aMin && r.a <= BELT.aMax ? 'warn' : '')).join('')}</dl><p class="note">En orange : dans la ceinture, où ces résonances creusent des lacunes (comme les lacunes de Kirkwood autour de Jupiter).</p></details>`;
+    const sites = SITES.filter((x) => x.body === 'Nunzir');
+    if (sites.length) h += this.begin('Sites', true, 'conception') + `<ul class="evts">${sites.map((x) => `<li><button type="button" data-site-open="${esc(x.id)}"><b>${esc(x.name)}</b><small>${nf(x.population)} humains${x.tyts ? ' · ' + nf(x.tyts) + ' Tyts' : ''}</small></button></li>`).join('')}</ul></details>`;
+    return h + '<p class="note">Les traceurs sont des points sans masse : ils figurent la densité de la ceinture, ils ne se heurtent pas entre eux.</p>';
   }
 
   // ---------- Comparateur de lieux ----------
@@ -770,6 +793,7 @@ export class UI {
     this.tourIdx = Math.max(0, Math.min(n - 1, i)); const s = st[this.tourIdx];
     if (s.vue) this.view(s.vue);
     this.restoreState({ v: 0, ...s.etat });
+    if (s.ceinture) { this.selectBelt(); this.world.rig.az = 0.6; this.world.rig.el = 0.8; }
     const dots = st.map((_, k) => `<button type="button" class="pip${k === this.tourIdx ? ' on' : ''}" data-go="${k}" aria-label="Étape ${k + 1} : ${esc(st[k].titre)}"${k === this.tourIdx ? ' aria-current="step"' : ''}></button>`).join('');
     $('#tour').innerHTML = `<div class="t-n">Étape ${this.tourIdx + 1} / ${n}</div><h2>${s.titre}</h2><div class="t-body">${s.texte()}</div>`
       + `<div class="t-dots">${dots}</div><div class="t-act"><button type="button" data-tour="prev"${this.tourIdx === 0 ? ' disabled' : ''}>◀ Précédent</button>`
@@ -801,7 +825,7 @@ export class UI {
   /** État de la vue courante (date, corps, site, caméra, vitesse). */
   etatCourant() {
     const w = this.world, rig = w.rig;
-    return { t: this.target, b: w.bodies[this.selected]?.name, s: this.selectedSite || undefined, az: rig.az, el: rig.el, d: rig.logTarget, v: this.speedIdx, p: !this.playing };
+    return { t: this.target, b: this.belt ? BELT.name : w.bodies[this.selected]?.name, s: this.selectedSite || undefined, az: rig.az, el: rig.el, d: rig.logTarget, v: this.speedIdx, p: !this.playing };
   }
   /** Applique un état décodé (valeurs déjà validées par decoderEtat ; un site ou un corps inconnu est ignoré). */
   restoreState(e) {
@@ -809,6 +833,7 @@ export class UI {
     if (e.v != null && SPEEDS[e.v]) { this.speedIdx = e.v; $('#speed').value = e.v; $('#speed-out').textContent = SPEEDS[e.v][1]; }
     if (e.t != null) this.goToTime(e.t, true);
     if (e.s && SITES.some((x) => x.id === e.s)) this.selectSite(e.s);
+    else if (e.b === BELT.name) this.selectBelt();
     else if (e.b) { const o = w.bodies.find((x) => x.name === e.b); if (o) this.select(o.idx, true); }
     if (e.az != null) rig.az = e.az;
     if (e.el != null) rig.el = e.el;
@@ -859,6 +884,12 @@ export class UI {
 
   // Valeurs physiques dérivées en direct ; appelé ~4 fois par seconde.
   renderInfo() {
+    if (this.belt) { // ceinture : fiche propre (l'en-tête réservé aux sites est vidé)
+      const hd = $('#info-head'); if (hd.dataset.h) { hd.innerHTML = ''; hd.dataset.h = ''; }
+      const h = this.beltHtml(), el = $('#info-live'); this.info = h;
+      if (el.dataset.h !== h) { const sc = el.scrollTop; el.innerHTML = h; el.dataset.h = h; el.scrollTop = sc; }
+      return;
+    }
     const w = this.world, sim = this.sim, o = w.bodies[this.selected], b = o.b, d = b.def, star = sim.bodies[0];
     const rp = sim.rPos;
     const dStar = (i) => Math.hypot(rp[3 * i] - rp[0], rp[3 * i + 1] - rp[1], rp[3 * i + 2] - rp[2]);
