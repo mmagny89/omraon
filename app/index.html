@@ -27,6 +27,7 @@
     <button type="button" id="btn-info" class="tb" aria-pressed="true" title="Fiche du corps ou du site"><span class="ic">ⓘ</span><span class="t">Fiche</span></button>
     <button type="button" id="btn-options" class="tb" aria-pressed="false" title="Options, éphémérides, réseau"><span class="ic">⚙</span><span class="t">Options</span></button>
     <button type="button" id="btn-tour" class="tb" title="Visite guidée du système"><span class="ic">🧭</span><span class="t">Visite</span></button>
+    <button type="button" id="btn-photo" class="tb" title="Photo de la vue en PNG, sans interface (touche P)"><span class="ic">📷</span><span class="t">Photo</span></button>
     <button type="button" id="btn-link" class="tb" title="Copier le lien de cette vue (date, corps, site, caméra)"><span class="ic">🔗</span><span class="t">Lien</span></button>
     <button type="button" id="btn-hide" class="tb" title="Masquer toute l'interface (touche H)"><span class="ic">🙈</span><span class="t">Masquer</span></button>
   </header>
@@ -57,7 +58,19 @@
     </div>
   </footer>
   <section id="options" aria-label="Options"><button type="button" class="panel-x" data-close="options" aria-label="Fermer les options">×</button><h2>Options</h2>
-    <div id="quick"><button type="button" id="btn-tour2">🧭 Visite guidée</button><button type="button" id="btn-link2">🔗 Copier le lien</button></div>
+    <div id="quick"><button type="button" id="btn-tour2">🧭 Visite</button><button type="button" id="btn-link2">🔗 Lien</button><button type="button" id="btn-photo2">📷 Photo</button></div>
+    <details id="carnet">
+      <summary>Carnet de scènes &amp; photo</summary>
+      <div class="grid">
+        <button type="button" id="carnet-photo" class="wide">📷 Photo de la vue (PNG, sans interface)</button>
+        <label class="wide" for="carnet-nom">Nom de la scène</label>
+        <input id="carnet-nom" type="text" maxlength="80" class="wide" placeholder="ex. Éclipse sur les Beaux quartiers" autocomplete="off">
+        <button type="button" id="carnet-add" class="wide">＋ Garder la vue actuelle</button>
+      </div>
+      <ul id="carnet-list" aria-label="Scènes gardées"></ul>
+      <p id="carnet-vide" class="note">Aucune scène gardée. Les scènes restent dans ce navigateur ; l'export Markdown les emporte.</p>
+      <button type="button" id="carnet-export" class="wide">⬇ Exporter le carnet (Markdown)</button>
+    </details>
     <details id="settings">
       <summary>Paramètres &amp; diagnostics</summary>
       <div class="grid">

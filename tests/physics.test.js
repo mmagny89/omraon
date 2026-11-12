@@ -369,3 +369,18 @@ test('lien partageable : aller-retour, bornes et valeurs hostiles', () => {
   assert.deepEqual(decoderEtat('#t=abc&el=9&d=1e9&b=<script>&s=%E0%A4%A&p=2&x=1&=3'), {}, 'tout ce qui est illisible ou hors bornes est ignoré');
   assert.deepEqual(decoderEtat(''), {}); assert.equal(encoderEtat({ t: NaN }), '');
 });
+
+import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug, CLE, MAX } from '../app/src/ui/carnet.js';
+test('carnet de scènes : stockage tolérant, export Markdown, noms de fichier sûrs', () => {
+  const mem = new Map(), st = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  assert.deepEqual(lireCarnet(st), [], 'carnet vide');
+  const s = nouvelleScene({ nom: 'Éclipse', hash: '#t=0.47&b=Kebet', lieu: 'Kebet', date: 'An 0', texte: 'ligne 1\n\nligne 2', vignette: 'data:image/jpeg;base64,AAAA' }, 1);
+  assert.ok(ecrireCarnet(st, [s]) && lireCarnet(st).length === 1 && lireCarnet(st)[0].nom === 'Éclipse');
+  assert.equal(nouvelleScene({ nom: 'x', hash: '#a', vignette: 'javascript:alert(1)' }).vignette, '', 'vignette qui n\'est pas une image : refusée');
+  mem.set(CLE, '{pas du json'); assert.deepEqual(lireCarnet(st), [], 'contenu corrompu ignoré');
+  mem.set(CLE, JSON.stringify([{ id: 1 }, s, { id: 's', nom: 'n', hash: 'sans-diese' }])); assert.equal(lireCarnet(st).length, 1, 'entrées mal formées écartées');
+  assert.equal(ecrireCarnet({ setItem() { throw new Error('quota'); } }, [s]), false, 'stockage plein : false, sans exception');
+  assert.equal(ecrireCarnet(st, Array.from({ length: MAX + 10 }, () => s)) && lireCarnet(st).length, MAX);
+  const md = versMarkdown([s], 'https://x/'); assert.match(md, /## Éclipse/); assert.match(md, /Vue : https:\/\/x\/#t=0\.47&b=Kebet/); assert.match(md, />\s*ligne 1\n>\n> ligne 2/);
+  assert.equal(slug('Cité-mine de Sethis — An −5 · jour 3'), 'cite-mine-de-sethis-an-5-jour-3');
+});

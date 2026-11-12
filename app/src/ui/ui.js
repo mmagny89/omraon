@@ -20,6 +20,7 @@ import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
 import { encoderEtat, decoderEtat } from './lien.js';
 import { etapesVisite } from './visite.js';
+import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug } from './carnet.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -425,9 +426,9 @@ export class UI {
     $('#sky-info').innerHTML = `Étoile à ${el.toFixed(0)}°${sky.eclipse ? ` — <b>éclipse : ${sky.eclipse.by} masque ${(sky.eclipse.fraction * 100).toFixed(0)} % de l'étoile</b>` : ''}`;
   }
 
-  refreshScene() {
+  refreshScene(force = false) {
     const site = this.currentSite(), rec = site && this.world.siteEls?.get(site.id);
-    if (!rec?.st || !$('#scene-box').open) return;
+    if (!rec?.st || (!force && !$('#scene-box').open)) return;
     const sim = this.sim, w = this.world, body = site.type === 'heliocentric' ? null : sim.bodies[rec.st.idx];
     const report = siteReport({ sim, el: (i) => w.bodies[i].el }, site, rec.st, this.target), sky = computeSky(sim, site, rec.st);
     const dayD = !body ? 1 : body.type === 'moon' ? (w.bodies[body.idx].el?.period || 1) : site.type === 'orbit' ? 1 : (w.bodies[body.idx].protDays || 1);
@@ -551,6 +552,7 @@ export class UI {
     $('#speed').addEventListener('input', (e) => { this.speedIdx = +e.target.value; $('#speed-out').textContent = SPEEDS[this.speedIdx][1]; });
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
     this.bindLink();
+    this.bindCarnet();
     for (const a of document.querySelectorAll('a.skip')) a.addEventListener('click', (e) => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.focus(); }); // liens d'évitement sans toucher à l'adresse (#t=…)
     this.bindTour();
     $('#info-live').addEventListener('click', (e) => { const t = e.target.closest?.('.evts button[data-t]'); if (t) this.goToTime(+t.dataset.t); });
@@ -570,6 +572,7 @@ export class UI {
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
       if (e.code === 'Space') { e.preventDefault(); $('#play').click(); }
+      if (e.code === 'KeyP' && !e.ctrlKey && !e.metaKey && !e.altKey) this.photo();
     });
   }
   // ---------- Panneaux repliables, options, interface masquable ----------
@@ -670,6 +673,57 @@ export class UI {
       rows += row(`Jour vu depuis ${p.def.name}`, 'infini : ' + p.def.name + ' est fixe dans le ciel');
     }
     return rows;
+  }
+
+  // ---------- Photo et carnet de scènes ----------
+  lieuCourant() { return this.currentSite()?.name || this.world.bodies[this.selected]?.name || 'Omraon'; }
+  /** Date lisible : horloge de Kebet, puis jour terrestre entre parenthèses. */
+  dateTexte() {
+    const t = this.sim.t, y = Math.floor(t / DAYS_PER_YEAR), dd = t - y * DAYS_PER_YEAR;
+    return `${this.fmtT(t)} (An ${String(y).replace('-', '−')}, jour terrestre ${Math.floor(dd)})`;
+  }
+  telecharger(nom, contenu, type) {
+    const url = URL.createObjectURL(contenu instanceof Blob ? contenu : new Blob([contenu], { type }));
+    const a = document.createElement('a'); a.href = url; a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+  }
+  /** Photo de la vue (sans interface) avec bandeau de légende : lieu, date, mention du projet. */
+  photo() {
+    const cv = this.world.capture(), bar = Math.max(56, Math.round(cv.width / 22)), out = document.createElement('canvas');
+    out.width = cv.width; out.height = cv.height + bar;
+    const g = out.getContext('2d'); g.drawImage(cv, 0, 0); g.fillStyle = '#04060d'; g.fillRect(0, cv.height, out.width, bar);
+    const fs = Math.round(bar * 0.3), pad = Math.round(bar * 0.35);
+    g.fillStyle = '#e6ecf8'; g.font = `600 ${fs}px system-ui, sans-serif`; g.textBaseline = 'middle'; g.fillText(`${this.lieuCourant()} · ${this.fmtT(this.sim.t)}`, pad, cv.height + bar * 0.34);
+    g.fillStyle = '#8d9bb8'; g.font = `${Math.round(fs * 0.78)}px system-ui, sans-serif`; g.fillText(`Système d'Omraon (simulation) · ${this.dateTexte().replace(/^.*?\(/, '(')}`, pad, cv.height + bar * 0.73);
+    out.toBlob((b) => { if (b) { this.telecharger(`${slug(this.lieuCourant())}-${slug(this.fmtT(this.sim.t))}.png`, b); this.announce('Photo enregistrée'); } }, 'image/png');
+  }
+  carnetStock() { try { return window.localStorage; } catch { return null; } }
+  carnetRendre() {
+    const l = $('#carnet-list'); l.innerHTML = (this.carnet || []).map((s) => `<li data-id="${esc(s.id)}">${s.vignette ? `<img src="${s.vignette}" alt="" width="64" height="36">` : '<span class="noimg"></span>'}<div><b>${esc(s.nom)}</b><small>${esc(s.lieu)} · ${esc(s.date)}</small></div><button type="button" data-open>Ouvrir</button><button type="button" data-del aria-label="Supprimer la scène ${esc(s.nom)}">✕</button></li>`).join('');
+    $('#carnet-vide').hidden = !!(this.carnet || []).length;
+  }
+  carnetAjouter() {
+    const st = this.carnetStock(), site = this.currentSite(); if (!this.carnet) this.carnet = st ? lireCarnet(st) : [];
+    let texte = ''; if (site) { try { this.refreshScene(true); texte = this.sceneText || ''; } catch { texte = ''; } }
+    let vignette = ''; try { vignette = this.world.capture(240).toDataURL('image/jpeg', 0.6); } catch { vignette = ''; }
+    const s = nouvelleScene({ nom: $('#carnet-nom').value.trim() || `${this.lieuCourant()} · ${this.fmtT(this.sim.t)}`, hash: '#' + encoderEtat(this.etatCourant()), lieu: this.lieuCourant(), date: this.dateTexte(), texte, vignette });
+    const next = [s, ...this.carnet];
+    if (!st || !ecrireCarnet(st, next)) { this.announce('Carnet plein ou indisponible : scène non gardée'); return; }
+    this.carnet = next; $('#carnet-nom').value = ''; this.carnetRendre(); this.announce('Scène gardée');
+  }
+  bindCarnet() {
+    const st = this.carnetStock(); this.carnet = st ? lireCarnet(st) : []; this.carnetRendre();
+    $('#carnet-add').addEventListener('click', () => this.carnetAjouter());
+    for (const b of document.querySelectorAll('#carnet-photo, #btn-photo, #btn-photo2')) b.addEventListener('click', () => this.photo());
+    $('#carnet-list').addEventListener('click', (e) => {
+      const li = e.target.closest('li'), s = li && this.carnet.find((x) => x.id === li.dataset.id); if (!s) return;
+      if (e.target.closest('[data-open]')) { this.restoreState(decoderEtat(s.hash)); this.announce(`Scène ouverte : ${s.nom}`); }
+      else if (e.target.closest('[data-del]')) { this.carnet = this.carnet.filter((x) => x.id !== s.id); if (st) ecrireCarnet(st, this.carnet); this.carnetRendre(); this.announce('Scène supprimée'); }
+    });
+    $('#carnet-export').addEventListener('click', () => {
+      if (!this.carnet.length) { this.announce('Le carnet est vide'); return; }
+      this.telecharger('carnet-omraon.md', versMarkdown(this.carnet, location.origin + location.pathname), 'text/markdown'); this.announce('Carnet exporté');
+    });
   }
 
   /** Annonce un changement d'état aux lecteurs d'écran (zone `role=status`, hors écran). */

@@ -309,6 +309,15 @@ export class World {
     }
   }
 
+  /** Image courante dans un canvas 2D (rendu immédiat : valable sans preserveDrawingBuffer). maxW : largeur maximale, 0 = taille réelle. */
+  capture(maxW = 0) {
+    if (this.ground?.active) this.ground.render(); else this.renderer.render(this.scene, this.camera);
+    const src = this.renderer.domElement, k = maxW ? Math.min(1, maxW / src.width) : 1;
+    const c = document.createElement('canvas'); c.width = Math.round(src.width * k); c.height = Math.round(src.height * k);
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    return c;
+  }
+
   // ---------- Vue à la première personne ----------
   enterGround(site) {
     const rec = this.siteEls?.get(site.id); if (!rec?.st) return false;

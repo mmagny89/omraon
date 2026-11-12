@@ -233,7 +233,7 @@ body.ground #bar { z-index: 6; position: fixed; }
 @media (max-width: 860px) {
   #btn-options { display: none; } /* la roue dentée de la barre du bas fait le même travail */
   .tb { min-width: 44px; padding: 6px 6px; } #top { gap: 4px; }
-  #btn-tour, #btn-link { display: none; } /* la visite et le lien passent dans le panneau Options (voir #quick) */
+  #btn-tour, #btn-link, #btn-photo { display: none; } /* la visite et le lien passent dans le panneau Options (voir #quick) */
   #views button { padding: 6px 6px; min-height: 44px; }
   #bar .row { flex-wrap: wrap; row-gap: 0; } #speed { min-width: 90px; }
   #speed-out { width: auto; white-space: nowrap; font-size: 12px; } #date { font-size: 11px; white-space: nowrap; min-width: 0; margin-left: auto; }
@@ -349,3 +349,11 @@ body.ui-hidden #tour { display: none; }
 #info .tile[data-tip]:focus-visible, #info .evts button:focus-visible, #info details.sec > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 #info:focus-visible { outline: 2px solid var(--accent); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }
+
+/* Carnet de scènes */
+#carnet-list { list-style: none; margin: 8px 0; padding: 0; }
+#carnet-list li { display: grid; grid-template-columns: 64px 1fr auto auto; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); }
+#carnet-list img, #carnet-list .noimg { width: 64px; height: 36px; border-radius: 4px; object-fit: cover; background: rgba(160, 185, 230, .12); }
+#carnet-list div { min-width: 0; } #carnet-list b { display: block; overflow-wrap: anywhere; } #carnet-list small { color: var(--mute); }
+#carnet-list button { min-height: 44px; min-width: 44px; padding: 0 10px; }
+#carnet-nom { width: 100%; min-height: 44px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 8px; }
