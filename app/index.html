@@ -72,6 +72,23 @@
   </footer>
   <section id="options" aria-label="Options"><button type="button" class="panel-x" data-close="options" aria-label="Fermer les options">×</button><h2>Options</h2>
     <div id="quick"><button type="button" id="btn-tour2">🧭 Visite</button><button type="button" id="btn-link2">🔗 Lien</button><button type="button" id="btn-photo2">📷 Photo</button></div>
+    <details id="lore">
+      <summary>Lore : glossaire, personnages, vestiges</summary>
+      <div id="lore-tabs" role="tablist" aria-label="Sections du lore">
+        <button type="button" role="tab" id="lt-gl" aria-controls="lore-gl" aria-selected="true">Glossaire</button>
+        <button type="button" role="tab" id="lt-pj" aria-controls="lore-pj" aria-selected="false" tabindex="-1">Personnages</button>
+        <button type="button" role="tab" id="lt-vs" aria-controls="lore-vs" aria-selected="false" tabindex="-1">Vestiges</button>
+      </div>
+      <div id="lore-gl" role="tabpanel" aria-labelledby="lt-gl">
+        <div class="grid"><label class="wide" for="lore-q">Chercher un mot ou un sens</label><input id="lore-q" type="search" class="wide" placeholder="ex. lumière, Kaha, Aset" autocomplete="off"><label class="wide" for="lore-cat">Catégorie</label><select id="lore-cat" class="wide"></select></div>
+        <p id="lore-gl-n" class="note" aria-live="polite"></p><ul id="lore-gl-l" class="lore-l"></ul>
+      </div>
+      <div id="lore-pj" role="tabpanel" aria-labelledby="lt-pj" hidden><ul id="lore-pj-l" class="lore-l"></ul><p class="note">Chaque personnage est placé dans son lieu d'origine ; un clic y emmène. « Lieu provisoire » : le document ne tranche pas le site exact.</p></div>
+      <div id="lore-vs" role="tabpanel" aria-labelledby="lt-vs" hidden>
+        <label class="chk"><input type="checkbox" id="lore-iceberg" checked> Montrer les indices d'iceberg</label>
+        <ul id="lore-vs-l" class="lore-l"></ul><p class="note">Les Anciens (les Iktu, la Première Race) : le lore veut qu'on ne les explique jamais tout à fait. Un « iceberg » est un indice, pas une réponse.</p>
+      </div>
+    </details>
     <details id="compare">
       <summary>Comparer deux lieux</summary>
       <div class="grid">

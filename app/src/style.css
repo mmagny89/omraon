@@ -421,3 +421,18 @@ body.ui-hidden #tour { display: none; }
 /* Mention de droits et à propos */
 #copyright { position: fixed; left: 14px; bottom: 8px; z-index: 1; font-size: 11px; color: var(--mute); opacity: .65; pointer-events: none; }
 #apropos p { margin: 6px 0; font-size: 12.5px; color: #cfd8ec; } #apropos a { color: var(--accent); }
+
+/* Lore : listes de personnages, vestiges, glossaire ; pastilles de niveau */
+.lore-l { list-style: none; margin: 6px 0; padding: 0; }
+.lore-l li { padding: 6px 0; border-top: 1px solid var(--line); display: grid; gap: 2px; }
+.lore-l b { color: var(--text); } .lore-l small { color: var(--mute); } .lore-l span { color: #cfd8ec; font-size: 12.5px; }
+#info .lore-l li, #options .lore-l li { overflow-wrap: anywhere; }
+#lore-pj-l button, #lore-vs-l button { display: grid; gap: 2px; width: 100%; text-align: left; min-height: 44px; padding: 6px 8px; background: none; border: 0; border-radius: 8px; color: inherit; font: inherit; cursor: pointer; }
+#lore-pj-l button:hover, #lore-vs-l button:hover, #lore-pj-l button:focus-visible, #lore-vs-l button:focus-visible { background: rgba(255, 191, 107, .1); }
+#lore-tabs { display: flex; gap: 4px; margin: 6px 0; } #lore-tabs button { flex: 1; min-height: 44px; padding: 0 6px; }
+#lore-tabs button[aria-selected="true"] { border-color: var(--accent); background: rgba(255, 191, 107, .14); }
+#lore-q, #lore-cat { width: 100%; min-height: 44px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 8px; }
+.chk { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.pill.iceberg { color: #8fd0ff; border-color: rgba(143, 208, 255, .5); } .pill.ouvert { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
+.lore-l .pill { justify-self: start; margin: 2px 0; }
+#list small.pj { margin-left: auto; color: var(--accent); } #list small.pj + small { margin-left: 6px; }

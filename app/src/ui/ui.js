@@ -23,6 +23,9 @@ import { etapesVisite } from './visite.js';
 import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug } from './carnet.js';
 import { STATUTS, statutSection } from './statut.js';
 import { fusionner, liaison } from './comparaison.js';
+import { PERSONNAGES, VESTIGES } from '../data/lore.js';
+import { GLOSSAIRE } from '../data/glossaire.js';
+import { glossaireComplet, filtrer, auLieu } from './lore.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -38,7 +41,7 @@ const recalerVitesses = () => SPEEDS_BASE.forEach(([b, l, T], i) => {
 });
 const HUM_TOT = SITES.reduce((t, x) => t + x.population, 0), TYT_TOT = SITES.reduce((t, x) => t + (x.tyts || 0), 0);
 /** Infobulle de population d'un site : répartition humains / Tyts et part du total du système. */
-const popTip = (x) => tipRepartition({ titre: x.name, parts: [
+const popTip = (x) => tipRepartition({ titre: x.name, note: auLieu(PERSONNAGES, x.body, x.id).length ? `Personnages : ${auLieu(PERSONNAGES, x.body, x.id).map((p) => p.nom).join(', ')}` : '', parts: [
   { n: x.population, label: 'Humains', cls: 'h', partTotale: (x.population / HUM_TOT) * 100 },
   { n: x.tyts || 0, label: 'Tyts', cls: 't', partTotale: TYT_TOT ? ((x.tyts || 0) / TYT_TOT) * 100 : 0 }] });
 const $ = (s) => document.querySelector(s);
@@ -78,10 +81,11 @@ export class UI {
     const group = () => mk(list, 'div', 'grp');
     const sitesOf = (name) => SITES.filter((x) => x.body === name);
     const pop = (n) => (n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
-    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small>${pop(x.population)}</small>`, { site: x.id, tip: popTip(x) }, () => this.selectSite(x.id));
+    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}${auLieu(PERSONNAGES, x.body, x.id).length ? `<small class="pj" aria-label="${auLieu(PERSONNAGES, x.body, x.id).length} personnage(s)">👤${auLieu(PERSONNAGES, x.body, x.id).length}</small>` : ''}<small>${pop(x.population)}</small>`, { site: x.id, tip: popTip(x) }, () => this.selectSite(x.id));
     const bodyBtn = (parent, b, cls) => {
       const dot = `<span class="dot" style="color:${b.def.color || '#ffe2b0'};background:${b.def.color || '#ffe2b0'}"></span>`;
-      return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); this.announce(`${b.def.name} sélectionné`); });
+      const pjs = auLieu(PERSONNAGES, b.def.name);
+      return btn(parent, cls || b.type, `${dot}${b.def.name}${pjs.length ? `<small class="pj" aria-label="${pjs.length} personnage(s)">👤${pjs.length}</small>` : ''}`, pjs.length ? { idx: b.idx, tip: tipTexte(b.def.name, `Personnages : ${pjs.map((p) => p.nom).join(', ')}`) } : { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); this.announce(`${b.def.name} sélectionné`); });
     };
     bodyBtn(group(), bodies[0]);
     bodies.filter((b) => b.type === 'planet').forEach((p) => {
@@ -528,6 +532,7 @@ export class UI {
     const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
     let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
+    h += this.loreHtml(site.body, site.id);
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
       h += yy < site.founded ? `<p class="note">À l'An ${String(yy).replace('-', '−')} : la colonie n'est pas encore fondée (An ${String(site.founded).replace('-', '−')}).</p>` : `<p class="note">À l'An ${String(yy).replace('-', '−')} (colonie fondée An ${String(site.founded).replace('-', '−')}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
@@ -555,6 +560,7 @@ export class UI {
     $('#speed-out').textContent = SPEEDS[this.speedIdx][1];
     this.bindLink();
     this.buildCompare();
+    this.buildLore();
     this.bindCarnet();
     for (const a of document.querySelectorAll('a.skip')) a.addEventListener('click', (e) => { e.preventDefault(); document.querySelector(a.getAttribute('href'))?.focus(); }); // liens d'évitement sans toucher à l'adresse (#t=…)
     this.bindTour();
@@ -679,6 +685,46 @@ export class UI {
     return rows;
   }
 
+  // ---------- Lore : personnages, vestiges, glossaire ----------
+  /** Lieu lisible d'une entrée de lore (nom du site s'il existe, sinon du corps). */
+  lieuLore(o) { const s = o.site && SITES.find((x) => x.id === o.site); return s ? s.name : o.corps; }
+  /** Va au lieu d'une entrée : le site si elle en a un, sinon le corps (la ceinture a sa fiche). */
+  allerAuLieu(o) {
+    if (o.site) this.selectSite(o.site); else if (o.corps === BELT.name) this.selectBelt(); else { const b = this.world.bodies.find((x) => x.name === o.corps); if (b) this.select(b.idx, true); }
+    this.closeLeftOnMobile();
+  }
+  /** Sections « Personnages d'ici » et « Vestiges » d'une fiche de corps (siteId null) ou de site. */
+  loreHtml(corps, siteId = null, sansSites = false) {
+    // sansSites : sur la fiche d'un corps affichée sous celle d'un site, on ne répète pas ce que la fiche du site montre déjà
+    const pj = auLieu(PERSONNAGES, corps, siteId).filter((p) => !sansSites || !p.origine.site), ve = auLieu(VESTIGES, corps, siteId, 'direct').filter((v) => (this.loreIceberg !== false || v.niveau !== 'iceberg') && (!sansSites || !v.site));
+    let h = '';
+    if (pj.length) h += this.begin('Personnages d\'ici', true, 'canon') + `<ul class="lore-l">${pj.map((p) => `<li><b>${esc(p.nom)}</b>${p.vivant === false ? ' <small>(décédée)</small>' : ''}<small>${esc(p.role)}${!siteId && p.origine.site ? ' · ' + esc(this.lieuLore(p.origine)) : ''}</small>${p.origine.statut === 'provisoire' ? '<em class="pill provisoire">lieu provisoire</em>' : ''}<span>${esc(p.resume)}</span></li>`).join('')}</ul></details>`;
+    if (ve.length) h += this.begin('Vestiges des Anciens', true, 'canon') + `<ul class="lore-l">${ve.map((v) => `<li><b>${esc(v.titre)}</b><em class="pill ${v.niveau}">${v.niveau === 'iceberg' ? 'iceberg' : v.niveau === 'ouvert' ? 'fil ouvert' : 'canon'}</em><span>${esc(v.texte)}</span></li>`).join('')}</ul></details>`;
+    return h;
+  }
+  buildLore() {
+    const mondes = [{ tyt: STAR.names.tyt, courant: STAR.names.tytCourant, sens: STAR.names.sens, humain: STAR.name }, { tyt: BELT.names.tyt, courant: BELT.names.tytCourant, sens: BELT.names.sens, humain: BELT.name }];
+    for (const b of this.sim.bodies.slice(1)) mondes.push({ tyt: b.def.names?.tyt, courant: b.def.names?.tytCourant, sens: b.def.names?.sens, humain: b.def.name });
+    this.glossaire = glossaireComplet(GLOSSAIRE, mondes);
+    const cats = [...new Set(this.glossaire.map((e) => e.cat))];
+    $('#lore-cat').innerHTML = '<option value="">Toutes les catégories</option>' + cats.map((c) => `<option>${esc(c)}</option>`).join('');
+    const rendreGl = () => {
+      const l = filtrer(this.glossaire, $('#lore-q').value, $('#lore-cat').value);
+      $('#lore-gl-n').textContent = `${l.length} entrée${l.length > 1 ? 's' : ''}`;
+      $('#lore-gl-l').innerHTML = l.map((e) => `<li><b>${esc(e.mot)}</b><span>${esc(e.sens)}</span>${e.note ? `<small>${esc(e.note)}</small>` : ''}</li>`).join('');
+    };
+    $('#lore-q').addEventListener('input', rendreGl); $('#lore-cat').addEventListener('change', rendreGl); rendreGl();
+    const lieuBtn = (o, html, cle) => `<li><button type="button" data-lieu="${cle}">${html}</button></li>`;
+    const rendrePj = () => { $('#lore-pj-l').innerHTML = PERSONNAGES.map((p, i) => lieuBtn(p.origine, `<b>${esc(p.nom)}</b>${p.vivant === false ? ' <small>(décédée)</small>' : ''}<small>${esc(p.role)} · ${esc(this.lieuLore(p.origine))}</small>${p.origine.statut === 'provisoire' ? '<em class="pill provisoire">lieu provisoire</em>' : ''}`, 'p' + i)).join(''); };
+    const rendreVs = () => { $('#lore-vs-l').innerHTML = VESTIGES.filter((v) => this.loreIceberg !== false || v.niveau !== 'iceberg').map((v) => { const i = VESTIGES.indexOf(v); const h = `<b>${esc(v.titre)}</b><em class="pill ${v.niveau}">${v.niveau === 'iceberg' ? 'iceberg' : v.niveau === 'ouvert' ? 'fil ouvert' : 'canon'}</em><small>${v.horsSysteme ? 'hors du système' : esc(this.lieuLore(v))}</small><span>${esc(v.texte)}</span>`; return v.horsSysteme ? `<li>${h}</li>` : lieuBtn(v, h, 'v' + i); }).join(''); };
+    rendrePj(); rendreVs();
+    $('#lore-iceberg').addEventListener('change', (e) => { this.loreIceberg = e.target.checked; rendreVs(); this.renderInfo(true); });
+    $('#lore').addEventListener('click', (e) => { const b = e.target.closest('[data-lieu]'); if (!b) return; const k = b.dataset.lieu, o = k[0] === 'p' ? PERSONNAGES[+k.slice(1)].origine : VESTIGES[+k.slice(1)]; this.allerAuLieu(o); });
+    const tabs = ['gl', 'pj', 'vs'], sel = (t) => { for (const x of tabs) { $('#lt-' + x).setAttribute('aria-selected', x === t); $('#lt-' + x).tabIndex = x === t ? 0 : -1; $('#lore-' + x).hidden = x !== t; } };
+    $('#lore-tabs').addEventListener('click', (e) => { const b = e.target.closest('[role=tab]'); if (b) sel(b.id.slice(3)); });
+    $('#lore-tabs').addEventListener('keydown', (e) => { const i = tabs.findIndex((x) => $('#lt-' + x).getAttribute('aria-selected') === 'true'); if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); const n = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]; sel(n); $('#lt-' + n).focus(); } });
+  }
+
   // ---------- Ceinture Nunzir ----------
   /** Sélectionne la ceinture : caméra cadrée sur son anneau (centré sur l'étoile, à ~4 UA) et fiche propre. */
   selectBelt() {
@@ -698,6 +744,7 @@ export class UI {
     h += this.begin('Résonances avec Zirkan', true, 'calcule') + `<dl>${res.map((r) => row(`${r.p}:${r.q}`, `${f(r.a, 3)} UA`, r.a >= BELT.aMin && r.a <= BELT.aMax ? 'warn' : '')).join('')}</dl><p class="note">En orange : dans la ceinture, où ces résonances creusent des lacunes (comme les lacunes de Kirkwood autour de Jupiter).</p></details>`;
     const sites = SITES.filter((x) => x.body === 'Nunzir');
     if (sites.length) h += this.begin('Sites', true, 'conception') + `<ul class="evts">${sites.map((x) => `<li><button type="button" data-site-open="${esc(x.id)}"><b>${esc(x.name)}</b><small>${nf(x.population)} humains${x.tyts ? ' · ' + nf(x.tyts) + ' Tyts' : ''}</small></button></li>`).join('')}</ul></details>`;
+    h += this.loreHtml(BELT.name);
     return h + '<p class="note">Les traceurs sont des points sans masse : ils figurent la densité de la ceinture, ils ne se heurtent pas entre eux.</p>';
   }
 
@@ -951,6 +998,7 @@ export class UI {
       if (d.id === 'kebet') h += `<p class="note">Kebet reçoit l'éclairement d'une planète en bordure de zone habitable ; la rotation synchrone et l'effet de serre de son atmosphère décident du reste.</p>`;
       h += '</details>';
     }
+    h += this.loreHtml(b.def.name, null, !!this.selectedSite);
     h += this.prochainsEvenements(b);
     h += this.begin('Habitabilité', true, 'conception') + this.habitabilityHtml(b) + '</details>';
     let head = '';

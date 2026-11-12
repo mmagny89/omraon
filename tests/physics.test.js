@@ -415,3 +415,27 @@ test('garde-fous du rendu : profil d\'anneau déterministe, divisions creusées,
   const steps = etapesVisite(ui); assert.equal(steps.length, 9);
   for (const s of steps) { assert.ok(s.ceinture ? !s.etat.b : noms.has(s.etat.b), `corps inconnu : ${s.etat.b}`); assert.ok(s.titre && s.texte(ui).length > 40, `texte vide : ${s.titre}`); }
 });
+
+import { moisConfederal, glossaireComplet, filtrer, auLieu } from '../app/src/ui/lore.js';
+import { MOIS, PERSONNAGES, VESTIGES } from '../app/src/data/lore.js';
+import { GLOSSAIRE } from '../app/src/data/glossaire.js';
+import { SITES as ST } from '../app/src/data/sites.js';
+test('lore : calendrier de 13 mois, personnages et vestiges bien placés, aucune racine égyptienne affichée', () => {
+  assert.equal(MOIS.length, 13); assert.equal(MOIS[0], 'Aset'); assert.equal(MOIS[12], 'Pamenoth');
+  assert.equal(moisConfederal(0, 1.28).mois, 'Aset'); assert.equal(moisConfederal(0, 1.28).jour, 1);
+  assert.equal(moisConfederal(365.25 - 0.01, 1.28).mois, 'Pamenoth'); assert.equal(moisConfederal(-1, 1.28).mois, 'Pamenoth', 'avant l\'An 0 : année précédente');
+  assert.equal(moisConfederal(365.25 / 13 + 0.01, 1.28).mois, 'Pharmouti');
+  assert.ok(moisConfederal(100, 1.28).jour >= 1 && moisConfederal(100, 1.28).jour <= moisConfederal(100, 1.28).nbJours);
+  const corps = new Set(ST.map((s) => s.body)); const ids = new Set(ST.map((s) => s.id));
+  for (const p of PERSONNAGES) { assert.ok(p.origine.site === null || ids.has(p.origine.site), `site inconnu : ${p.id}`); if (p.origine.site) assert.equal(ST.find((s) => s.id === p.origine.site).body, p.origine.corps, `corps incohérent : ${p.id}`); assert.ok(p.origine.statut === 'canon' || p.origine.statut === 'provisoire'); }
+  for (const v of VESTIGES) { if (!v.horsSysteme) { assert.ok(corps.has(v.corps) || v.corps === 'Kebet' || v.corps === 'Astir', v.id); if (v.site) assert.ok(ids.has(v.site), v.id); } assert.ok(['canon', 'iceberg', 'ouvert'].includes(v.niveau)); }
+  assert.deepEqual(auLieu(PERSONNAGES, 'Roushan', 'roushan-cites').map((p) => p.id), ['ella', 'jax', 'parents-ella', 'mai']);
+  assert.ok(auLieu(PERSONNAGES, 'Kebet').some((p) => p.id === 'eirik') && !auLieu(PERSONNAGES, 'Kebet', 'kebet-temples').length);
+  assert.ok(auLieu(VESTIGES, 'Kebet', 'kebet-temples', 'direct').length === 1);
+  const gl = glossaireComplet(GLOSSAIRE, [{ tyt: "ASHK-KH'RU", courant: 'Ashru', sens: 'la Lumière-sacrée', humain: 'Omraon' }]);
+  assert.ok(GLOSSAIRE.length >= 60 && gl.length === GLOSSAIRE.length + 1 + 13);
+  assert.ok(filtrer(gl, 'LUMIERE').some((e) => e.mot === 'Ashk') && filtrer(gl, 'LUMIERE').some((e) => e.mot === "ASHK-KH'RU"), 'recherche sans accents ni casse, dans le sens');
+  assert.ok(filtrer(gl, 'ashka').some((e) => e.mot === 'ashka') && filtrer(gl, '', 'Calendrier confédéral').length === 13 && filtrer(gl, 'zzzz').length === 0);
+  const tout = JSON.stringify([GLOSSAIRE, PERSONNAGES, VESTIGES]);
+  assert.ok(!/\b(égypt\w*|Horus|Isis|Osiris|Aton|Atoum|Khépri|Nephthys|Maât|Sopdou|Tefnout)\b/i.test(tout), 'les racines égyptiennes ne s\'affichent jamais');
+});
