@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Système d'Omraon — Simulation</title>
   <meta name="description" content="Simulation N-corps et visualisation 3D du système d'Omraon : une étoile, trois telluriques, une ceinture, deux géantes et six lunes.">
+  <meta name="author" content="Magny">
+  <meta name="copyright" content="© 2026 Magny. Tous droits réservés.">
   <link rel="stylesheet" href="./src/style.css">
 </head>
 <body>
@@ -14,22 +16,33 @@
     <p id="view-help" class="sr-only">Flèches : tourner la vue. Plus et moins, ou Page haut et Page bas : zoom. Les corps et les sites se choisissent dans la liste (bouton Corps).</p>
     <div id="labels" aria-hidden="true"></div>
   </main>
+  <p id="copyright">© 2026 Magny · Tous droits réservés</p>
   <div id="sr-status" class="sr-only" role="status" aria-live="polite"></div>
 
   <header id="top">
-    <button type="button" id="btn-bodies" class="tb" aria-pressed="true" title="Liste des corps et des sites"><span class="ic">☰</span><span class="t">Corps</span></button>
-    <h1>Système d'<b>Omraon</b></h1>
-    <div id="views" role="group" aria-label="Vues">
+    <div class="th-l">
+      <button type="button" id="btn-bodies" class="tb" aria-pressed="true" title="Liste des corps et des sites"><span class="ic">☰</span><span class="t">Corps</span></button>
+      <h1><span class="logo" aria-hidden="true">✦</span><span>Système d'<b>Omraon</b></span></h1>
+    </div>
+    <div id="views" class="tg" role="group" aria-label="Vues">
       <button type="button" data-view="system">Système</button>
       <button type="button" data-view="inner">Intérieur</button>
       <button type="button" data-view="kebet">Kebet</button>
     </div>
-    <button type="button" id="btn-info" class="tb" aria-pressed="true" title="Fiche du corps ou du site"><span class="ic">ⓘ</span><span class="t">Fiche</span></button>
-    <button type="button" id="btn-options" class="tb" aria-pressed="false" title="Options, éphémérides, réseau"><span class="ic">⚙</span><span class="t">Options</span></button>
-    <button type="button" id="btn-tour" class="tb" title="Visite guidée du système"><span class="ic">🧭</span><span class="t">Visite</span></button>
-    <button type="button" id="btn-photo" class="tb" title="Photo de la vue en PNG, sans interface (touche P)"><span class="ic">📷</span><span class="t">Photo</span></button>
-    <button type="button" id="btn-link" class="tb" title="Copier le lien de cette vue (date, corps, site, caméra)"><span class="ic">🔗</span><span class="t">Lien</span></button>
-    <button type="button" id="btn-hide" class="tb" title="Masquer toute l'interface (touche H)"><span class="ic">🙈</span><span class="t">Masquer</span></button>
+    <div class="th-r">
+      <div class="tg" role="group" aria-label="Panneaux">
+        <button type="button" id="btn-info" class="tb" aria-pressed="true" title="Fiche du corps ou du site"><span class="ic">ⓘ</span><span class="t">Fiche</span></button>
+        <button type="button" id="btn-options" class="tb" aria-pressed="false" title="Options, éphémérides, réseau"><span class="ic">⚙</span><span class="t">Options</span></button>
+      </div>
+      <div class="tg" role="group" aria-label="Outils">
+        <button type="button" id="btn-tour" class="tb" title="Visite guidée du système"><span class="ic">🧭</span><span class="t">Visite</span></button>
+        <button type="button" id="btn-photo" class="tb" title="Photo de la vue en PNG, sans interface (touche P)"><span class="ic">📷</span><span class="t">Photo</span></button>
+        <button type="button" id="btn-link" class="tb" title="Copier le lien de cette vue (date, corps, site, caméra)"><span class="ic">🔗</span><span class="t">Lien</span></button>
+      </div>
+      <div class="tg" role="group" aria-label="Affichage">
+        <button type="button" id="btn-hide" class="tb" title="Masquer toute l'interface (touche H)"><span class="ic">🙈</span><span class="t">Masquer</span></button>
+      </div>
+    </div>
   </header>
   <aside id="tour" role="dialog" aria-label="Visite guidée" hidden></aside>
   <div id="frise" role="group" aria-label="Frise chronologique"></div>
@@ -66,6 +79,12 @@
         <label for="cmp-b">Lieu B</label><select id="cmp-b" class="wide"></select>
       </div>
       <div id="cmp-out"></div>
+    </details>
+    <details id="apropos">
+      <summary>À propos</summary>
+      <p>Système d'Omraon : simulation N-corps et visualisation 3D du système décrit dans la <i>Bible géographique v3</i> du roman.</p>
+      <p>© 2026 Magny. Tous droits réservés. Les noms, lieux, personnages et éléments de l'univers du roman restent la propriété de leur auteur.</p>
+      <p>Bibliothèque embarquée : Three.js (licence MIT). Contact : <a href="mailto:contact@mmagny.fr">contact@mmagny.fr</a>.</p>
     </details>
     <details id="carnet">
       <summary>Carnet de scènes &amp; photo</summary>
@@ -145,7 +164,23 @@
     <div class="gh-bottom"><span id="gh-heading"></span>
       <div class="gh-btns"><label class="gh-chk"><input type="checkbox" id="gh-names"> Noms des astres</label><label class="gh-chk"><input type="checkbox" id="gh-cards" checked> Points cardinaux</label><button type="button" data-look="star">Étoile</button><button type="button" data-look="parent">Planète parente</button><button type="button" data-look="north">Nord</button><button type="button" id="gh-exit">✕ Quitter la vue</button></div></div>
   </div>
-  <div id="loader"><div><b>Système d'Omraon</b><span id="loader-msg">Initialisation…</span></div></div>
+  <div id="loader">
+    <div class="ld">
+      <svg class="ld-orbits" viewBox="-60 -40 120 80" width="132" height="88" aria-hidden="true" focusable="false">
+        <ellipse rx="52" ry="30" fill="none" stroke="currentColor" stroke-opacity=".25"/><ellipse rx="34" ry="19" fill="none" stroke="currentColor" stroke-opacity=".25"/><ellipse rx="18" ry="10" fill="none" stroke="currentColor" stroke-opacity=".25"/>
+        <circle r="5" fill="#ffd9a0"/><circle r="9" fill="#ffbf6b" opacity=".18"/>
+        <g class="ld-s1"><circle cx="18" r="1.8" fill="#ff8a4a"/></g><g class="ld-s2"><circle cx="34" r="2.4" fill="#c98a52"/></g><g class="ld-s3"><circle cx="52" r="3" fill="#e0c08a"/></g>
+      </svg>
+      <p class="ld-t">Système d'<b>Omraon</b></p>
+      <p class="ld-s">Simulation N-corps et vue 3D du système du roman</p>
+      <progress id="loader-bar" max="100" aria-label="Chargement de la simulation"></progress>
+      <span id="loader-msg" role="status" aria-live="polite">Initialisation…</span>
+      <p id="loader-tip" class="ld-tip"></p>
+      <p class="ld-slow">Le chargement est plus long que prévu. Si rien ne bouge, rechargez la page : WebGL est nécessaire.</p>
+      <noscript><p class="ld-err">JavaScript est nécessaire pour afficher la simulation.</p></noscript>
+    </div>
+    <p class="ld-c">© 2026 Magny · Tous droits réservés</p>
+  </div>
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
   <script type="module" src="./src/main.js"></script>
 </body>

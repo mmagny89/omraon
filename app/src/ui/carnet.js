@@ -34,6 +34,7 @@ export function versMarkdown(scenes, base) {
     out.push(`- Vue : ${base}${s.hash}`, '');
     if (s.texte) out.push('### Fiche de scène', '', ...s.texte.split('\n').map((l) => (l.trim() ? `> ${l}` : '>')), '');
   }
+  out.push('---', '© 2026 Magny. Tous droits réservés.', '');
   return out.join('\n');
 }
 

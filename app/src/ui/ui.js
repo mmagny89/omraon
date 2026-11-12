@@ -719,6 +719,7 @@ export class UI {
     const fs = Math.round(bar * 0.3), pad = Math.round(bar * 0.35);
     g.fillStyle = '#e6ecf8'; g.font = `600 ${fs}px system-ui, sans-serif`; g.textBaseline = 'middle'; g.fillText(`${this.lieuCourant()} · ${this.fmtT(this.sim.t)}`, pad, cv.height + bar * 0.34);
     g.fillStyle = '#8d9bb8'; g.font = `${Math.round(fs * 0.78)}px system-ui, sans-serif`; g.fillText(`Système d'Omraon (simulation) · ${this.dateTexte().replace(/^.*?\(/, '(')}`, pad, cv.height + bar * 0.73);
+    g.textAlign = 'right'; g.fillText('© 2026 Magny · Tous droits réservés', out.width - pad, cv.height + bar * 0.73); g.textAlign = 'left';
     out.toBlob((b) => { if (b) { this.telecharger(`${slug(this.lieuCourant())}-${slug(this.fmtT(this.sim.t))}.png`, b); this.announce('Photo enregistrée'); } }, 'image/png');
   }
   carnetStock() { try { return window.localStorage; } catch { return null; } }
