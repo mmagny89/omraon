@@ -36,6 +36,7 @@ export const PLANETS = [
     massEarth: 0.95, radiusKm: 0.98 * 6371, albedo: 0.3,
     orbit: { a: 0.52, e: 0.04, i: 1.5, Om: 76, w: 54, M: 220 },
     rotation: { periodH: 31, tiltDeg: 12, nodeDeg: 40 },
+    atmosphere: { color: '#d9a16a', strength: 0.25, height: 0.03 }, // rendu seulement : voile de poussière, atmosphère ténue (0,05 bar)
     habitat: { pressureBar: 0.05, greenhouseK: 5 }, // conception : atmosphère ténue et poussiéreuse (le doc « Quotidien sensoriel » parle de vent, de poussière, de nuits glaciales)
     names: { tyt: 'SET-KAL-DURUK', tytCourant: 'Setkal', sens: 'la Pierre-de-peine' },
     role: 'Monde-mine par excellence : aride, riche en métaux, forte concentration de Tyts esclaves. Monde d\'origine de Théa.',
@@ -73,7 +74,7 @@ export const PLANETS = [
     rotation: { periodH: 9.8, tiltDeg: 3.1, nodeDeg: 150 },
     names: { tyt: 'ZIR-KAAN', tytCourant: 'Zirkaan', sens: 'la Voûte-qui-porte' },
     role: 'Géante-ciel qui porte la lune habitable Kebet. Pas de surface ; seuls les navigateurs la nomment.',
-    atmosphere: { color: '#f2d9a8', strength: 0.5 },
+    atmosphere: { color: '#f2d9a8', strength: 0.85, height: 0.07 }, // rendu seulement (halo de la géante)
     habitat: { magnetosphere: 0.0005 }, // conception : champ très faible (Kebet est à 4,7 rayons de Zirkan ; avec un champ jovien la dose serait mortelle)
     moons: [
       {
@@ -109,7 +110,7 @@ export const PLANETS = [
     rotation: { periodH: 10.7, tiltDeg: 26, nodeDeg: 80 },
     names: { tyt: 'RUKH-SHU', tytCourant: 'Rukhshu', sens: 'le Grand-Souffle' },
     role: 'Géante externe pâle et froide : cités flottantes, raffineries de gaz, carburant des moteurs. Monde d\'origine d\'Ella.',
-    atmosphere: { color: '#e9e2c4', strength: 0.4 },
+    atmosphere: { color: '#e9e2c4', strength: 0.75, height: 0.07 }, // rendu seulement (halo de la géante)
     habitat: { magnetosphere: 0.03, internalHeat: 1.63 }, // champ de type Saturne ; T(1 bar) ≈ 1,63 × T équilibre comme Saturne
     moons: [
       {

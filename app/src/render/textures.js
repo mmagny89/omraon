@@ -16,34 +16,34 @@ const styles = {
     const b = n.fbm(x * 3, y * 3, z * 3, 6), ridge = 1 - Math.abs(n.fbm(x * 5 + 9, y * 5, z * 5, 4));
     const base = ramp([[0, hex('#1d1612')], [0.5, hex('#3b2e26')], [1, hex('#6a5646')]], 0.5 + b);
     const lava = clamp01((ridge - 0.86) * 18);
-    return { c: mix(base, hex('#ff6a1a'), lava * 0.9), e: lava };
+    return { c: mix(base, hex('#ff6a1a'), lava * 0.9), e: lava, h: clamp01(0.5 + b * 0.9 + (ridge - 0.5) * 0.3) };
   },
   sethis: (n, x, y, z) => {
     const b = n.fbm(x * 2.2, y * 2.2, z * 2.2, 6), d = n.fbm(x * 7 + 3, y * 7, z * 7, 4);
     const c = ramp([[0, hex('#6b3d22')], [0.45, hex('#b2723e')], [0.75, hex('#d39a5c')], [1, hex('#e6bd86')]], 0.5 + b * 0.9);
-    return { c: mix(c, hex('#4a2a1a'), clamp01(d * 0.8 - 0.1)) };
+    return { c: mix(c, hex('#4a2a1a'), clamp01(d * 0.8 - 0.1)), h: clamp01(0.5 + b * 0.9) };
   },
   naksun: (n, x, y, z) => {
     const b = n.fbm(x * 2.8, y * 2.8, z * 2.8, 6), cr = n.noise(x * 14, y * 14, z * 14);
     let c = ramp([[0, hex('#4a4f58')], [0.5, hex('#8d939d')], [1, hex('#c0c4cc')]], 0.5 + b);
     c = mix(c, [60, 66, 76], clamp01(-cr * 0.8) * 0.5);
-    return { c };
+    return { c, h: clamp01(0.5 + b * 0.8 - clamp01(-cr) * 0.3) };
   },
   rockGrey: (n, x, y, z) => {
     const b = n.fbm(x * 4, y * 4, z * 4, 6), cr = n.noise(x * 11, y * 11, z * 11);
     const v = 0.5 + 0.5 * b - clamp01(-cr) * 0.25;
-    return { c: [v * 190, v * 186, v * 182] };
+    return { c: [v * 190, v * 186, v * 182], h: clamp01(0.5 + 0.5 * b - clamp01(-cr) * 0.35) };
   },
   rockDark: (n, x, y, z) => {
     const b = n.fbm(x * 4, y * 4, z * 4, 6), cr = n.noise(x * 12, y * 12, z * 12);
     const v = 0.35 + 0.35 * b - clamp01(-cr) * 0.2;
-    return { c: [v * 150, v * 140, v * 135] };
+    return { c: [v * 150, v * 140, v * 135], h: clamp01(0.5 + 0.5 * b - clamp01(-cr) * 0.35) };
   },
   ice: (n, x, y, z) => {
     const b = n.fbm(x * 3, y * 3, z * 3, 5), cr = Math.abs(n.noise(x * 9, y * 9, z * 9));
     let c = ramp([[0, hex('#b9d6ee')], [0.6, hex('#e3f1fb')], [1, hex('#ffffff')]], 0.55 + b * 0.6);
     c = mix(c, hex('#7fa8c9'), clamp01(1 - cr * 9) * 0.5);
-    return { c };
+    return { c, h: clamp01(0.5 + b * 0.5 - clamp01(1 - cr * 9) * 0.2) };
   },
   kebet: (n, x, y, z) => {
     const h = n.fbm(x * 1.8 + 5, y * 1.8, z * 1.8, 7) + 0.25 * n.fbm(x * 6, y * 6, z * 6, 3);
@@ -57,7 +57,7 @@ const styles = {
       c = mix(c, hex('#f2f6f8'), clamp01((e - 0.6) * 4));
     }
     const ice = clamp01((lat - 0.82 + 0.05 * n.noise(x * 8, y * 8, z * 8)) * 14);
-    return { c: mix(c, hex('#f4f8fb'), ice) };
+    return { c: mix(c, hex('#f4f8fb'), ice), h: h < sea ? 0.3 : clamp01(0.3 + (h - sea) * 1.2) };
   },
   zirkan: gasGiant([[0, '#8a5a36'], [0.25, '#c99a62'], [0.5, '#ecd9b0'], [0.75, '#b8825a'], [1, '#e8cfa0']], 9, 0.5, true),
   roushan: gasGiant([[0, '#a79d80'], [0.3, '#d9cfae'], [0.55, '#efe6c8'], [0.8, '#c3b693'], [1, '#e6dcba']], 7, 0.25, false),
@@ -86,14 +86,18 @@ export function makeBodyTexture(styleName, seed, w = 512, h = 256, withEmissive 
   const n = makeNoise(seed), gen = styles[styleName] || styles.rockGrey;
   const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const ctx = cv.getContext('2d'), img = ctx.createImageData(w, h);
-  let ev, ectx, eimg;
+  let ev, ectx, eimg, bv, bctx, bimg;
   if (withEmissive) { ev = document.createElement('canvas'); ev.width = w; ev.height = h; ectx = ev.getContext('2d'); eimg = ectx.createImageData(w, h); }
   for (let j = 0; j < h; j++) {
     const lat = Math.PI * (0.5 - (j + 0.5) / h), cl = Math.cos(lat), z = Math.sin(lat);
     for (let i = 0; i < w; i++) {
       const lon = ((i + 0.5) / w) * Math.PI * 2;
-      const { c, e = 0 } = gen(n, cl * Math.cos(lon), cl * Math.sin(lon), z);
+      const { c, e = 0, h: hh } = gen(n, cl * Math.cos(lon), cl * Math.sin(lon), z);
       const k = 4 * (j * w + i);
+      if (hh !== undefined) {
+        if (!bimg) { bv = document.createElement('canvas'); bv.width = w; bv.height = h; bctx = bv.getContext('2d'); bimg = bctx.createImageData(w, h); }
+        bimg.data[k] = bimg.data[k + 1] = bimg.data[k + 2] = 255 * hh; bimg.data[k + 3] = 255;
+      }
       img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255;
       if (eimg) { eimg.data[k] = 255 * e; eimg.data[k + 1] = 90 * e; eimg.data[k + 2] = 10 * e; eimg.data[k + 3] = 255; }
     }
@@ -102,7 +106,9 @@ export function makeBodyTexture(styleName, seed, w = 512, h = 256, withEmissive 
   const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4; tex.wrapS = THREE.RepeatWrapping;
   let emissive = null;
   if (ev) { ectx.putImageData(eimg, 0, 0); emissive = new THREE.CanvasTexture(ev); emissive.colorSpace = THREE.SRGBColorSpace; }
-  return { map: tex, emissive };
+  let bump = null;
+  if (bimg) { bctx.putImageData(bimg, 0, 0); bump = new THREE.CanvasTexture(bv); bump.wrapS = THREE.RepeatWrapping; }
+  return { map: tex, emissive, bump };
 }
 
 export function makeCloudTexture(seed, w = 512, h = 256) {

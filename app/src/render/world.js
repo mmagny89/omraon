@@ -13,6 +13,14 @@ export const UNIT = AU_KM / 1000; // 1 unité de scène = 1000 km
 const ORBIT_PTS = 257;
 const frac = (x) => x - Math.floor(x);
 
+/** Adoucit le terminateur : l'éclairage direct déborde un peu sur la face nuit (diffusion), plus fort quand le corps a une atmosphère. */
+function softTerminator(mat, wrap) {
+  const a = 'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );';
+  mat.onBeforeCompile = (sh) => {
+    sh.fragmentShader = sh.fragmentShader.replace('#include <lights_physical_pars_fragment>', THREE.ShaderChunk.lights_physical_pars_fragment.replace(a, `float dotNL = saturate( ( dot( geometryNormal, directLight.direction ) + ${wrap.toFixed(2)} ) / ${(1 + wrap).toFixed(2)} );`));
+  };
+  mat.customProgramCacheKey = () => `terminateur-${wrap}`;
+}
 const atmVert = /* glsl */ `
 #include <common>
 #include <logdepthbuf_pars_vertex>
@@ -26,14 +34,16 @@ void main(){
 const atmFrag = /* glsl */ `
 #include <common>
 #include <logdepthbuf_pars_fragment>
-uniform vec3 uColor; uniform vec3 uSun; uniform float uStrength;
+uniform vec3 uColor; uniform vec3 uSun; uniform float uStrength; uniform float uLimb;
 varying vec3 vWN; varying vec3 vWP;
 void main(){
   #include <logdepthbuf_fragment>
   vec3 n = normalize(vWN); vec3 v = normalize(cameraPosition - vWP);
-  float f = pow(1.0 - abs(dot(n, v)), 2.6);
-  float lit = clamp(dot(n, normalize(uSun)) * 0.9 + 0.35, 0.0, 1.0);
-  gl_FragColor = vec4(uColor, f * lit * uStrength);
+  float f = pow(clamp(abs(dot(n, v)) / uLimb, 0.0, 1.0), 1.7); // 1 au bord de la planète, 0 au bord extérieur de l'enveloppe (face arrière)
+  float ndl = dot(n, normalize(uSun));
+  float lit = clamp(ndl * 0.9 + 0.35, 0.0, 1.0);
+  vec3 col = mix(uColor, vec3(1.0, 0.52, 0.28), (1.0 - smoothstep(0.0, 0.45, abs(ndl))) * 0.5); // lueur plus chaude au crépuscule
+  gl_FragColor = vec4(col, f * lit * uStrength);
 }`;
 
 export class World {
@@ -96,20 +106,23 @@ export class World {
         const big = b.def.kind === 'gas' || b.def.texture === 'kebet';
         const small = b.type === 'moon' && !big && b.radiusKm < 200;
         const tex = makeBodyTexture(b.def.texture, seed, big ? 1024 : small ? 256 : 512, big ? 512 : small ? 128 : 256, b.def.texture === 'kalpra');
-        mat = new THREE.MeshStandardMaterial({ map: tex.map, roughness: 0.95, metalness: 0, emissiveMap: tex.emissive, emissive: tex.emissive ? 0xffffff : 0x000000, emissiveIntensity: 0.8 });
+        mat = new THREE.MeshStandardMaterial({ map: tex.map, bumpMap: tex.bump || null, bumpScale: 2.5, roughness: 0.95, metalness: 0, emissiveMap: tex.emissive, emissive: tex.emissive ? 0xffffff : 0x000000, emissiveIntensity: 0.8 });
+        softTerminator(mat, b.def.kind === 'gas' ? 0.3 : b.def.atmosphere ? 0.22 : 0.12);
       }
       o.mesh = new THREE.Mesh(this.sphereGeo, mat);
       o.group.add(o.mesh);
       if (b.def.atmosphere) {
         o.atm = new THREE.Mesh(this.sphereGeo, new THREE.ShaderMaterial({
-          vertexShader: atmVert, fragmentShader: atmFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-          uniforms: { uColor: { value: new THREE.Color(b.def.atmosphere.color) }, uSun: { value: new THREE.Vector3(1, 0, 0) }, uStrength: { value: b.def.atmosphere.strength } },
+          vertexShader: atmVert, fragmentShader: atmFrag, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.BackSide,
+          uniforms: { uLimb: { value: 0.3 }, uColor: { value: new THREE.Color(b.def.atmosphere.color) }, uSun: { value: new THREE.Vector3(1, 0, 0) }, uStrength: { value: b.def.atmosphere.strength } },
         }));
-        o.atmScale = b.def.kind === 'gas' ? 1.035 : 1.05;
+        o.atmScale = 1 + (b.def.atmosphere.height ?? (b.def.kind === 'gas' ? 0.035 : 0.05));
+        o.atm.material.uniforms.uLimb.value = Math.sqrt(1 - 1 / o.atmScale ** 2); // |n·v| au contour de la planète
         o.group.add(o.atm);
       }
       if (b.def.clouds) {
         o.clouds = new THREE.Mesh(this.sphereGeo, new THREE.MeshStandardMaterial({ map: makeCloudTexture(seed + 3), transparent: true, depthWrite: false, roughness: 1 }));
+        softTerminator(o.clouds.material, 0.22);
         o.group.add(o.clouds);
       }
       this.scene.add(o.group);

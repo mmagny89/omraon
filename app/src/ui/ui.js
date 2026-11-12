@@ -66,7 +66,7 @@ export class UI {
     const group = () => mk(list, 'div', 'grp');
     const sitesOf = (name) => SITES.filter((x) => x.body === name);
     const pop = (n) => (n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
-    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small title="${x.population.toLocaleString('fr-FR')} humains">${pop(x.population)}</small>`, { site: x.id }, () => this.selectSite(x.id));
+    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small title="${x.population.toLocaleString('fr-FR')} humains${x.tyts ? ' · ' + x.tyts.toLocaleString('fr-FR') + ' Tyts' : ' · aucun Tyt'}">${pop(x.population)}</small>`, { site: x.id }, () => this.selectSite(x.id));
     const bodyBtn = (parent, b, cls) => {
       const dot = `<span class="dot" style="color:${b.def.color || '#ffe2b0'};background:${b.def.color || '#ffe2b0'}"></span>`;
       return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); });
@@ -514,7 +514,7 @@ export class UI {
     const type = { surface: 'Base au sol', orbit: 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
     const yy = Math.floor(this.target / DAYS_PER_YEAR), pm = this.pop && yy !== 0 ? this.pop.at(yy) : null, p0 = this.pop?.at(0);
     const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
-    let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains')}${site.tyts ? tl(nf(site.tyts), 'Tyts') : ''}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
+    let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', `${nf(site.population)} humains`)}${site.tyts ? tl(nf(site.tyts), 'Tyts', '', `${nf(site.tyts)} Tyts`) : tl('0', 'Tyts', '', 'Aucun Tyt sur ce site')}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
@@ -664,7 +664,7 @@ export class UI {
     const o = this.secState?.[titre] ?? ouvert;
     return `<details class="sec" data-sec="${titre}"${o ? ' open' : ''}><summary>${titre}</summary>`;
   }
-  tile(valeur, libelle, sous = '') { return `<div class="tile"><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
+  tile(valeur, libelle, sous = '', info = '') { return `<div class="tile"${info ? ` title="${info}"` : ''}><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
   jourCourt(d) { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j`; }
 
   // Valeurs physiques dérivées en direct ; appelé ~4 fois par seconde.

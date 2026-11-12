@@ -35,3 +35,8 @@
 - **Calendrier affiché** : jour = jour de Kebet (période orbitale calculée, ≈ 1,28 j terrestre), 24 h par jour, minute et seconde proportionnelles ; l'année reste de 365,25 j terrestres (≈ 285 jours de Kebet, le dernier est partiel). La limite de 6 jours de l'hyperpropulsion reste en jours terrestres (≈ 4,7 jours de Kebet). Conception : le roman ne chiffre pas ce calendrier. `physics/calendrier.js`.
 - **Journée de Kebet** : 1,28 j (rotation synchrone) ; le document parle d'un « vrai cycle jour/nuit ».
 - **Nombre de Tyts** : géré (ratio visé 1,2) ou subi (croissance sous contrainte), au choix dans le panneau.
+
+## Rendu (conception, sans effet sur la physique)
+
+- Halos atmosphériques : Zirkan et Roushan (épaisseur 7 % du rayon), Sethis (voile de poussière ténu, cohérent avec 0,05 bar), Kebet. Couleurs et intensités : `data/omraon.js`, champ `atmosphere`.
+- Relief : carte de relief générée par le même bruit que la texture, sans lien avec une topographie canonique ; terminateur adouci par un éclairage enveloppant (`render/world.js`).
