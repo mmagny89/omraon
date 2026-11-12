@@ -1,4 +1,4 @@
-# Configuration GitHub — simulation
+# Configuration GitHub — omraon
 
 Tout ce qui se règle **dans l'interface GitHub** pour que ce dépôt construise et déploie. À faire une fois, dans cet ordre. Le reste de la mise
 en service — clones, secrets du serveur, Traefik — est dans `README.docker.md`. Les cases à cocher de la fin résument les étapes : les reporter dans
@@ -14,7 +14,7 @@ Le dispositif suppose deux branches longues, et le workflow ne reconnaît que ce
 | `develop` | pré-production (PPD) — **n'existe pas encore** : ce dépôt n'a pour l'instant que `main` (`git branch -a` avant de trancher) |
 
 ```sh
-git remote add origin git@github.com:<compte>/simulation.git
+git remote add origin git@github.com:<compte>/omraon.git
 git push -u origin main
 git switch -c develop && git push -u origin develop    # seulement si une PPD est voulue
 ```
@@ -37,7 +37,7 @@ sh outils/installer-deploiement.sh serveur    # crée la clé et l'affiche
 ```
 
 **« Allow write access » reste décoché** : un déploiement ne pousse jamais. Le volet `serveur` se lance sous l'utilisateur de déploiement, pas sous root,
-et le dépôt se clone en `git@github.com:<compte>/simulation.git` (un alias d'hôte ne se résout que pour le compte dont il habite le `~/.ssh/config`).
+et le dépôt se clone en `git@github.com:<compte>/omraon.git` (un alias d'hôte ne se résout que pour le compte dont il habite le `~/.ssh/config`).
 
 ## 3. Secrets et variables du déploiement
 

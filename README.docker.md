@@ -1,4 +1,4 @@
-# simulation — socle Docker
+# omraon — socle Docker
 
 Généré par `.claude/scripts/setup-statique.sh` le 2026-11-11. Site statique
 (HTML, CSS, JavaScript) servi par Caddy 2.11.9. Aucun PHP, aucun Node,

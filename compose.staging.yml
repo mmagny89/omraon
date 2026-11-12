@@ -3,7 +3,7 @@ services:
   web:
     build:
       target: staging
-    image: simulation-web:staging
+    image: omraon-web:staging
     # Seule NET_BIND_SERVICE est conservee : la capability posee sur le
     # binaire (setcap) ne survit pas a un cap_drop qui la retire.
     cap_drop:
@@ -18,19 +18,19 @@ services:
     expose:
       - "80"
     networks:
-      - simulation
+      - omraon
       - traefik
     labels:
       traefik.enable: "true"
       # Deux reseaux : sans cette etiquette, Traefik peut choisir le reseau
       # interne et repondre 502 une fois sur deux.
       traefik.docker.network: traefik
-      traefik.http.routers.simulation-staging.rule: Host(`${DOMAINE:?DOMAINE est requis en staging}`)
-      traefik.http.routers.simulation-staging.entrypoints: websecure
-      traefik.http.routers.simulation-staging.tls.certresolver: letsencrypt
-      traefik.http.services.simulation-staging.loadbalancer.server.port: "80"
+      traefik.http.routers.omraon-staging.rule: Host(`${DOMAINE:?DOMAINE est requis en staging}`)
+      traefik.http.routers.omraon-staging.entrypoints: websecure
+      traefik.http.routers.omraon-staging.tls.certresolver: letsencrypt
+      traefik.http.services.omraon-staging.loadbalancer.server.port: "80"
 
 networks:
-  simulation:
+  omraon:
   traefik:
     external: true

@@ -32,5 +32,6 @@
 
 ## Questions ouvertes du document, tranchées provisoirement
 - **Planète en cours de colonisation (Mouvement II)** : Shukal, aux confins autour de Roukir ; à confirmer.
+- **Calendrier affiché** : jour = jour de Kebet (période orbitale calculée, ≈ 1,28 j terrestre), 24 h par jour, minute et seconde proportionnelles ; l'année reste de 365,25 j terrestres (≈ 285 jours de Kebet, le dernier est partiel). La limite de 6 jours de l'hyperpropulsion reste en jours terrestres (≈ 4,7 jours de Kebet). Conception : le roman ne chiffre pas ce calendrier. `physics/calendrier.js`.
 - **Journée de Kebet** : 1,28 j (rotation synchrone) ; le document parle d'un « vrai cycle jour/nuit ».
 - **Nombre de Tyts** : géré (ratio visé 1,2) ou subi (croissance sous contrainte), au choix dans le panneau.

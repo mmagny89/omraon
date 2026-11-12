@@ -5,6 +5,7 @@ import { habitableZone, starLuminosity } from './physics/derived.js';
 import { World } from './render/world.js';
 import { UI } from './ui/ui.js';
 import { SITES } from './data/sites.js';
+import { calibrerJour } from './physics/calendrier.js';
 import { kebetIsLand } from './render/textures.js';
 
 // Les sites marqués « land » sont ramenés sur le continent le plus proche (la texture est procédurale).
@@ -26,6 +27,7 @@ const newSim = () => {
   return s;
 };
 const sim = newSim();
+calibrerJour(sim); // le jour de Kebet fait référence pour les jours et les heures affichés
 const world = new World($('view'), sim, $('labels'));
 await world.build((m) => (msg.textContent = m));
 sim.computeRender(0);

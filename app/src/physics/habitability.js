@@ -1,3 +1,4 @@
+import { fmtDuree } from './calendrier.js';
 import { equilibriumTemp, bulk, hillRadius, stableSatelliteLimit, rocheLimitKm } from './derived.js';
 import { AU_KM, R_SUN_KM, G, DAYS_PER_YEAR, M_SUN_KG } from './constants.js';
 
@@ -123,7 +124,7 @@ export function assess(ctx, idx) {
     // éclipses
     const rr = pBody.radiusKm / (el.a * AU_KM);
     if (rr < 1) {
-      crit.push({ label: 'Taille de ' + pBody.def.name + ' dans le ciel', value: `${fmt(2 * Math.asin(rr) / (Math.PI / 180), 1)}°`, status: 'info', note: `éclipse ≈ ${fmt(rr / Math.PI * 100, 1)} % de l'orbite ; jour = ${fmt(el.period, 1)} j (rotation synchrone)` });
+      crit.push({ label: 'Taille de ' + pBody.def.name + ' dans le ciel', value: `${fmt(2 * Math.asin(rr) / (Math.PI / 180), 1)}°`, status: 'info', note: `éclipse ≈ ${fmt(rr / Math.PI * 100, 1)} % de l'orbite ; jour = ${fmtDuree(el.period)} (rotation synchrone)` });
     }
   }
   // saisons

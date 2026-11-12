@@ -85,7 +85,7 @@
         <label>Origine <select id="net-origin"></select></label>
         <label>Mode <select id="net-mode"><option value="diffusion">Diffusion sur le réseau (piratage)</option><option value="bouche">Bouche-à-oreille (vaisseaux)</option></select></label>
         <label>Topologie <select id="net-topo"><option value="direct">Direct</option><option value="controle">Via le Consortium (contrôlé)</option><option value="pirate">Réseau pirate chiffré</option></select></label>
-        <label>Horizon <select id="net-h"><option value="1">1 jour</option><option value="7" selected>7 jours</option><option value="30">30 jours</option><option value="365">1 an</option></select></label>
+        <label>Horizon <select id="net-h"><option data-jk="1" value="1">1 jour</option><option data-jk="7" value="7" selected>7 jours</option><option data-jk="30" value="30">30 jours</option><option value="365">1 an</option></select></label>
         <label>Routage (min/saut) <input id="net-hop" type="number" min="0" step="any" value="2" inputmode="decimal"></label>
         <label>Réaction du Consortium (min) <input id="net-det" type="number" min="0" step="any" value="360" inputmode="decimal"></label>
         <button type="button" id="net-go" class="wide">Lancer la diffusion</button>
@@ -96,7 +96,7 @@
     </details>
     <details id="ephem"><summary>Éphémérides</summary>
       <div class="grid">
-        <label>Horizon <select id="eph-h"><option value="30">30 jours</option><option value="365.25" selected>1 an</option><option value="1826">5 ans</option></select></label>
+        <label>Horizon <select id="eph-h"><option data-jk="30" value="30">30 jours</option><option value="365.25" selected>1 an</option><option value="1826">5 ans</option></select></label>
         <label>Corps <select id="eph-body"></select></label>
         <label><input type="checkbox" id="eph-ecl" checked> Éclipses de l'étoile</label>
         <label><input type="checkbox" id="eph-sun" checked> Lever / coucher (site choisi)</label>

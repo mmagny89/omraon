@@ -1,9 +1,10 @@
 import { AU_KM } from './constants.js';
+import { fmtDuree } from './calendrier.js';
 import { ambianceFor } from '../data/ambiances.js';
 
 const f = (x, d = 1) => (Math.abs(x) >= 1e5 ? x.toExponential(1) : x.toFixed(d));
 const deg = (r) => r * 180 / Math.PI;
-const dur = (d) => (d < 1 / 24 ? `${f(d * 1440, 0)} min` : d < 2 ? `${f(d * 24, 1)} h` : `${f(d, 1)} j`);
+const dur = (d) => fmtDuree(d, { minutes: true });
 const MOON_DEG = 0.52;
 
 /**

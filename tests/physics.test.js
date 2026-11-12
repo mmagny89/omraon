@@ -351,3 +351,13 @@ test('confins : Shukal, petite planète-colonie stable près de Roukir, gravité
   assert.ok(el.e < 0.12 && Math.abs(el.a * AU_KM / 9.5e6 - 1) < 0.1, `e=${el.e} a=${el.a * AU_KM}`);
   const hab = assess(ctxOf(sim), b.idx); assert.ok(['protege', 'station'].includes(hab.mode)); // pas d'atmosphère viable
 });
+
+import { calibrerJour, decouperDate, fmtDuree, fmtSecondes, jourKebet } from '../app/src/physics/calendrier.js';
+test('calendrier de Kebet : le jour de Kebet fait référence pour jours et heures', () => {
+  const sim = make(), j = calibrerJour(sim), el = ctxOf(sim).el(sim.bodies.find((b) => b.def.name === 'Kebet').idx);
+  assert.ok(Math.abs(j - el.period) / el.period < 0.01, `jour=${j} période=${el.period}`);
+  assert.equal(jourKebet(), j);
+  const d = decouperDate(j * (3.5 + 30.5 / 86400)); // 3 jours de Kebet, 12 h 00 min 30 s
+  assert.deepEqual([d.an, d.jour, d.h, d.min, d.s], [0, 3, 12, 0, 30]);
+  assert.equal(fmtDuree(j), '24.0 h'); assert.equal(fmtDuree(j * 5), '5.00 j'); assert.equal(fmtSecondes(j * 3600), '60 min'); assert.equal(fmtSecondes(j * 10800), '3.0 h');
+});

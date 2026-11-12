@@ -5,7 +5,7 @@ const G0 = 9.80665;
 // L'accélération n'est PAS fixée par le document : valeurs par défaut de conception, modifiables.
 // 8 g est l'ordre de grandeur qui fait traverser les 35 UA du système en 6 jours (le plafond du moteur).
 export const PROPULSION = {
-  hyper: { label: 'Hyperpropulsion (0,95 c, 6 j max)', mode: 'cruise', vmax: 0.95, acc: 8, maxDays: 6 },
+  hyper: { label: 'Hyperpropulsion (0,95 c, 6 j terrestres max)', mode: 'cruise', vmax: 0.95, acc: 8, maxDays: 6 },
   subliminique: { label: 'Subliminique (0,1 c)', mode: 'cruise', vmax: 0.1, acc: 1 },
   chimique: { label: 'Chimique (référence Hohmann)', mode: 'hohmann', isp: 450 },
 };

@@ -1,4 +1,4 @@
-# simulation — système d'Omraon
+# omraon — système d'Omraon
 
 Simulation N-corps et vue 3D du système d'Omraon (roman). **Site statique** : HTML, CSS, JavaScript en modules ES, Three.js copié dans `app/vendor/`.
 Aucun PHP, aucun bundler, aucune étape de build. Le serveur est Caddy seul (`docker/web`).
@@ -36,7 +36,8 @@ Toute commande Docker passe par la **clé de service** `web`, jamais par le `con
 - **Canon contre conception.** Les documents du roman (00–13) fixent les ordres de grandeur, les noms, les propulsions, la chronologie. Toute autre valeur est une proposition de
   conception : la marquer (`invented`, `provisional`, « supposé ») et la lister dans `docs/hypotheses.md`.
 - Les racines égyptiennes des noms sont « jamais affichées » (bible) : ne jamais les mettre dans l'interface.
-- An 0 = présent du roman ; années de 365,25 jours ; arrivée de l'arche en −560.
+- An 0 = présent du roman ; années de 365,25 jours terrestres ; arrivée de l'arche en −560.
+- **Kebet fait référence pour les jours et les heures affichés** (`physics/calendrier.js`) : 1 jour = période de Kebet (≈ 1,28 j terrestre), 24 h par jour, minute et seconde proportionnelles. Le temps interne reste en jours terrestres ; seul l'affichage convertit. Ne jamais écrire `* 24` ou `* 86400` pour afficher une durée : passer par `fmtDuree` / `fmtSecondes`.
 - Physique : `physics/` n'importe ni Three.js ni le DOM (les tests tournent sous Node seul). L'intégrateur est symétrique donc réversible : ne pas le casser (test « saut dans le temps »).
 - Une modification de donnée se vérifie par `npm test` (stabilité des lunes, énergie, canon), une modification d'interface dans un vrai navigateur (390 px et desktop).
 - Ce dépôt n'a que la branche `main`. Commits Conventional Commits, sans mention d'outil ; jamais de push sans demande.

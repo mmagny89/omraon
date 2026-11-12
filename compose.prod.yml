@@ -3,7 +3,7 @@ services:
   web:
     build:
       target: prod
-    image: simulation-web:prod
+    image: omraon-web:prod
     # Seule NET_BIND_SERVICE est conservee : la capability posee sur le
     # binaire (setcap) ne survit pas a un cap_drop qui la retire.
     cap_drop:
@@ -18,19 +18,19 @@ services:
     expose:
       - "80"
     networks:
-      - simulation
+      - omraon
       - traefik
     labels:
       traefik.enable: "true"
       # Deux reseaux : sans cette etiquette, Traefik peut choisir le reseau
       # interne et repondre 502 une fois sur deux.
       traefik.docker.network: traefik
-      traefik.http.routers.simulation-prod.rule: Host(`${DOMAINE:?DOMAINE est requis en prod}`)
-      traefik.http.routers.simulation-prod.entrypoints: websecure
-      traefik.http.routers.simulation-prod.tls.certresolver: letsencrypt
-      traefik.http.services.simulation-prod.loadbalancer.server.port: "80"
+      traefik.http.routers.omraon-prod.rule: Host(`${DOMAINE:?DOMAINE est requis en prod}`)
+      traefik.http.routers.omraon-prod.entrypoints: websecure
+      traefik.http.routers.omraon-prod.tls.certresolver: letsencrypt
+      traefik.http.services.omraon-prod.loadbalancer.server.port: "80"
 
 networks:
-  simulation:
+  omraon:
   traefik:
     external: true

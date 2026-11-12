@@ -18,20 +18,26 @@ import { planVoyage } from '../physics/flight.js';
 import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
+import { jourKebet, decouperDate, fmtDuree, fmtSecondes, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
-const SPEEDS = [
-  [1 / 86400, 'temps réel'], [1 / 1440, '1 min/s'], [1 / 24, '1 h/s'], [1, '1 j/s'], [10, '10 j/s'], [30.4375, '1 mois/s'],
-  [DAYS_PER_YEAR, '1 an/s'], [DAYS_PER_YEAR * 10, '10 ans/s'], [DAYS_PER_YEAR * 100, '100 ans/s'], [DAYS_PER_YEAR * 1000, '1000 ans/s'],
+// Vitesses : jour, heure, minute et seconde sont ceux de Kebet (facteur en jours de Kebet) ; mois et années restent terrestres (flag T).
+const SPEEDS_BASE = [
+  [1 / 86400, 'temps réel'], [1 / 1440, '1 min/s'], [1 / 24, '1 h/s'], [1, '1 j/s'], [10, '10 j/s'], [30.4375, '1 mois/s', true],
+  [DAYS_PER_YEAR, '1 an/s', true], [DAYS_PER_YEAR * 10, '10 ans/s', true], [DAYS_PER_YEAR * 100, '100 ans/s', true], [DAYS_PER_YEAR * 1000, '1000 ans/s', true],
 ];
+const SPEEDS = SPEEDS_BASE.map(([b, l]) => [b, l]); // [jours terrestres par seconde réelle, libellé] — recalé sur Kebet par recalerVitesses()
+const recalerVitesses = () => SPEEDS_BASE.forEach(([b, , T], i) => { SPEEDS[i][0] = T ? b : b * jourKebet(); });
 const $ = (s) => document.querySelector(s);
 const mixHex = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`; };
 const f = (x, d = 3) => (d === 0 ? Math.round(x).toLocaleString('fr-FR') : Math.abs(x) >= 1e5 || (Math.abs(x) < 1e-2 && x !== 0) ? x.toExponential(2) : x.toFixed(d));
-const fmtDur = (d) => (d < 2 ? `${(d * 24).toFixed(1)} h` : d < 400 ? `${d.toFixed(2)} j` : `${(d / DAYS_PER_YEAR).toFixed(2)} ans`);
+const fmtDur = (d) => fmtDuree(d);
 const row = (k, v, cls = '') => `<dt>${k}</dt><dd class="${cls}">${v}</dd>`;
 
 export class UI {
   constructor(sim, world) {
     this.sim = sim; this.world = world;
+    recalerVitesses();
+    document.querySelectorAll('option[data-jk]').forEach((o) => { o.value = String(+o.dataset.jk * jourKebet()); }); // horizons en jours de Kebet
     this.playing = true; this.speedIdx = 0; this.target = 0; this.selected = 0; this.selectedSite = null;
     this.hz = habitableZone(sim.bodies[0].def);
     this.L = starLuminosity(sim.bodies[0].def);
@@ -218,7 +224,7 @@ export class UI {
   }
 
   renderNet(res) {
-    const dur = (d) => (d < 1 / 24 ? `${(d * 1440).toFixed(0)} min` : d < 2 ? `${(d * 24).toFixed(1)} h` : `${d.toFixed(1)} j`), pc = (x) => `${(x * 100).toFixed(x < 0.1 ? 1 : 0)} %`, sm = res.summary;
+    const dur = (d) => fmtDuree(d, { minutes: true }), pc = (x) => `${(x * 100).toFixed(x < 0.1 ? 1 : 0)} %`, sm = res.summary;
     const hubName = SITES.find((x) => x.id === res.hub).name;
     $('#net-sum').innerHTML = `Le Consortium (${hubName}) reçoit le message ${dur(res.tHub)} après l'envoi et ordonne la coupure ${dur(res.killAtHub - res.tHub)} plus tard ; l'ordre voyage à la lumière.<br>` +
       `<b>${sm.reached}/${sm.total}</b> sites reçoivent le message avant l'ordre de coupure. Humains informés : ${sm.h10 != null ? '10 % en ' + dur(sm.h10) : '10 % jamais'}, ${sm.h50 != null ? '50 % en ' + dur(sm.h50) : '50 % jamais'} ; à l'horizon <b>${pc(sm.finalH)}</b> des humains et <b>${pc(sm.finalT)}</b> des Tyts.`;
@@ -319,22 +325,22 @@ export class UI {
     if (st.done) { this.cancelVoyage(true); return; }
     const phases = { accel: 'Accélération', rest: 'Repos moteur (refroidissement)', decel: 'Freinage', cruise: 'Croisière', arrivee: 'Arrivée' };
     const o = this.world.siteEls.get(vy.site.id)?.st?.pos, de = this.world.siteEls.get(vy.dest.id)?.st?.pos, dist = (a, b) => Math.hypot(...[0, 1, 2].map((k) => a[k] - b[k])) * 8.3167;
-    const dur = (s) => (s < 7200 ? `${(s / 60).toFixed(0)} min` : s < 172800 ? `${(s / 3600).toFixed(1)} h` : `${(s / 86400).toFixed(2)} j`);
+    const dur = fmtSecondes;
     const maxB = (vy.prop.maxDays || 6) * 86400, burnPct = Math.min(100, st.burn / maxB * 100);
-    const min = (m) => (m < 1 ? `${(m * 60).toFixed(0)} s` : m < 120 ? `${m.toFixed(1)} min` : `${(m / 60).toFixed(1)} h`);
+    const min = (m) => { m = enSecondesKebet(m * 60) / 60; return m < 1 ? `${(m * 60).toFixed(0)} s` : m < 120 ? `${m.toFixed(1)} min` : `${(m / 60).toFixed(1)} h`; };
     $('#voy-body').innerHTML = `<p><b>${vy.site.name}</b> → <b>${vy.dest.name}</b></p><div class="bar"><i style="width:${(st.progress * 100).toFixed(1)}%"></i></div><dl>` +
       row('Phase', phases[st.phase] || st.phase, st.phase === 'rest' ? 'warn' : '') + row('Écoulé / total', `${dur(st.elapsed)} / ${dur(v.plan.total)}`) +
       row('Vitesse', `${(st.speed / 1000).toFixed(0)} km/s (${(st.speed / 299792458 * 100).toFixed(2)} % de c)`) + row('Accélération', `${vy.accG} g`) +
       row('Distance restante', `${((1 - st.progress) * d / 1e6).toFixed(1)} M km`) +
-      row('Poussée continue', `${dur(st.burn)} / ${vy.prop.maxDays || 6} j max`, burnPct > 85 ? 'warn' : '') +
+      row('Poussée continue', `${dur(st.burn)} / ${dur(maxB)} max`, burnPct > 85 ? 'warn' : '') +
       (o ? row('Délai de message → ' + vy.site.name, min(dist(sh.pos, o))) : '') + (de ? row('Délai de message → ' + vy.dest.name, min(dist(sh.pos, de))) : '') + '</dl>' +
-      (v.plan.hasRest ? '<p class="note">Plus de 6 jours de poussée : le moteur est coupé au milieu du trajet (repos supposé d\'un jour) pour éviter la surchauffe.</p>' : '');
+      (v.plan.hasRest ? `<p class="note">Plus de ${dur(maxB)} de poussée (6 jours terrestres, canon) : le moteur est coupé au milieu du trajet (repos supposé de ${dur(86400)}) pour éviter la surchauffe.</p>` : '');
   }
 
   // ---------- Ciel, fiche de scène, éphémérides ----------
   fmtT(t) {
-    const y = Math.floor(t / DAYS_PER_YEAR), d = t - y * DAYS_PER_YEAR;
-    return `An ${String(y).replace('-', '−')} · jour ${Math.floor(d)} · ${String(Math.floor((d % 1) * 24)).padStart(2, '0')} h`;
+    const { an, jour, h } = decouperDate(t);
+    return `An ${String(an).replace('-', '−')} · jour ${jour} · ${String(h).padStart(2, '0')} h`;
   }
   rotParams() { return this.world.bodies.map((o) => ({ phase0: o.phase0, protDays: o.protDays })); }
 
@@ -415,9 +421,9 @@ export class UI {
       const now = this.sim.t, more = ev.length > 150;
       note.textContent = `${ev.length} événement(s) en ${((performance.now() - t0) / 1000).toFixed(1)} s${more ? ' (150 premiers affichés)' : ''}.${$('#eph-sun').checked && !site ? ' Choisis un site au sol pour les levers et couchers.' : ''} Cliquer saute à la date (la ceinture est regénérée).`;
       list.innerHTML = ev.slice(0, 150).map((e) => {
-        const detail = e.duration != null ? `${e.who} ← ${e.by}, ${e.duration < 1 / 12 ? (e.duration * 1440).toFixed(0) + ' min' : (e.duration * 24).toFixed(1) + ' h'}` : e.by ? `${e.who} – ${e.by}` : e.who;
+        const detail = e.duration != null ? `${e.who} ← ${e.by}, ${fmtDuree(e.duration, { minutes: true })}` : e.by ? `${e.who} – ${e.by}` : e.who;
         const dt = e.t - now;
-        return `<li><button type="button" data-t="${e.t}"><span><b>${e.type}</b> · ${detail}</span><small>${this.fmtT(e.t)} · dans ${dt < 2 ? (dt * 24).toFixed(1) + ' h' : dt < 400 ? dt.toFixed(1) + ' j' : (dt / DAYS_PER_YEAR).toFixed(2) + ' ans'}</small></button></li>`;
+        return `<li><button type="button" data-t="${e.t}"><span><b>${e.type}</b> · ${detail}</span><small>${this.fmtT(e.t)} · dans ${fmtDuree(dt)}</small></button></li>`;
       }).join('');
       list.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => this.goToTime(+b.dataset.t)));
     }, 30);
@@ -463,7 +469,7 @@ export class UI {
     let h = `<dl>${row('Distance actuelle', au >= 0.01 ? `${nf(au, 3)} UA (${nf(r.distKm / 1e6, 1)} M km)` : `${nf(r.distKm, 0)} km`)}${row('Délai lumière (communications)', r.lightMin < 1 ? `${nf(r.lightMin * 60, 1)} s` : r.lightMin < 120 ? `${nf(r.lightMin, 1)} min` : `${nf(r.lightMin / 60, 1)} h`)}${row('Parcours', r.scope)}</dl>`;
     if (r.cruise) {
       const c = r.cruise;
-      h += `<h3>${r.prop.label}</h3><dl>${row('Durée (retournement à mi-course)', c.days < 2 ? `${nf(c.days * 24, 1)} h` : fmtDur(c.days))}${row('Vitesse de pointe', `${nf(c.peakBeta, c.peakBeta < 0.01 ? 4 : 3)} c${c.cruised ? ' (croisière atteinte)' : ''}`)}${row('Accélération', `${nf(c.accG, 1)} g`)}`;
+      h += `<h3>${r.prop.label}</h3><dl>${row('Durée (retournement à mi-course)', fmtDur(c.days))}${row('Vitesse de pointe', `${nf(c.peakBeta, c.peakBeta < 0.01 ? 4 : 3)} c${c.cruised ? ' (croisière atteinte)' : ''}`)}${row('Accélération', `${nf(c.accG, 1)} g`)}`;
       if (r.prop.maxDays) h += row('Limite moteur (6 j continus)', c.overLimit ? `dépassée : ${c.restStops} arrêt(s) de refroidissement` : 'respectée', c.overLimit ? 'warn' : 'ok');
       h += `</dl><p class="note">Distance actuelle, sans courbure ni puits de gravité. Accélération supposée (le document fixe seulement les vitesses 0,1 c / 0,95 c et la limite de 6 jours). Navettes de montée/descente : ${nf(r.shuttle.dv, 2)} km/s, chimiques.</p>`;
     }
@@ -597,7 +603,7 @@ export class UI {
 
   // Durée du jour : sidéral (rotation propre) et solaire (d'un lever de l'étoile au suivant).
   dayRows(o, b) {
-    const hours = (d) => (d * 24 < 48 ? `${f(d * 24, 1)} h` : `${f(d, 2)} j (${f(d * 24, 0)} h)`);
+    const hours = (d) => { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j (${f(k * HEURES_PAR_JOUR, 0)} h)`; };
     const sid = b.type === 'moon' ? o.el?.period : o.protDays;
     if (!sid) return '';
     let year = null, rows = '';
@@ -686,11 +692,10 @@ export class UI {
       if (limited) this.target = sim.t;
     }
     const t = this.target;
-    const y = Math.floor(t / DAYS_PER_YEAR), dd = t - y * DAYS_PER_YEAR;
     if (!this.calculating) {
-      const fr = dd % 1, p2 = (n) => String(Math.floor(n)).padStart(2, '0');
-      const clock = this.speedIdx <= 2 ? `${p2(fr * 24)}:${p2((fr * 1440) % 60)}:${p2((fr * 86400) % 60)}` : `${p2(fr * 24)} h`; // secondes seulement aux vitesses lisibles
-      $('#date').textContent = `An ${String(y).replace('-', '−')} · jour ${Math.floor(dd)} · ${clock}`;
+      const { an, jour, h, min, s } = decouperDate(t), p2 = (n) => String(n).padStart(2, '0');
+      const clock = this.speedIdx <= 2 ? `${p2(h)}:${p2(min)}:${p2(s)}` : `${p2(h)} h`; // secondes seulement aux vitesses lisibles
+      $('#date').textContent = `An ${String(an).replace('-', '−')} · jour ${jour} · ${clock}`;
     }
     this.friseUpdate(t / DAYS_PER_YEAR);
     if (this.voyage) { this.voyageAcc = (this.voyageAcc || 0) + dt; if (this.voyageAcc > 0.15) { this.voyageAcc = 0; this.updateVoyage(); } }

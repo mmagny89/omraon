@@ -2,7 +2,7 @@ services:
   web:
     build:
       target: dev
-    image: simulation-web:dev
+    image: omraon-web:dev
     environment:
       # Pas de HTTP/3 en developpement : le relais UDP de Docker sur Mac
       # n'achemine pas QUIC de facon fiable (section mission/pieges-symfony).
