@@ -18,6 +18,7 @@ import { planVoyage } from '../physics/flight.js';
 import { makeSnapshot, ctxAt } from '../physics/ephem.js';
 import { siteState } from '../physics/sites.js';
 import { UNIT } from '../render/world.js';
+import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
 // Vitesses : jour, heure, minute et seconde sont ceux de Kebet (facteur en jours de Kebet) ; mois et années restent terrestres (flag T).
@@ -30,6 +31,11 @@ const recalerVitesses = () => SPEEDS_BASE.forEach(([b, l, T], i) => {
   SPEEDS[i][0] = T ? b : b * jourKebet();
   SPEEDS[i][1] = /j\/s$/.test(l) ? `${l} (${fmtTerre(SPEEDS[i][0])} Terre/s)` : l;
 });
+const HUM_TOT = SITES.reduce((t, x) => t + x.population, 0), TYT_TOT = SITES.reduce((t, x) => t + (x.tyts || 0), 0);
+/** Infobulle de population d'un site : répartition humains / Tyts et part du total du système. */
+const popTip = (x) => tipRepartition({ titre: x.name, parts: [
+  { n: x.population, label: 'Humains', cls: 'h', partTotale: (x.population / HUM_TOT) * 100 },
+  { n: x.tyts || 0, label: 'Tyts', cls: 't', partTotale: TYT_TOT ? ((x.tyts || 0) / TYT_TOT) * 100 : 0 }] });
 const $ = (s) => document.querySelector(s);
 const mixHex = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`; };
 const f = (x, d = 3) => (d === 0 ? Math.round(x).toLocaleString('fr-FR') : Math.abs(x) >= 1e5 || (Math.abs(x) < 1e-2 && x !== 0) ? x.toExponential(2) : x.toFixed(d));
@@ -40,6 +46,7 @@ export class UI {
   constructor(sim, world) {
     this.sim = sim; this.world = world;
     recalerVitesses();
+    initTooltips();
     document.querySelectorAll('option[data-jk]').forEach((o) => { o.value = String(+o.dataset.jk * jourKebet()); o.textContent = `${o.dataset.jk} jour${+o.dataset.jk > 1 ? "s" : ""} (${fmtTerre(+o.value)} Terre)`; }); // horizons en jours de Kebet
     this.playing = true; this.speedIdx = 0; this.target = 0; this.selected = 0; this.selectedSite = null;
     this.hz = habitableZone(sim.bodies[0].def);
@@ -66,7 +73,7 @@ export class UI {
     const group = () => mk(list, 'div', 'grp');
     const sitesOf = (name) => SITES.filter((x) => x.body === name);
     const pop = (n) => (n >= 1e3 ? `${Math.round(n / 1e3)} k` : String(n));
-    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small title="${x.population.toLocaleString('fr-FR')} humains${x.tyts ? ' · ' + x.tyts.toLocaleString('fr-FR') + ' Tyts' : ' · aucun Tyt'}">${pop(x.population)}</small>`, { site: x.id }, () => this.selectSite(x.id));
+    const siteBtn = (parent, x, cls = 'site') => btn(parent, cls, `<span class="ico">${x.type === 'orbit' ? '◇' : x.type === 'floating' ? '☁' : '▪'}</span>${x.name}<small>${pop(x.population)}</small>`, { site: x.id, tip: popTip(x) }, () => this.selectSite(x.id));
     const bodyBtn = (parent, b, cls) => {
       const dot = `<span class="dot" style="color:${b.def.color || '#ffe2b0'};background:${b.def.color || '#ffe2b0'}"></span>`;
       return btn(parent, cls || b.type, `${dot}${b.def.name}`, { idx: b.idx }, () => { this.select(b.idx, true); this.closeLeftOnMobile(); });
@@ -124,8 +131,8 @@ export class UI {
     const labels = [[-960, 'Départ'], [-560, 'Arrivée'], [-500, 'Basculement'], [-300, 'Fin des Siècles Sombres'], [0, 'Présent']];
     fr.innerHTML = `<div class="read" id="frise-read"></div>` +
       `<div class="track" id="frise-track" role="slider" tabindex="0" aria-valuemin="${Y0}" aria-valuemax="${Y1}" aria-valuenow="0" aria-label="Date en années (An 0 = présent du roman) ; flèches : ±1 an, Maj : ±10 ans">` +
-      eras.map(([a, b2, c, t]) => `<div class="seg ${c}" style="width:${pct(b2) - pct(a)}%" title="${t}"></div>`).join('') + '</div>' +
-      EVENTS.map((e) => `<button type="button" class="tick" data-year="${e.year}" style="left:${pct(e.year)}%" title="${e.label} (An ${String(e.year).replace('-', '−')}) : ${e.note}" aria-label="${e.label}"></button>`).join('') +
+      eras.map(([a, b2, c, t]) => `<div class="seg ${c}" style="width:${pct(b2) - pct(a)}%" data-tip="${esc(tipTexte(t))}"></div>`).join('') + '</div>' +
+      EVENTS.map((e) => `<button type="button" class="tick" data-year="${e.year}" style="left:${pct(e.year)}%" data-tip="${esc(tipTexte(`${e.label} · An ${String(e.year).replace('-', '−')}`, e.note))}" aria-label="${e.label}"></button>`).join('') +
       labels.map(([y, t]) => `<span class="lab" style="left:${Math.min(94, Math.max(6, pct(y)))}%">${t}</span>`).join('') + '<div class="cursor" id="frise-cursor"></div>';
     this.friseDom = { track: $('#frise-track'), cursor: $('#frise-cursor'), read: $('#frise-read'), Y0, Y1, pct };
     const yearAt = (e) => { const r = this.friseDom.track.getBoundingClientRect(); return Y0 + Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * (Y1 - Y0); };
@@ -514,7 +521,7 @@ export class UI {
     const type = { surface: 'Base au sol', orbit: 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
     const yy = Math.floor(this.target / DAYS_PER_YEAR), pm = this.pop && yy !== 0 ? this.pop.at(yy) : null, p0 = this.pop?.at(0);
     const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
-    let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', `${nf(site.population)} humains`)}${site.tyts ? tl(nf(site.tyts), 'Tyts', '', `${nf(site.tyts)} Tyts`) : tl('0', 'Tyts', '', 'Aucun Tyt sur ce site')}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
+    let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
@@ -664,7 +671,7 @@ export class UI {
     const o = this.secState?.[titre] ?? ouvert;
     return `<details class="sec" data-sec="${titre}"${o ? ' open' : ''}><summary>${titre}</summary>`;
   }
-  tile(valeur, libelle, sous = '', info = '') { return `<div class="tile"${info ? ` title="${info}"` : ''}><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
+  tile(valeur, libelle, sous = '', info = '') { return `<div class="tile"${info ? tipAttr(info) : ''}><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
   jourCourt(d) { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j`; }
 
   // Valeurs physiques dérivées en direct ; appelé ~4 fois par seconde.
@@ -678,9 +685,14 @@ export class UI {
     const bk = bulk(b.mass, b.radiusKm), hab = b.type === 'star' ? null : assess(this.ctx(), b.idx);
     const sid = b.type === 'moon' ? o.el?.period : o.protDays, tile = (...a) => this.tile(...a);
     const di0 = b.type === 'star' ? 0 : dStar(b.type === 'planet' ? b.idx : b.parent);
+    const gG = bk.gSurf / 9.80665, tEq = equilibriumTemp(star.def, di0, d.albedo ?? 0.3) - 273.15;
+    const tipR = tipJauge({ titre: 'Rayon', texte: `${f(b.radiusKm, 0)} km`, v: b.radiusKm, min: 500, max: 1e6, log: true, marques: [{ v: 1737, label: 'Lune' }, { v: 6371, label: 'Terre' }, { v: 71492, label: 'Jupiter' }, { v: 695700, label: 'Soleil' }], note: 'Échelle logarithmique.' });
     const tiles = b.type === 'star'
-      ? tile(`${f(b.radiusKm / 1e3, 0)} k km`, 'Rayon') + tile(`${d.teff} K`, 'Température') + tile(`${f(this.L, 2)} L☉`, 'Luminosité') + tile(fmtMass(b.mass), 'Masse')
-      : tile(`${f(bk.gSurf / 9.80665, 2)} g`, 'Gravité') + tile(sid ? this.jourCourt(sid) : '—', 'Jour', sid ? `${fmtTerre(sid)} Terre` : '') + tile(`${f(b.radiusKm, 0)} km`, 'Rayon') + tile(`${f(equilibriumTemp(star.def, di0, d.albedo ?? 0.3) - 273.15, 0)} °C`, 'T équilibre');
+      ? tile(`${f(b.radiusKm / 1e3, 0)} k km`, 'Rayon', '', tipR) + tile(`${d.teff} K`, 'Température', '', tipTexte('Température de surface', `${d.teff} K · Soleil : 5 772 K`)) + tile(`${f(this.L, 2)} L☉`, 'Luminosité', '', tipTexte('Luminosité', `${f(this.L, 2)} × le Soleil`)) + tile(fmtMass(b.mass), 'Masse', '', tipTexte('Masse', `${fmtMass(b.mass)} · Soleil = 1 M☉`))
+      : tile(`${f(gG, 2)} g`, 'Gravité', '', tipJauge({ titre: 'Gravité de surface', texte: `${f(gG, 2)} g · ${f(bk.gSurf, 2)} m/s²`, v: gG, min: 0, max: 3, marques: [{ v: 0.38, label: 'Mars' }, { v: 1, label: 'Terre' }, { v: 2.53, label: 'Jupiter' }] }))
+        + tile(sid ? this.jourCourt(sid) : '—', 'Jour', sid ? `${fmtTerre(sid)} Terre` : '', sid ? tipJauge({ titre: 'Jour sidéral', texte: `${this.jourCourt(sid)} de Kebet · ${fmtTerre(sid)} Terre`, v: sid, min: 0.1, max: 100, log: true, marques: [{ v: jourKebet(), label: 'Kebet' }], note: 'Jours terrestres, échelle logarithmique. Un jour de Kebet vaut 24 h de Kebet.' }) : '')
+        + tile(`${f(b.radiusKm, 0)} km`, 'Rayon', '', tipR)
+        + tile(`${f(tEq, 0)} °C`, 'T équilibre', '', tipJauge({ titre: 'Température d\'équilibre', texte: `${f(tEq, 0)} °C · ${f(tEq + 273.15, 0)} K`, v: tEq, min: -250, max: 500, bandes: [{ de: 0, a: 100, cls: 'ok', label: 'eau liquide à 1 bar' }], marques: [{ v: 15, label: 'Terre (moy.)' }], note: 'Sans effet de serre ni chaleur interne.' }));
     h += `<header class="hero"><span class="swatch" style="background:${d.color || '#9fb4d8'}"></span><div><h2>${d.name}</h2><div class="sub">${kind}</div></div>${hab ? `<span class="chip ${hab.level}">${hab.label}</span>` : ''}</header><p class="lead">${d.role}</p><div class="tiles">${tiles}</div>`;
     h += this.begin('Noms', false) + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
     h += this.begin('Physique', true) + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;

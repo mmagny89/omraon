@@ -8,18 +8,32 @@ import { SYSTEM_EDGE_AU } from '../data/omraon.js';
 import { siteState } from '../physics/sites.js';
 import { voyageAt } from '../physics/flight.js';
 import { GroundView } from './ground.js';
+import { overlapFraction } from '../physics/sky.js';
+
+/** Éclairement de la planète sur sa lune (face nuit) : exagéré pour être visible ; l'ombre d'éclipse, elle, est calculée sans facteur. */
+const PLANETSHINE_BOOST = 6;
 
 export const UNIT = AU_KM / 1000; // 1 unité de scène = 1000 km
 const ORBIT_PTS = 257;
 const frac = (x) => x - Math.floor(x);
 
-/** Adoucit le terminateur : l'éclairage direct déborde un peu sur la face nuit (diffusion), plus fort quand le corps a une atmosphère. */
-function softTerminator(mat, wrap) {
+/**
+ * Éclairage des corps : terminateur adouci (l'éclairage direct déborde un peu sur la face nuit), et, pour une lune,
+ * ombre d'éclipse (uShadow : part du disque de l'étoile encore visible) et lumière de la planète sur la face nuit (uShine, uShineDir).
+ */
+function lightMods(mat, wrap, moon = false) {
   const a = 'float dotNL = saturate( dot( geometryNormal, directLight.direction ) );';
+  mat.userData.u = { uShadow: { value: 1 }, uShine: { value: new THREE.Vector3() }, uShineDir: { value: new THREE.Vector3(1, 0, 0) } };
   mat.onBeforeCompile = (sh) => {
     sh.fragmentShader = sh.fragmentShader.replace('#include <lights_physical_pars_fragment>', THREE.ShaderChunk.lights_physical_pars_fragment.replace(a, `float dotNL = saturate( ( dot( geometryNormal, directLight.direction ) + ${wrap.toFixed(2)} ) / ${(1 + wrap).toFixed(2)} );`));
+    if (!moon) return;
+    Object.assign(sh.uniforms, mat.userData.u);
+    sh.fragmentShader = sh.fragmentShader.replace('void main() {', 'uniform float uShadow; uniform vec3 uShine; uniform vec3 uShineDir;\nvoid main() {')
+      .replace('#include <lights_fragment_end>', `reflectedLight.directDiffuse *= uShadow; reflectedLight.directSpecular *= uShadow;
+      { vec3 sd = normalize( ( viewMatrix * vec4( uShineDir, 0.0 ) ).xyz ); reflectedLight.directDiffuse += uShine * max( dot( geometryNormal, sd ), 0.0 ) * diffuseColor.rgb; }
+      #include <lights_fragment_end>`);
   };
-  mat.customProgramCacheKey = () => `terminateur-${wrap}`;
+  mat.customProgramCacheKey = () => `eclairage-${wrap}-${moon}`;
 }
 const atmVert = /* glsl */ `
 #include <common>
@@ -107,7 +121,8 @@ export class World {
         const small = b.type === 'moon' && !big && b.radiusKm < 200;
         const tex = makeBodyTexture(b.def.texture, seed, big ? 1024 : small ? 256 : 512, big ? 512 : small ? 128 : 256, b.def.texture === 'kalpra');
         mat = new THREE.MeshStandardMaterial({ map: tex.map, bumpMap: tex.bump || null, bumpScale: 2.5, roughness: 0.95, metalness: 0, emissiveMap: tex.emissive, emissive: tex.emissive ? 0xffffff : 0x000000, emissiveIntensity: 0.8 });
-        softTerminator(mat, b.def.kind === 'gas' ? 0.3 : b.def.atmosphere ? 0.22 : 0.12);
+        lightMods(mat, b.def.kind === 'gas' ? 0.3 : b.def.atmosphere ? 0.22 : 0.12, b.type === 'moon');
+        o.lit = mat;
       }
       o.mesh = new THREE.Mesh(this.sphereGeo, mat);
       o.group.add(o.mesh);
@@ -122,7 +137,8 @@ export class World {
       }
       if (b.def.clouds) {
         o.clouds = new THREE.Mesh(this.sphereGeo, new THREE.MeshStandardMaterial({ map: makeCloudTexture(seed + 3), transparent: true, depthWrite: false, roughness: 1 }));
-        softTerminator(o.clouds.material, 0.22);
+        lightMods(o.clouds.material, 0.22, b.type === 'moon');
+        o.litClouds = o.clouds.material;
         o.group.add(o.clouds);
       }
       this.scene.add(o.group);
@@ -216,6 +232,27 @@ export class World {
       if (o.visible && d < thr && d / thr < bestScore) { bestScore = d / thr; best = o.idx; }
     }
     return best;
+  }
+
+  /** Ombre d'éclipse (la planète masque l'étoile) et lumière de la planète sur la face nuit d'une lune. */
+  updateMoonLight(o, rp, dF) {
+    const mats = [o.lit, o.litClouds].filter((m) => m?.userData.u), i = o.idx, p = o.b.parent, bodies = this.sim.bodies;
+    if (!mats.length) return;
+    const v = (a, c) => [rp[3 * a] - rp[3 * c], rp[3 * a + 1] - rp[3 * c + 1], rp[3 * a + 2] - rp[3 * c + 2]];
+    const n = (a) => Math.hypot(a[0], a[1], a[2]), dt = (a, c) => a[0] * c[0] + a[1] * c[1] + a[2] * c[2];
+    const ms = v(0, i), mp = v(p, i), ps = v(0, p), pm = v(i, p), dS = n(ms), dP = n(mp);
+    const rS = Math.asin(Math.min(1, bodies[0].radiusKm / AU_KM / dS)), rP = Math.asin(Math.min(1, bodies[p].radiusKm / AU_KM / dP));
+    const sep = Math.acos(Math.max(-1, Math.min(1, dt(ms, mp) / (dS * dP))));
+    const shadow = dP < dS ? 1 - overlapFraction(rS, rP, sep) : 1;
+    const phase = (1 + dt(ps, pm) / (n(ps) * n(pm))) / 2, k = (bodies[p].def.albedo ?? 0.3) * phase * Math.sin(rP) ** 2 * PLANETSHINE_BOOST;
+    const sunE = 1.4 * (dF / (dS * UNIT)) ** 2; // éclairement de l'étoile au niveau de la lune, dans l'unité du rendu
+    const col = new THREE.Color(bodies[p].def.color || '#ffffff');
+    for (const m of mats) {
+      const u = m.userData.u;
+      u.uShadow.value = shadow;
+      u.uShine.value.set(col.r, col.g, col.b).multiplyScalar(sunE * k * shadow);
+      u.uShineDir.value.set(mp[0], mp[1], mp[2]).normalize();
+    }
   }
 
   // ---------- Vue à la première personne ----------
@@ -328,6 +365,7 @@ export class World {
       const s = o.rUnits * k;
       o.group.position.set(rx, ry, rz);
       o.mesh.scale.set(s, s, s * (1 - o.flat));
+      if (b.type === 'moon') this.updateMoonLight(o, rp, dF);
       // rotation propre
       let ang;
       if (b.type === 'moon') {
