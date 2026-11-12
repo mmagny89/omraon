@@ -27,6 +27,7 @@ import { PERSONNAGES, VESTIGES } from '../data/lore.js';
 import { GLOSSAIRE } from '../data/glossaire.js';
 import { glossaireComplet, filtrer, auLieu, moisConfederal } from './lore.js';
 import { indexer, versFrancais, versTyt } from './traducteur.js';
+import { initOptionsNav } from './optionsNav.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -629,6 +630,9 @@ export class UI {
   closeLeftOnMobile() { if (window.innerWidth <= 860) { document.body.classList.add('hide-left'); this.syncPanels?.(); } }
 
   bindPanels() {
+    initOptionsNav($('#options'));
+    // les graphiques de population se redessinent à la largeur réelle quand leur section devient visible ou que le panneau change de taille
+    new ResizeObserver(() => { const w = $('#pop-c1').clientWidth; if (w && w !== this._popW && this.pop) { this._popW = w; this.drawPopCharts(); this.popCursor(Math.floor(this.target / DAYS_PER_YEAR), false); } }).observe($('#pop-c1'));
     const cl = document.body.classList, mobile = () => window.innerWidth <= 860;
     this.syncPanels = () => {
       $('#btn-bodies').setAttribute('aria-pressed', !cl.contains('hide-left')); $('#btn-info').setAttribute('aria-pressed', !cl.contains('hide-right'));
@@ -1106,7 +1110,7 @@ export class UI {
     if (this.world.ground?.active) this.updateGround(dt);
     this.netAcc = (this.netAcc || 0) + dt; if (this.net && this.netAcc > 0.2) { this.netAcc = 0; this.updateNetMarkers(); }
     const pb = $('#play'), ptxt = this.playing ? '❚❚' : '▶', plab = this.playing ? 'Pause' : 'Lecture'; if (pb.textContent !== ptxt || pb.getAttribute('aria-label') !== plab) { pb.textContent = ptxt; pb.setAttribute('aria-label', plab); } // le bouton reflète toujours l'état réel
-    this.cmpAcc = (this.cmpAcc || 0) + dt; if (this.cmpAcc > 1 && $('#compare').open) { this.cmpAcc = 0; this.renderCompare(); }
+    this.cmpAcc = (this.cmpAcc || 0) + dt; if (this.cmpAcc > 1 && !$('#compare').hidden) { this.cmpAcc = 0; this.renderCompare(); }
     this.hashAcc = (this.hashAcc || 0) + dt; if (this.hashAcc > 1 && !this.calculating) { this.hashAcc = 0; this.syncHash(); }
     this.skyAcc = (this.skyAcc || 0) + dt; this.sceneAcc = (this.sceneAcc || 0) + dt;
     if (this.selectedSite && this.skyAcc > 0.12) { this.skyAcc = 0; this.drawSkyNow(); }
