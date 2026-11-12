@@ -455,10 +455,12 @@ test('traducteur : mot à mot sur le canon, rien d\'inventé', () => {
   assert.equal(versTyt('je dors', idx).resultat, 'shu [dors]'); assert.equal(versTyt('', idx).resultat, '');
 });
 
-test('population : génocide du monde natal et contrôle des naissances tyt', () => {
+test('population : génocide du monde natal, survivants en petits groupes, contrôle des naissances tyt', () => {
   const m = simulatePopulation({}), P = m.params, g = m.summary.genocide;
-  assert.ok(m.at(-501).N > 3e7 && m.at(-496).N < m.at(-501).N * 0.05, 'le monde natal s\'effondre après −500');
-  assert.ok(Math.abs(g.victims / (g.victims + g.survivors) - 0.99) < 0.02 && simulatePopulation({ genocideToll: 0 }).at(-490).N > m.at(-501).N);
+  assert.ok(m.at(-501).N > 3e7 && m.at(-499).N === 0, 'monde natal vidé d\'un coup, sans reste');
+  assert.equal(m.at(-501).E, 0); assert.ok(m.at(-499).E >= P.earthTyts && m.at(-499).E < P.earthTyts * 1.1, 'les Tyts partis sur Terre apparaissent au crime');
+  assert.ok(g.victims > 3e7 && [g.kebet, g.prisoners, g.earth].every((x) => x >= 500 && x < 1e4), 'trois groupes peu nombreux, assez pour éviter la consanguinité');
+  assert.ok(m.at(-499).T - m.at(-501).T >= P.warPrisoners * 0.9, 'les prisonniers de guerre rejoignent les Tyts du système');
   assert.equal(m.at(-501).reductions + m.at(-501).prevented, 0, 'aucun contrôle avant le crime');
   assert.ok(m.at(0).cumPrevented > 0 && m.at(0).cumReductions > 0 && m.at(100).cumReductions > m.at(0).cumReductions, 'les cumuls croissent');
   assert.equal(simulatePopulation({ tytMode: 'nature' }).at(0).cumPrevented, 0, 'mode subi : rien n\'est empêché');

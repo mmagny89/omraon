@@ -149,11 +149,20 @@
         <label>Vérité rapportée à l'An <input id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
         <label>… force (0–1) <input id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
         <label>Monde natal tyt avant le génocide <input id="pop-nat" type="number" min="1000" step="1000000" value="30000000" inputmode="numeric"></label>
-        <label>… part exterminée (%) <input id="pop-toll" type="number" min="0" max="100" step="1" value="99" inputmode="numeric"></label>
+        <label>Prisonniers de guerre épargnés <input id="pop-pow" type="number" min="0" step="100" value="2000" inputmode="numeric"></label>
+        <label>Tyts partis sur Terre <input id="pop-earth" type="number" min="0" step="100" value="1500" inputmode="numeric"></label>
         <button type="button" id="pop-reset" class="wide">Valeurs calées sur les documents</button>
       </div>
       <p id="pop-hv" class="note" aria-live="off">Survolez une courbe pour lire les chiffres d'une année.</p>
-      <canvas id="pop-c1" role="img" aria-label="Populations humaine et tyt du système, Tyts du monde natal, contrôle des humains sur les Tyts, génocide du monde natal"></canvas><canvas id="pop-c3" role="img" aria-label="Naissances tyt décidées, naissances empêchées et Tyts éliminés par an"></canvas><canvas id="pop-c2" role="img" aria-label="Contrôle, désespoir et éveil"></canvas>
+      <figure class="pop-fig"><figcaption><b>Effectifs et contrôle</b><span>Nombre de personnes (échelle logarithmique, à gauche) · contrôle des humains sur les Tyts (0 à 100 %) · abscisse : année de l'Ère confédérale · barre blanche : date de la frise</span></figcaption>
+        <ul class="pop-lg"><li><i style="background:#ffbf6b"></i>humains</li><li><i style="background:#6fd3a0"></i>Tyts du système (Kebet et prisonniers, puis leurs descendants)</li><li><i class="d" style="background:#c78bff"></i>Tyts du monde natal (hors système)</li><li><i class="d" style="background:#6fb4ff"></i>contrôle des humains sur les Tyts</li><li><i class="d" style="background:#ff6b7a"></i>génocide du monde natal : le monde est vidé</li><li><i class="d" style="background:#f78fd0"></i>Tyts survivants partis sur Terre (hors système)</li></ul>
+        <canvas id="pop-c1" role="img" aria-label="Populations humaine et tyt du système, Tyts du monde natal et de la Terre, contrôle des humains sur les Tyts, génocide du monde natal"></canvas></figure>
+      <figure class="pop-fig"><figcaption><b>Contrôle des naissances tyt</b><span>Flux par an, échelle logarithmique : ce que les humains décident, retiennent ou éliminent chez les Tyts du système</span></figcaption>
+        <ul class="pop-lg"><li><i style="background:#6fd3a0"></i>naissances décidées</li><li><i style="background:#ffbf6b"></i>naissances empêchées (potentiel naturel retenu)</li><li><i style="background:#ff6b7a"></i>Tyts éliminés (réductions)</li></ul>
+        <canvas id="pop-c3" role="img" aria-label="Naissances tyt décidées, naissances empêchées et Tyts éliminés par an"></canvas></figure>
+      <figure class="pop-fig"><figcaption><b>Dégel du contrôle</b><span>Part de 0 à 100 % : le savoir de contrôle se perd, le désespoir s'estompe, les Tyts s'éveillent</span></figcaption>
+        <ul class="pop-lg"><li><i style="background:#6fb4ff"></i>contrôle effectif</li><li><i style="background:#ff6b7a"></i>désespoir des Tyts</li><li><i style="background:#6fd3a0"></i>Tyts éveillés</li></ul>
+        <canvas id="pop-c2" role="img" aria-label="Contrôle, désespoir et éveil des Tyts"></canvas></figure>
       <div id="pop-sum" class="note"></div><table id="pop-at"></table>
     </details>
     <details id="reseau"><summary>Réseau de communication</summary>
