@@ -5,6 +5,34 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [1.2.0] - 2026-11-14
+
+### Ajouté
+
+- **Économie du système** (`physics/economie.js`, données et réglages dans `data/economie.js`, tout en conception) : huit marchandises (eau, carburant, minerai, métaux, vivres, équipements, luxe, Tyts), prix par rareté, transporteurs qui arbitrent (cargaisons mixtes, temps de vol réel, coût du carburant et du lancement), grand livre fermé, péage de l'octroi de Naksun, douane de Kebet, contrebande. Les Tyts sont à la fois une marchandise et une main-d'œuvre.
+- **Panneau « Économie et commerce »** (Options) : simulation par paquets, chocs (glace de Nunka, récolte, raffineries, péage, grève, fouilles), événements datés (blocus, piraterie, grève, péage), mode hasard à graine, comparaison avec la référence, prix, flux, transporteurs, taxes, voyages du *Mai*.
+- **Flux commerciaux sur la carte 3D** : convois animés colorés par marchandise, routes dont la largeur suit le volume, rejeu de la simulation sur l'horloge.
+- **Couplage avec la population** : une pénurie durable devient une crise de misère qui accélère l'éveil des Tyts et fait perdre du contrôle ; effet lu sur le point de bascule, avec bouton d'application au panneau Population.
+- **Système élargi** : Roushan ramenée à 12 UA (fourchette crédible de formation d'une géante de 0,35 masse de Jupiter), troyens de Roushan, ceinture froide de 17 à 34 UA, comètes et centaures, lacunes de Kirkwood et amas de Hilda dans la ceinture principale.
+- **Ceinture productive** : deux mines libres (Fonderies libres, Chalands de glace), les passeurs d'Onkel, un événement « expédition du Consortium » ; quatre nouveaux sites avec leur ambiance (non canon).
+- **Port de Kebet tenu en place** au-dessus de la capitale par une poussée continue (aucune orbite ne le permet : l'orbite synchrone est hors de la sphère de Hill), qui brûle 60 t de carburant par jour.
+- `docs/ressources.md` (stocks et extractions par corps : rien ne s'épuise, la rareté est politique) ; `docs/modifications-lore.md` gagne les entrées 18 à 42.
+- Tests : économie répartie en trois fichiers exécutés en parallèle (la suite passe de 95 à 47 s), particules, ciel de chaque site, port de Kebet, cohérence entre les sites et le modèle de population (89 tests).
+
+### Modifié
+
+- **Population des sites** alignée sur le modèle de population : humains × 1,2 et Tyts × 2 (497 000 et 331 000 contre 414 000 et 166 000), Roushan à 300 000 habitants, Sethis à 300 000 Tyts ; un test garde l'écart sous 3 %.
+- Productivité rapportée aux seuls **extracteurs** (5 à 150 kg par jour et par personne) : à Sethis 16 % des Tyts extraient, les autres servent, entretiennent, construisent. Prix d'un Tyt fixé à 5 800 cr, soit dix ans de la production d'un extracteur moyen.
+- **Douane de Kebet** appliquée à tout ce qui arrive à un site de Kebet depuis l'extérieur, jamais aux transferts internes (61 % de la valeur importée y échappait).
+- **Rentabilité des convois** : frais d'exploitation et de marché, prix bornés par bien, petits armateurs en concurrence ; le *Mai* passe de 11 000 % à ≈ 240 % par an.
+- Roukir devient « la dernière douane du système habité » (décision de l'autrice) : la frontière physique est la ceinture froide.
+- L'économie suit la croissance de la population (0,7 % par an) et les Tyts réellement présents.
+
+### Corrigé
+
+- **Ciel, fiche de scène et vue à hauteur d'yeux** des sites en orbite autour de l'étoile (repaire et mines de la ceinture, troyens, ceinture froide) : le calcul du ciel écartait l'étoile et plantait, la fiche gardait le texte du site précédent.
+- Un convoi saisi par hasard ne livre plus rien ; une comète perdue est remplacée au lieu de disparaître.
+
 ## [1.1.0] - 2026-11-12
 
 ### Ajouté

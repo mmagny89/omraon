@@ -10,12 +10,12 @@
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](README.docker.md)
 
 Simulation physique (N-corps) et vue 3D du système décrit dans la *Bible géographique v3* : l'étoile Omraon, trois telluriques (Kalpra, Sethis, Naksun),
-la ceinture Nunzir, deux géantes (Zirkan, Roushan), huit lunes dont Kebet et la planète-colonie des confins (Shukal), et dix-huit sites habités. Application
+la ceinture Nunzir, deux géantes (Zirkan, Roushan), huit lunes dont Kebet et la planète-colonie des confins (Shukal), et vingt-deux sites habités. Application
 statique : aucun serveur applicatif, aucune ressource externe.
 
 ```sh
 docker compose up -d --wait   # https://localhost (certificat auto-signé de Caddy)
-npm test                      # 51 tests de physique, de calcul et de cohérence avec le canon
+npm test                      # 89 tests de physique, d'économie, de ciel et de cohérence avec le canon
 ```
 
 Stack statique d'agence (Caddy seul, ni PHP ni Node) : le site vit dans `app/`, sans étape de build ; Three.js est copié dans `app/vendor/` (importmap).
@@ -30,7 +30,7 @@ Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICEN
 | **Physique** | N-corps gravitationnel, relativité générale 1PN, lunes en N-corps ou sur rails, rotation synchrone, résonance spin-orbite 3:2 de Kalpra, aplatissement, éclipses. Diagnostics ΔE/E et ΔL/L. |
 | **Fiches** | Masse, rayon, gravité, éléments orbitaux en direct, rayon de Hill, limite de Roche, jour sidéral et solaire, année locale, éclairement, température. |
 | **Habitabilité** | Diagnostic par corps (température, eau, atmosphère, gravité, rayonnement, marées, stabilité) avec verdict par mode, et « habitable en permanence ? » sur 5 ans simulés. |
-| **Sites habités** | 18 sites (mines, octroi, garnison, tribunaux, port et cités de Kebet, cités flottantes, postes des confins…) : thermique, blindage, énergie, vie, trajets. |
+| **Sites habités** | 22 sites (mines, octroi, garnison, tribunaux, port de Kebet tenu au-dessus de la capitale, cités flottantes, postes des confins, mines libres de la ceinture, troyens de Roushan, ceinture froide…) : thermique, blindage, énergie, vie, trajets. |
 | **Trajets et voyage animé** | Hohmann, hyperpropulsion 0,95 c (6 jours de poussée continue au plus), subluminique 0,1 c, fenêtres, délai lumière ; voyage animé du Mai avec repos moteur. |
 | **Ciel et vue à hauteur d'yeux** | Ciel vu d'un site, interactif ; vue à la première personne avec horizon réel, hublot pour les stations, points cardinaux et noms des astres à la demande. |
 | **Fiche de scène** | Lumière, heure du jour, prochain lever ou éclipse, conditions, communications, puis la banque d'images des documents « Quotidien sensoriel ». |
@@ -38,6 +38,7 @@ Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICEN
 | **Modifications du lore** | [`docs/modifications-lore.md`](docs/modifications-lore.md) : tout ce que la simulation invente ou change par rapport aux documents du roman, avec statut et fichier. |
 | **Chronologie** | An 0 = début de l'Ère confédérale, présent du roman = An 300 (conception) ; frise de l'An −660 à l'An 360, saut de date avec recalcul N-corps réversible, âge du système. |
 | **Réseau de communication** | Diffusion d'une information (piratage de Jax) selon trois topologies, ordre de coupure du Consortium à la vitesse de la lumière, bouche-à-oreille par vaisseaux. |
+| **Économie et commerce** | Huit marchandises, prix par rareté, transporteurs, douane, péage, contrebande, hasard à graine ; chocs et événements datés ; comparaison avec la référence, couplage avec le dégel ; flux animés sur la carte 3D. Tout est de la conception ([`docs/ressources.md`](docs/ressources.md)). |
 | **Population et dégel** | De l'arche de 10 000 personnes au présent : humains, Tyts, contrôle, désespoir, éveil, révoltes, point de bascule ; populations des sites à la date de la frise. |
 
 ### Interface
@@ -94,12 +95,12 @@ Hors simulation : monde natal tyt, hangar-musée, Terre.
 app/
 ├── index.html, vendor/three.*       page, Three.js local (importmap) — package.json épingle la version, `npm run vendor` recopie
 └── src/
-    ├── data/       omraon.js (étoile, planètes, lunes), sites.js, chronologie.js, ambiances.js
+    ├── data/       omraon.js (étoile, planètes, lunes), sites.js, economie.js, chronologie.js, ambiances.js
     ├── physics/    simulation, kepler, system, sites, habitability, habitat, habscan, transfers, flight,
-    │               sky, scene, ephem, ephemeris, network, population, horizon, derived, constants
-    ├── render/     world, ground (vue au sol), skyView, cameraRig, textures, noise
+    │               sky, scene, ephem, ephemeris, network, population, economie, horizon, derived, constants
+    ├── render/     world, ground (vue au sol), flux (convois), skyView, cameraRig, textures, noise
     └── ui/ui.js    interface (panneaux, frise, fiches, options)
-tests/physics.test.js               node --test
+tests/                              node --test (physique, économie, particules, ciel, cohérence)
 outils/, .github/, docker/          exploitation, CI, Caddy (stack statique d'agence)
 CLAUDE.md                           mémoire du projet (règles, décisions actées)
 docs/hypotheses.md                  canon / propositions de conception
