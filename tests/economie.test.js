@@ -144,3 +144,12 @@ test('événements : un blocus ferme un site, la piraterie perd de la cargaison,
   const p3 = monde({ evenements: [{ type: 'peage', valeur: 3, de: 0, duree: 70 }] }); avancer(p3, 70);
   assert.ok((p3.taxes['naksun-octroi'] ?? 0) > (ref.taxes['naksun-octroi'] ?? 0), 'péage plus lourd');
 });
+
+import { besoinJour } from '../app/src/physics/economie.js';
+test('station de Kebet : la poussée continue consomme du carburant, qui lui est livré', () => {
+  const port = SITES.find((s) => s.id === 'kebet-orbite');
+  assert.ok(besoinJour(port, PROFILS['kebet-orbite'], 'carburant') >= 60);
+  const e = monde(); avancer(e, 60);
+  assert.ok([...e.flux].some(([k, q]) => k.split('|')[1] === 'kebet-orbite' && k.endsWith('|carburant') && q > 0), 'le carburant arrive au port');
+  assert.ok((e.noeuds.get('kebet-orbite').penurie.carburant ?? 0) < 20, 'le port ne manque pas de carburant');
+});
