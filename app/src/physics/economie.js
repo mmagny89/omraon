@@ -47,7 +47,7 @@ export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = M
   // Avitaillement : les vaisseaux prennent leur carburant aux raffineries (le site qui en produit le plus), à leur prix, quel que soit le quai.
   const raffinerie = [...noeuds.values()].sort((a, b) => (b.profil.prod.carburant ?? 0) - (a.profil.prod.carburant ?? 0))[0];
   return {
-    t: 0, raffinerie, octroi: [...noeuds.values()].find((n) => n.profil.peage), noeuds, convois, biens, reglages, dist, duree, journal: [], taxes: {}, transporte: {},
+    t: 0, raffinerie, octroi: [...noeuds.values()].find((n) => n.profil.peage), noeuds, convois, biens, reglages, dist, duree, journal: [], flux: new Map(), taxes: {}, transporte: {},
     masseInitiale: convois.reduce((s, c) => s + c.caisse, 0),
   };
 }
@@ -78,6 +78,7 @@ function livrer(etat, c) {
     n.solde -= net; c.caisse += net;
     etat.taxes[v.to] = (etat.taxes[v.to] ?? 0) + taxe;
     etat.transporte[v.g] = (etat.transporte[v.g] ?? 0) + v.qLivree;
+    const k = `${v.from}|${v.to}|${v.g}`; etat.flux.set(k, (etat.flux.get(k) ?? 0) + v.qLivree);
     c.gain += net;
   }
   c.gain -= v.depense; c.voyages++;
@@ -184,11 +185,15 @@ export function indicateurs(etat) {
   };
 }
 
+/** Relevé des prix (en multiple du prix de base, null hors marché) de tous les sites à la date courante. */
+export const releverPrix = (etat) => ({
+  t: etat.t,
+  prix: Object.fromEntries([...etat.noeuds].map(([id, n]) => [id, Object.fromEntries([...etat.biens].map(([g, b]) => { const p = prixAuStock(etat, n, g, n.stock[g]); return [g, p == null ? null : p / b.prixBase]; }))])),
+});
+
 /** Simule `jours` jours et renvoie l'état final et l'historique des prix (un relevé tous les `pas` jours). */
 export function simulerEconomie(params, jours, pas = 5) {
-  const etat = creerEconomie(params), historique = [];
-  const releve = () => historique.push({ t: etat.t, prix: Object.fromEntries([...etat.noeuds].map(([id, n]) => [id, Object.fromEntries([...etat.biens.keys()].map((g) => [g, prixAuStock(etat, n, g, n.stock[g])]))])) });
-  releve();
-  for (let i = 0; i < jours; i++) { jour(etat); if ((i + 1) % pas === 0) releve(); }
+  const etat = creerEconomie(params), historique = [releverPrix(etat)];
+  for (let i = 0; i < jours; i++) { jour(etat); if ((i + 1) % pas === 0) historique.push(releverPrix(etat)); }
   return { etat, historique };
 }

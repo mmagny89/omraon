@@ -184,6 +184,30 @@
       <canvas id="net-chart" role="img" aria-label="Part de la population informée en fonction du temps"></canvas>
       <div id="net-sum" class="note"></div><div id="net-tab-wrap"><table id="net-tab"></table></div>
     </details>
+    <details id="eco"><summary>Économie et commerce</summary>
+      <p class="note">Modèle simple, tout est de la conception : prix par rareté, transporteurs qui arbitrent, péage de Naksun, douane de Kebet, contrebande. La monnaie (crédit) porte un nom provisoire. Les positions sont celles du jour affiché.</p>
+      <div class="grid">
+        <label>Horizon <select id="eco-h"><option data-jk="30" value="30">30 jours</option><option data-jk="90" value="90" selected>90 jours</option><option data-jk="180" value="180">180 jours</option><option data-jk="365" value="365">1 an</option></select></label>
+        <label>Choc <select id="eco-choc"></select></label>
+        <button type="button" id="eco-go" class="wide">Simuler</button>
+        <button type="button" id="eco-stop" class="wide" hidden>Interrompre</button>
+      </div>
+      <p id="eco-prog" class="note" role="status" aria-live="polite"></p>
+      <div id="eco-res" hidden>
+        <div id="eco-sum" class="note"></div>
+        <div class="grid">
+          <label>Marchandise <select id="eco-bien"></select></label>
+          <label><input type="checkbox" id="eco-marq"> Colorier les sites (prix à la fin)</label>
+        </div>
+        <figure class="pop-fig"><figcaption><b>Évolution des prix</b><span>En multiple du prix de base (échelle logarithmique) ; abscisse : jours de la simulation ; les six sites les plus peuplés qui sont un marché pour cette marchandise</span></figcaption>
+          <ul id="eco-leg" class="pop-lg"></ul>
+          <canvas id="eco-chart" role="img" aria-label="Évolution du prix de la marchandise choisie sur les principaux sites"></canvas></figure>
+        <h3>Prix à la fin</h3><div class="eco-wrap"><table id="eco-prix" class="eco-tab"></table></div>
+        <h3>Principaux flux</h3><div class="eco-wrap"><table id="eco-flux" class="eco-tab"></table></div>
+        <h3>Transporteurs</h3><div class="eco-wrap"><table id="eco-convois" class="eco-tab"></table></div>
+        <h3>Taxes</h3><div class="eco-wrap"><table id="eco-taxes" class="eco-tab"></table></div>
+      </div>
+    </details>
     <details id="ephem"><summary>Éphémérides</summary>
       <div class="grid">
         <label>Horizon <select id="eph-h"><option data-jk="30" value="30">30 jours</option><option value="365.25" selected>1 an</option><option value="1826">5 ans</option></select></label>

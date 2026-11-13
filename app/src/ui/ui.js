@@ -28,6 +28,7 @@ import { GLOSSAIRE } from '../data/glossaire.js';
 import { glossaireComplet, filtrer, auLieu, moisConfederal } from './lore.js';
 import { indexer, versFrancais, versTyt } from './traducteur.js';
 import { initOptionsNav } from './optionsNav.js';
+import { initEconomie } from './economie.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -68,6 +69,7 @@ export class UI {
     this.bindVoyage();
     this.bindGround();
     this.buildNet();
+    initEconomie({ root: $('#options'), getPos: () => this.sitePositions(), setMarkers: (m) => this.world.siteEls?.forEach((r, id) => (m?.has(id) ? r.el.style.setProperty('--c', m.get(id)) : r.el.style.removeProperty('--c'))) });
     this.buildPop();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
@@ -296,9 +298,15 @@ export class UI {
 
   stopNet() { this.net = null; $('#net-stop').hidden = true; this.world.siteEls?.forEach((r) => r.el.style.removeProperty('--c')); }
 
-  runNet() {
+  /** Position (UA) de chaque site à la date affichée. */
+  sitePositions() {
     const w = this.world, pos = new Map(); this.sim.computeRender(this.target);
     const sctx = w.siteCtx(); for (const x of SITES) pos.set(x.id, (w.siteEls.get(x.id)?.st || siteState(sctx, x, this.target)).pos.slice());
+    return pos;
+  }
+
+  runNet() {
+    const pos = this.sitePositions();
     const horizon = +$('#net-h').value, mode = $('#net-mode').value;
     const res = simulateSpread({ sites: SITES, pos, origin: $('#net-origin').value, mode, topology: $('#net-topo').value, hopMin: +$('#net-hop').value || 0, detectMin: +$('#net-det').value || 0, horizonDays: horizon });
     this.net = { res, t0: this.target, horizon };

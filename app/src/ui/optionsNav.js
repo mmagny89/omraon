@@ -1,7 +1,7 @@
 // Navigation du panneau Options : un rail d'icônes à gauche (en bandeau sur téléphone), une seule section visible à la fois.
 // Les sections restent les <details> existants (mêmes identifiants, mêmes branchements) : on les garde ouverts et on masque les autres.
 export const SECTIONS = [
-  ['lore', '📖', 'Lore'], ['pop', '👥', 'Population'], ['reseau', '📡', 'Réseau'], ['ephem', '🔭', 'Éphémérides'],
+  ['lore', '📖', 'Lore'], ['pop', '👥', 'Population'], ['reseau', '📡', 'Réseau'], ['eco', '💱', 'Économie'], ['ephem', '🔭', 'Éphémérides'],
   ['compare', '⚖', 'Comparer'], ['carnet', '📷', 'Carnet'], ['settings', '⚙', 'Réglages'], ['apropos', 'ℹ', 'À propos'],
 ];
 const CLE = 'omraon.options.onglet';

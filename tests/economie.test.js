@@ -9,7 +9,7 @@ import { G } from '../app/src/physics/constants.js';
 import { SITES } from '../app/src/data/sites.js';
 import { PROFILS, TRANSPORTEURS } from '../app/src/data/economie.js';
 import { siteState } from '../app/src/physics/sites.js';
-import { creerEconomie, avancer, prix, prixAuStock, masseMonetaire, indicateurs, distanceDepuis, tempsVol } from '../app/src/physics/economie.js';
+import { releverPrix, creerEconomie, avancer, prix, prixAuStock, masseMonetaire, indicateurs, distanceDepuis, tempsVol } from '../app/src/physics/economie.js';
 
 const sim = new Simulation(buildSystem(STAR, PLANETS), { particleCount: 300 }); sim.autoTier = false; sim.computeRender(0);
 const el = (i) => {
@@ -101,4 +101,12 @@ test('économie : transporteurs et profils couvrent exactement les sites', () =>
   for (const s of SITES) assert.ok(PROFILS[s.id], `profil manquant : ${s.id}`);
   for (const id of Object.keys(PROFILS)) assert.ok(SITES.some((s) => s.id === id), `site inconnu : ${id}`);
   for (const t of TRANSPORTEURS) assert.ok(SITES.some((s) => s.id === t.base), `base inconnue : ${t.id}`);
+});
+
+test('économie : le relevé de prix est en multiple du prix de base et le registre des flux égale les volumes livrés', () => {
+  const e = monde(); const r0 = releverPrix(e);
+  assert.ok(Math.abs(r0.prix['roushan-cites'].vivres - 1) < 1e-9 && r0.prix['mahat-tribunaux'].minerai === null);
+  avancer(e, 60);
+  const somme = [...e.flux.values()].reduce((s, x) => s + x, 0), total = Object.values(e.transporte).reduce((s, x) => s + x, 0);
+  assert.ok(Math.abs(somme - total) < 1e-6 * total, `${somme} vs ${total}`);
 });
