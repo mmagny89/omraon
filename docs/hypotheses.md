@@ -24,7 +24,7 @@
 | Zirkan, Roushan | champ magnétique 0,0005 et 0,03 × Jupiter ; Roushan T(1 bar) = 1,63 × T équilibre | `data/omraon.js` |
 | Sethis | atmosphère ténue 0,05 bar (vent, poussière) | `data/omraon.js` |
 | Shukal | planète-colonie des confins : nom provisoire, 0,06 M⊕, orbite de 9,5 M km autour de Roushan | `data/omraon.js` |
-| Sites | 18 emplacements, populations et Tyts (`invented: true`) | `data/sites.js` |
+| Sites | 22 emplacements, populations et Tyts alignés sur le modèle de population (`invented: true`) | `data/sites.js` |
 | Accélération des vaisseaux | 8 g (≈ 35 UA en 6 jours), repos moteur d'un jour | `physics/transfers.js`, `physics/flight.js` |
 | Réseau | taux de diffusion locale, répression, graines, filtre du Consortium (~65 %) | `physics/network.js` |
 | Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 0,7 (voir `modifications-lore.md`), contrôle requis 1,04, coefficients d'éveil, hybrides humain/Tyt | `physics/population.js` |

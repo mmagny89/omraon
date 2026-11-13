@@ -36,6 +36,17 @@ export function besoinJour(site, profil, g) {
  *  'greve'     cible = faction ('consortium', 'libre', 'contrebande') : ses convois restent à quai ;
  *  'peage'     valeur = multiplicateur du péage de l'octroi.
  */
+/** Nombre de personnes (Tyts ou humains) qui extraient réellement sur un site (production ÷ productivité) ; 0 si le site n'en emploie pas à l'extraction. */
+export const extracteurs = (profil) => (profil.productivite ? Math.round((Object.values(profil.prod).reduce((a, b) => a + b, 0) * 1000) / profil.productivite) : 0);
+
+/** Valeur moyenne produite par jour et par extracteur (crédits), sur les sites qui en emploient : sert à fixer le prix d'un Tyt. */
+export function valeurParMineur(profils = PROFILS, marchandises = MARCHANDISES) {
+  const prix = Object.fromEntries(marchandises.map((m) => [m.id, m.prixBase]));
+  let v = 0, n = 0;
+  for (const p of Object.values(profils)) { const k = extracteurs(p); if (!k) continue; n += k; v += Object.entries(p.prod).reduce((s, [g, q]) => s + q * prix[g], 0); }
+  return v / Math.max(n, 1);
+}
+
 export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = MARCHANDISES, transporteurs = TRANSPORTEURS, reglages = REGLAGES, evenements = [], graine = null }) {
   const biens = new Map(marchandises.map((m) => [m.id, m]));
   const noeuds = new Map();
