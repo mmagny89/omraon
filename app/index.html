@@ -192,6 +192,9 @@
       <div class="grid">
         <label>Horizon <select id="eco-h"><option data-jk="30" value="30">30 jours</option><option data-jk="90" value="90" selected>90 jours</option><option data-jk="180" value="180">180 jours</option><option data-jk="365" value="365">1 an</option></select></label>
         <label>Choc <select id="eco-choc"></select></label>
+        <label>Événement daté <select id="eco-ev"></select></label>
+        <label>… dès le jour <input id="eco-ev-de" type="number" min="0" step="1" value="30" inputmode="numeric"></label>
+        <label>… pendant (jours) <input id="eco-ev-du" type="number" min="1" step="1" value="30" inputmode="numeric"></label>
         <button type="button" id="eco-go" class="wide">Simuler</button>
         <button type="button" id="eco-stop" class="wide" hidden>Interrompre</button>
       </div>

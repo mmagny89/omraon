@@ -26,7 +26,7 @@ export function siteState(ctx, site, t) {
   }
   const idx = ctx.bodyIndex(site.body), b = sim.bodies[idx], R = b.radiusKm / AU_KM;
   const bp = [p[3 * idx], p[3 * idx + 1], p[3 * idx + 2]], bv = [v[3 * idx], v[3 * idx + 1], v[3 * idx + 2]];
-  if (site.type === 'orbit') {
+  if (site.type === 'orbit' && !site.fixe) {
     const a = R + (site.altKm || 0) / AU_KM, n = Math.sqrt(G * sim.mass[idx] / a ** 3);
     const th = (site.phase || 0) * DEG + n * t, { P, Q } = orbitBasis((site.node || 0) * DEG, (site.incl || 0) * DEG, 0);
     const r = [0, 1, 2].map((k) => a * (Math.cos(th) * P[k] + Math.sin(th) * Q[k]));
@@ -35,8 +35,8 @@ export function siteState(ctx, site, t) {
     return { idx, pos: [0, 1, 2].map((k) => bp[k] + re[k]), vel: [0, 1, 2].map((k) => bv[k] + ve[k]), radiusKm: a * AU_KM, orbitalPeriod: TWO_PI / n };
   }
   // surface ou cité flottante : fixe dans le repère du corps
-  const rr = R + (site.altKm || 0) / AU_KM;
-  const d = surfaceDir(site.lat, site.lon).map((c) => c * rr);
+  const rr = R + (site.altKm || 0) / AU_KM, geo = site.fixe ?? site; // `fixe` : station tenue au-dessus d'un point (lat, lon), sans orbite
+  const d = surfaceDir(geo.lat, geo.lon).map((c) => c * rr);
   const e = localToEcliptic(d, b.tilt, b.node, ctx.ang(idx));
   const prot = ctx.protDays(idx);
   let vr = [0, 0, 0];

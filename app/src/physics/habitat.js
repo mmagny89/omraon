@@ -59,6 +59,12 @@ export function siteReport(ctx, site, st, t) {
       Tenv = site.habitat === 'dome' ? Teq : Tmean; gcr = 0.65;
     }
     env.push(['Gravité', `${fmt(g, g < 0.1 ? 3 : 2)} g`]);
+  } else if (site.type === 'orbit' && site.fixe) {
+    // station tenue en place au-dessus d'un point : pas de période orbitale ; la poussée qui l'y maintient fait le poids des occupants
+    const gl = (bulk(body.mass, body.radiusKm).gSurf / 9.80665) * (body.radiusKm / st.radiusKm) ** 2;
+    env.push(['Maintien en place', `poussée continue ≈ ${fmt(gl, 2)} g`], ['Éclipse par ' + d.name, 'la moitié du jour (nuit sous la station)']);
+    Tenv = Teq; gcr = 1.8; g = gl;
+    env.push(['Gravité', `${fmt(gl, 2)} g (la poussée fait le poids)`]);
   } else if (site.type === 'orbit') {
     const R = body.radiusKm, a = st.radiusKm, ecl = R / a < 1 ? Math.asin(R / a) / Math.PI : 0;
     env.push(['Période orbitale', `${fmt(st.orbitalPeriod * 24, 2)} h`], ['Éclipse par ' + d.name, `≈ ${fmt(ecl * 100, 0)} % de l'orbite (${fmt(ecl * st.orbitalPeriod * 24 * 60, 0)} min)`]);
@@ -121,7 +127,7 @@ export function siteReport(ctx, site, st, t) {
 
   // --- Structure ---
   const struct = [];
-  if (site.type === 'orbit' || site.type === 'heliocentric') struct.push(['Gravité artificielle', `rayon ≈ ${fmt(9.80665 / (2 * Math.PI * 2 / 60) ** 2, 0)} m pour 1 g à 2 tr/min`]);
+  if ((site.type === 'orbit' && !site.fixe) || site.type === 'heliocentric') struct.push(['Gravité artificielle', `rayon ≈ ${fmt(9.80665 / (2 * Math.PI * 2 / 60) ** 2, 0)} m pour 1 g à 2 tr/min`]);
   if (site.type === 'surface' && g > 0 && g < 0.1) struct.push(['Gravité artificielle', `${fmt(g * 1000, 1)} mg au sol : rotation ou séjours courts`]);
   if (site.type === 'floating') {
     const T1 = Tenv, rho = (P || 1) * 1e5 * 0.0023 / (8.314 * T1), Tin = 330, lift = rho * (1 - T1 / Tin), vol = PERSON.spinTonnes * 1000 / Math.max(lift, 1e-6);

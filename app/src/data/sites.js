@@ -29,7 +29,7 @@ export const SITES = [
   { id: 'astir-balise', name: "Balise d'Astir", body: 'Astir', type: 'surface', lat: 30, lon: 90, habitat: 'underground', population: 8000, tyts: 0, invented: true,
     role: 'Observatoire et balise de navigation vers Kebet ; logement d\'ouvriers-navetteurs.' },
   { id: 'kebet-orbite', name: 'Port orbital de Kebet', body: 'Kebet', type: 'orbit', altKm: 600, incl: 10, node: 0, phase: 90, habitat: 'orbital', population: 5000, tyts: 500, invented: true,
-    role: "Port d'entrée du monde habité : douane et transit avant la descente (stations de service, dont celle où Heru fut trouvé)." },
+    role: "Port d'entrée du monde habité : douane et transit avant la descente (stations de service, dont celle où Heru fut trouvé). Tenu en place au-dessus de la capitale (conception : aucune orbite ne le permet)." },
   { id: 'kebet-temples', name: "Grands temples d'Osaon", body: 'Kebet', type: 'surface', lat: 30, lon: 20, land: true, habitat: 'open', population: 3000, tyts: 1500, invented: true,
     role: "Centre religieux : archives, Histoire officielle, temples solaires ouverts sur le ciel — bâtis sur le sanctuaire tyt volé." },
   { id: 'kebet-consortium', name: 'Siège du Consortium', body: 'Kebet', type: 'surface', lat: 33, lon: 28, land: true, habitat: 'open', population: 2000, tyts: 800, invented: true,
@@ -49,3 +49,8 @@ export const SITES = [
   { id: 'nunzir-repaire', name: 'Repaire de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.32, e: 0.08, i: 3, Om: 80, w: 120, M: 40 }, habitat: 'underground', population: 1500, tyts: 200, invented: true,
     role: 'Repaire de pirates et de contrebandiers (Onkel, Ella) dans un astéroïde.' },
 ];
+
+// Le port de Kebet est tenu en place au-dessus de la capitale (le siège du Consortium) : `fixe` remplace son orbite par un point fixe dans le repère du corps,
+// à `altKm`. Aucune orbite naturelle ne le permet : celle qui suivrait la rotation de Kebet (≈ 47 000 km) est hors de sa sphère de Hill (voir docs/modifications-lore.md, n° 25).
+const capitale = SITES.find((x) => x.id === 'kebet-consortium');
+SITES.find((x) => x.id === 'kebet-orbite').fixe = { lat: capitale.lat, lon: capitale.lon };

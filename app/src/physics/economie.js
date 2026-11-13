@@ -27,7 +27,14 @@ export function besoinJour(site, profil, g) {
   return n + (profil.conso?.[g] ?? 0);
 }
 
-export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = MARCHANDISES, transporteurs = TRANSPORTEURS, reglages = REGLAGES }) {
+/**
+ * Événements datés : { type, de, duree, cible, valeur } en jours depuis le début de la simulation.
+ *  'blocus'    cible = id de site : aucun convoi n'y arrive ni n'en part ;
+ *  'piraterie' cible = id de site, valeur = part de la cargaison perdue (0–1) sur tout voyage qui en part ou y arrive ;
+ *  'greve'     cible = faction ('consortium', 'libre', 'contrebande') : ses convois restent à quai ;
+ *  'peage'     valeur = multiplicateur du péage de l'octroi.
+ */
+export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = MARCHANDISES, transporteurs = TRANSPORTEURS, reglages = REGLAGES, evenements = [] }) {
   const biens = new Map(marchandises.map((m) => [m.id, m]));
   const noeuds = new Map();
   for (const site of sites) {
@@ -46,7 +53,7 @@ export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = M
   // Avitaillement : les vaisseaux prennent leur carburant aux raffineries (le site qui en produit le plus), à leur prix, quel que soit le quai.
   const raffinerie = [...noeuds.values()].sort((a, b) => (b.profil.prod.carburant ?? 0) - (a.profil.prod.carburant ?? 0))[0];
   return {
-    t: 0, raffinerie, octroi: [...noeuds.values()].find((n) => n.profil.peage), noeuds, convois, biens, reglages, dist, duree, journal: [], flux: new Map(), taxes: {}, transporte: {},
+    t: 0, evenements, actifs: [], raffinerie, octroi: [...noeuds.values()].find((n) => n.profil.peage), noeuds, convois, biens, reglages, dist, duree, journal: [], flux: new Map(), taxes: {}, transporte: {},
     masseInitiale: convois.reduce((s, c) => s + c.caisse, 0),
   };
 }
@@ -92,7 +99,9 @@ function livrer(etat, c) {
  */
 function meilleur(etat, c, lieu) {
   const r = etat.reglages, { def } = c, src = etat.noeuds.get(lieu), contrebande = def.faction === 'contrebande';
-  const octroi = etat.octroi, raff = etat.raffinerie, dispo = {}, pSrc = {};
+  const octroi = etat.octroi, raff = etat.raffinerie, dispo = {}, pSrc = {}, ev = etat.actifs;
+  if (ev.some((e) => e.type === 'blocus' && e.cible === lieu)) return null;
+  const multPeage = ev.filter((e) => e.type === 'peage').reduce((m, e) => m * (e.valeur ?? 1), 1);
   for (const g of etat.biens.keys()) {
     const d = src.stock[g] - (g === 'tyts' ? RESERVE_TYTS : r.reserve) * src.cible[g], p = prix(etat, lieu, g);
     if (d > 0 && p != null) { dispo[g] = d; pSrc[g] = p; }
@@ -101,11 +110,12 @@ function meilleur(etat, c, lieu) {
   if (!goods.length) return null;
   let best = null;
   for (const [idD, nd] of etat.noeuds) {
-    if (idD === lieu) continue;
+    if (idD === lieu || ev.some((e) => e.type === 'blocus' && e.cible === idD)) continue;
+    const pirates = 1 - ev.filter((e) => e.type === 'piraterie' && (e.cible === lieu || e.cible === idD)).reduce((m, e) => m * (1 - (e.valeur ?? 0.2)), 1);
     const pD = {}, cand = goods.filter((g) => { if (!(nd.cible[g] > 0)) return false; pD[g] = prixAuStock(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0)); return pD[g] > pSrc[g]; }); // élagage : jamais rentable sinon
     if (!cand.length) continue;
     cand.sort((x, y) => (pD[y] - pSrc[y]) / etat.biens.get(y).volume - (pD[x] - pSrc[x]) / etat.biens.get(x).volume);
-    const d = etat.duree(lieu, idD, def.aG), vol = d + r.escaleJours, tauxPeage = !contrebande && octroi && src.profil.zone !== nd.profil.zone && (src.profil.zone === 'interieur' || nd.profil.zone === 'interieur') ? octroi.profil.peage : 0;
+    const d = etat.duree(lieu, idD, def.aG), vol = d + r.escaleJours, tauxPeage = !contrebande && octroi && src.profil.zone !== nd.profil.zone && (src.profil.zone === 'interieur' || nd.profil.zone === 'interieur') ? octroi.profil.peage * multPeage : 0;
     const taxeD = contrebande ? 0 : nd.profil.taxe ?? 0;
     for (const f of [1, 0.5, 0.25]) {
       let reste = def.soute * f, utilise = 0, achatT = 0, netT = 0; const cargo = [];
@@ -113,7 +123,7 @@ function meilleur(etat, c, lieu) {
         if (reste <= 1e-9) break;
         const bien = etat.biens.get(g), q = Math.min(reste / bien.volume, dispo[g]);
         if (!(q > 0)) continue;
-        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1), qLivree = contrebande ? q * (1 - (def.risque ?? 0)) : q;
+        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1), qLivree = (contrebande ? q * (1 - (def.risque ?? 0)) : q) * (1 - pirates);
         const net = valeurEchange(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0), qLivree, +1) * (1 - taxeD);
         if (net <= achat * (1 + tauxPeage)) continue;
         cargo.push({ g, q, qLivree, achat }); reste -= q * bien.volume; utilise += q * bien.volume; achatT += achat; netT += net;
@@ -145,13 +155,14 @@ function partir(etat, c, o) {
 }
 
 function choisir(etat, c) {
+  if (etat.actifs.some((e) => (e.type === 'greve' && e.cible === c.def.faction) || (e.type === 'blocus' && e.cible === c.lieu))) { c.dispo = etat.t + 1; return; } // grève, ou convoi retenu par un blocus
   const best = meilleur(etat, c, c.lieu);
   if (best) return partir(etat, c, best);
   // Rien à gagner ici : repositionnement à vide vers le quai d'où le meilleur trajet, net du voyage à vide, rapporte le plus.
   const r = etat.reglages, { def } = c, raff = etat.raffinerie;
   let pick = null;
   for (const idX of etat.noeuds.keys()) {
-    if (idX === c.lieu) continue;
+    if (idX === c.lieu || etat.actifs.some((e) => e.type === 'blocus' && e.cible === idX)) continue;
     const d = etat.duree(c.lieu, idX, def.aG), carb = d * def.soute * r.carburantVide;
     if (raff.stock.carburant < carb) continue;
     const fuel = valeurEchange(etat, raff, 'carburant', raff.stock.carburant, carb, -1);
@@ -167,6 +178,7 @@ function choisir(etat, c) {
 /** Avance l'économie d'un jour. */
 function jour(etat) {
   const t1 = etat.t + 1;
+  etat.actifs = etat.evenements.filter((e) => etat.t >= e.de && etat.t < e.de + e.duree);
   for (const n of etat.noeuds.values()) {
     const req = n.profil.tytsRequis ?? 0, lambda = req > 0 ? Math.min(1, n.stock.tyts / req) : 1;
     for (const g of etat.biens.keys()) {

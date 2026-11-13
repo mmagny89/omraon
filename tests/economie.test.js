@@ -129,3 +129,18 @@ test('couplage : la misère du système monte quand on coupe la glace de Nunka',
   assert.ok(b.total > a.total, `${b.total} vs ${a.total}`);
   assert.ok(b.total <= 1 && b.tyts >= 0 && b.humains >= 0);
 });
+
+test('événements : un blocus ferme un site, la piraterie perd de la cargaison, la grève immobilise une flotte, le péage se multiplie', () => {
+  const fen = { de: 20, duree: 30 }, dans = (v) => v.t >= fen.de + 1 && v.t < fen.de + fen.duree - 7; // marge pour les convois déjà en vol
+  const blocus = monde({ evenements: [{ type: 'blocus', cible: 'nunka-glace', ...fen }] }); avancer(blocus, 70);
+  assert.ok(blocus.journal.filter(dans).every((v) => v.from !== 'nunka-glace' && v.to !== 'nunka-glace'), 'aucun voyage à Nunka pendant le blocus');
+  assert.ok(blocus.journal.some((v) => v.t >= fen.de + fen.duree && (v.from === 'nunka-glace' || v.to === 'nunka-glace')), 'le trafic reprend après');
+  const greve = monde({ evenements: [{ type: 'greve', cible: 'consortium', ...fen }] }); avancer(greve, 70);
+  assert.ok(greve.journal.filter(dans).every((v) => !v.convoi.startsWith('consortium')), 'flottes du Consortium à quai');
+  const ref = monde(), pir = monde({ evenements: [{ type: 'piraterie', cible: 'roushan-cites', valeur: 0.5, de: 0, duree: 70 }] });
+  avancer(ref, 70); avancer(pir, 70);
+  const livre = (e) => Object.values(e.transporte).reduce((s, x) => s + x, 0);
+  assert.ok(livre(pir) < livre(ref) * 0.95, `${livre(pir)} vs ${livre(ref)}`);
+  const p3 = monde({ evenements: [{ type: 'peage', valeur: 3, de: 0, duree: 70 }] }); avancer(p3, 70);
+  assert.ok((p3.taxes['naksun-octroi'] ?? 0) > (ref.taxes['naksun-octroi'] ?? 0), 'péage plus lourd');
+});
