@@ -153,3 +153,20 @@ test('station de Kebet : la poussée continue consomme du carburant, qui lui est
   assert.ok([...e.flux].some(([k, q]) => k.split('|')[1] === 'kebet-orbite' && k.endsWith('|carburant') && q > 0), 'le carburant arrive au port');
   assert.ok((e.noeuds.get('kebet-orbite').penurie.carburant ?? 0) < 20, 'le port ne manque pas de carburant');
 });
+
+test('hasard : même graine, même histoire ; graines différentes, histoires différentes ; l\'espérance reste proche du modèle moyen', () => {
+  const run = (graine) => { const e = monde({ graine, transporteurs: TRANSPORTEURS }); avancer(e, 90); return e; };
+  const a = run(7), b = run(7), c = run(8), moy = monde(); avancer(moy, 90);
+  assert.deepEqual(a.journal.map((v) => [v.t, v.convoi, v.to, v.saisi]), b.journal.map((v) => [v.t, v.convoi, v.to, v.saisi]));
+  assert.notDeepEqual(a.journal.map((v) => v.saisi), c.journal.map((v) => v.saisi));
+  assert.ok(a.saisies > 0 && a.valeurSaisie > 0, 'la contrebande se fait prendre au moins une fois');
+  assert.ok(Math.abs(masseMonetaire(a) - a.masseInitiale) < 1e-6 * a.masseInitiale, 'l\'argent reste conservé');
+  const liv = (e) => Object.values(e.transporte).reduce((s, x) => s + x, 0);
+  assert.ok(Math.abs(liv(a) / liv(moy) - 1) < 0.15, `${liv(a)} vs ${liv(moy)}`);
+  assert.equal(moy.saisies, 0); // en valeur moyenne, aucune saisie entière
+});
+test('hasard : une cargaison saisie ne livre rien', () => {
+  const e = mini('contrebande'); e.rng = () => 0; // toujours saisi
+  avancer(e, 6);
+  assert.ok(e.saisies > 0 && (e.transporte.eau ?? 0) === 0);
+});

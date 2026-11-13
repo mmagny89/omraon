@@ -195,6 +195,8 @@
         <label>Événement daté <select id="eco-ev"></select></label>
         <label>… dès le jour <input id="eco-ev-de" type="number" min="0" step="1" value="30" inputmode="numeric"></label>
         <label>… pendant (jours) <input id="eco-ev-du" type="number" min="1" step="1" value="30" inputmode="numeric"></label>
+        <label><input type="checkbox" id="eco-hasard"> Hasard (fouilles, pirates)</label>
+        <label>… graine <input id="eco-graine" type="number" min="0" step="1" value="1" inputmode="numeric"></label>
         <button type="button" id="eco-go" class="wide">Simuler</button>
         <button type="button" id="eco-stop" class="wide" hidden>Interrompre</button>
       </div>
@@ -218,6 +220,7 @@
         <h3>Prix à la fin</h3><div class="eco-wrap"><table id="eco-prix" class="eco-tab"></table></div>
         <h3>Principaux flux</h3><div class="eco-wrap"><table id="eco-flux" class="eco-tab"></table></div>
         <h3>Transporteurs</h3><div class="eco-wrap"><table id="eco-convois" class="eco-tab"></table></div>
+        <h3>Le Mai (Ella Corren)</h3><div class="eco-wrap"><table id="eco-mai" class="eco-tab"></table></div>
         <h3>Taxes</h3><div class="eco-wrap"><table id="eco-taxes" class="eco-tab"></table></div>
       </div>
     </details>

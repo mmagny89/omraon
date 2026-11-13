@@ -11,6 +11,8 @@ import { AU_KM, DAYS_PER_YEAR } from './constants.js';
 import { MARCHANDISES, CONSO_HABITANT, CONSO_LUXE, PROFILS, TRANSPORTEURS, REGLAGES } from '../data/economie.js';
 
 const AU_M = AU_KM * 1000;
+/** Générateur pseudo-aléatoire à graine (mulberry32) : même graine, même histoire. */
+const alea = (graine) => { let a = graine >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; };
 const RESERVE_TYTS = 1; // jamais sous la main-d'œuvre requise : on n'exporte que le surplus
 
 /** Distances en UA entre deux sites, à partir de leurs positions (Map id → [x, y, z], UA). */
@@ -34,7 +36,7 @@ export function besoinJour(site, profil, g) {
  *  'greve'     cible = faction ('consortium', 'libre', 'contrebande') : ses convois restent à quai ;
  *  'peage'     valeur = multiplicateur du péage de l'octroi.
  */
-export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = MARCHANDISES, transporteurs = TRANSPORTEURS, reglages = REGLAGES, evenements = [] }) {
+export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = MARCHANDISES, transporteurs = TRANSPORTEURS, reglages = REGLAGES, evenements = [], graine = null }) {
   const biens = new Map(marchandises.map((m) => [m.id, m]));
   const noeuds = new Map();
   for (const site of sites) {
@@ -53,7 +55,7 @@ export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = M
   // Avitaillement : les vaisseaux prennent leur carburant aux raffineries (le site qui en produit le plus), à leur prix, quel que soit le quai.
   const raffinerie = [...noeuds.values()].sort((a, b) => (b.profil.prod.carburant ?? 0) - (a.profil.prod.carburant ?? 0))[0];
   return {
-    t: 0, evenements, actifs: [], raffinerie, octroi: [...noeuds.values()].find((n) => n.profil.peage), noeuds, convois, biens, reglages, dist, duree, journal: [], flux: new Map(), taxes: {}, transporte: {},
+    t: 0, rng: graine == null ? null : alea(graine), saisies: 0, valeurSaisie: 0, evenements, actifs: [], raffinerie, octroi: [...noeuds.values()].find((n) => n.profil.peage), noeuds, convois, biens, reglages, dist, duree, journal: [], flux: new Map(), taxes: {}, transporte: {},
     masseInitiale: convois.reduce((s, c) => s + c.caisse, 0),
   };
 }
@@ -116,7 +118,7 @@ function meilleur(etat, c, lieu) {
     if (!cand.length) continue;
     cand.sort((x, y) => (pD[y] - pSrc[y]) / etat.biens.get(y).volume - (pD[x] - pSrc[x]) / etat.biens.get(x).volume);
     const d = etat.duree(lieu, idD, def.aG), vol = d + r.escaleJours, tauxPeage = !contrebande && octroi && src.profil.zone !== nd.profil.zone && (src.profil.zone === 'interieur' || nd.profil.zone === 'interieur') ? octroi.profil.peage * multPeage : 0;
-    const taxeD = contrebande ? 0 : nd.profil.taxe ?? 0;
+    const taxeD = contrebande ? 0 : nd.profil.taxe ?? 0, perte = 1 - (1 - (contrebande ? def.risque ?? 0 : 0)) * (1 - pirates); // probabilité (ou part) de cargaison perdue
     for (const f of [1, 0.5, 0.25]) {
       let reste = def.soute * f, utilise = 0, achatT = 0, netT = 0; const cargo = [];
       for (const g of cand) {
@@ -135,7 +137,7 @@ function meilleur(etat, c, lieu) {
       const fuel = valeurEchange(etat, raff, 'carburant', stockRaff, carb, -1), peage = achatT * tauxPeage;
       if (achatT + fuel + peage > c.caisse) continue;
       const profit = netT - achatT - fuel - peage;
-      if (profit > r.profitMin && (!best || profit / vol > best.score)) best = { idD, d, cargo, achat: achatT, fuel, peage, carb, profit, score: profit / vol };
+      if (profit > r.profitMin && (!best || profit / vol > best.score)) best = { idD, d, cargo, perte, achat: achatT, fuel, peage, carb, profit, score: profit / vol };
     }
   }
   return best;
@@ -144,6 +146,12 @@ function meilleur(etat, c, lieu) {
 function partir(etat, c, o) {
   const { def } = c, src = etat.noeuds.get(c.lieu), raff = etat.raffinerie, octroi = etat.octroi;
   const { idD, d, cargo, achat, fuel, peage, carb } = o, dest = etat.noeuds.get(idD);
+  let saisi = false;
+  if (etat.rng && cargo.length && o.perte > 0) { // hasard : toute la cargaison est perdue, ou rien
+    saisi = etat.rng() < o.perte;
+    for (const x of cargo) x.qLivree = saisi ? 0 : x.q;
+    if (saisi) { etat.saisies++; etat.valeurSaisie += achat; }
+  }
   for (const x of cargo) { src.stock[x.g] -= x.q; dest.enRoute[x.g] = (dest.enRoute[x.g] ?? 0) + x.qLivree; }
   src.solde += achat;
   raff.stock.carburant -= carb; raff.solde += fuel;
@@ -151,7 +159,7 @@ function partir(etat, c, o) {
   c.caisse -= achat + fuel + peage;
   c.voyage = { from: c.lieu, to: idD, cargo, contrebande: def.faction === 'contrebande', tDep: etat.t, tArr: etat.t + d, depense: achat + fuel + peage };
   const grand = cargo.reduce((m, x) => (!m || x.q * etat.biens.get(x.g).volume > m.q * etat.biens.get(m.g).volume ? x : m), null);
-  if (etat.journal.length < 20000) etat.journal.push({ t: etat.t, tArr: etat.t + d, convoi: def.id, from: c.lieu, to: idD, g: grand?.g ?? null, q: grand?.q, cargo: cargo.map((x) => ({ g: x.g, q: x.q })), jours: d, contrebande: def.faction === 'contrebande' });
+  if (etat.journal.length < 20000) etat.journal.push({ t: etat.t, tArr: etat.t + d, convoi: def.id, from: c.lieu, to: idD, g: grand?.g ?? null, q: grand?.q, cargo: cargo.map((x) => ({ g: x.g, q: x.q })), jours: d, contrebande: def.faction === 'contrebande', saisi });
 }
 
 function choisir(etat, c) {

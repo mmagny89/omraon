@@ -30,6 +30,8 @@
 | Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 0,7 (voir `modifications-lore.md`), contrôle requis 1,04, coefficients d'éveil, hybrides humain/Tyt | `physics/population.js` |
 | Habitabilité | seuils vert/orange/rouge, gravité 0,6–1,5 g, dose visée 0,2 mSv/j, etc. | `physics/habitability.js`, `physics/habitat.js` |
 | Économie | marchandises, prix par rareté (`(cible/stock)^0,7`, ×0,2 à ×5), transporteurs qui maximisent le profit par jour (cargaisons mixtes), grand livre fermé, misère du système couplée à la population (#23), carburant pris aux raffineries de Roushan, distances figées à la date des positions (voir `modifications-lore.md` #18–22) | `data/economie.js`, `physics/economie.js` |
+| Ressources | stocks et extractions estimés par corps ; aucun ne s'épuise (voir `ressources.md`) | `docs/ressources.md` |
+| Hasard économique | mode à graine : un convoi saisi ou pillé perd toute sa cargaison, sinon rien (même probabilité que la part perdue en moyenne) | `graine` dans `physics/economie.js` |
 | Port de Kebet | tenu en place au-dessus de la capitale (aucune orbite ne le permet : voir `modifications-lore.md` #25) | `data/sites.js`, `physics/sites.js` |
 | Troyens de Zirkan | 400 astéroïdes, activés par défaut (non canon) | `physics/simulation.js` |
 

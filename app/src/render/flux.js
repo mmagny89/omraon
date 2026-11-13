@@ -14,11 +14,15 @@ export class FluxLayer {
     pg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_V * 3), 3));
     pg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(MAX_V * 3), 3));
     this.pts = new THREE.Points(pg, new THREE.PointsMaterial({ size: 7, sizeAttenuation: false, vertexColors: true, transparent: true, depthWrite: false, depthTest: true }));
+    // le Mai (Ella Corren) : un point blanc plus gros, toujours lisible parmi les autres convois
+    const mg = new THREE.BufferGeometry();
+    mg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(64 * 3), 3));
+    this.mai = new THREE.Points(mg, new THREE.PointsMaterial({ size: 13, sizeAttenuation: false, color: 0xffffff, transparent: true, depthWrite: false, depthTest: true }));
     const rg = new THREE.BufferGeometry();
     rg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(MAX_R * 6 * 3), 3));
     rg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(MAX_R * 6 * 3), 3));
     this.rub = new THREE.Mesh(rg, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.55, depthWrite: false, depthTest: true, side: THREE.DoubleSide }));
-    for (const o of [this.rub, this.pts]) { o.frustumCulled = false; o.renderOrder = 6; o.visible = false; world.scene.add(o); }
+    for (const o of [this.rub, this.pts, this.mai]) { o.frustumCulled = false; o.renderOrder = 6; o.visible = false; world.scene.add(o); }
     this.tmp = { a: new THREE.Vector3(), b: new THREE.Vector3(), v: new THREE.Vector3(), n: new THREE.Vector3(), c: new THREE.Color() };
   }
 
@@ -35,7 +39,7 @@ export class FluxLayer {
 
   applyMode() {
     const on = !!this.data;
-    this.pts.visible = on && (this.mode === 'tout' || this.mode === 'convois');
+    this.pts.visible = this.mai.visible = on && (this.mode === 'tout' || this.mode === 'convois');
     this.rub.visible = on && (this.mode === 'tout' || this.mode === 'routes');
   }
 
@@ -46,14 +50,16 @@ export class FluxLayer {
     const { siteEls, camera: cam } = this.w, U = this.unit, sites = (id) => siteEls.get(id)?.st?.pos;
     if (this.pts.visible) {
       const pos = this.pts.geometry.attributes.position.array, col = this.pts.geometry.attributes.color.array, tau = tr - this.data.t0, vs = this.data.voyages;
-      let n = 0;
+      const mp = this.mai.geometry.attributes.position.array; let n = 0, nm = 0;
       for (let i = 0; i < vs.length && n < MAX_V; i++) {
         const v = vs[i]; if (tau < v.tDep || tau >= v.tArr) continue;
         const A = sites(v.from), B = sites(v.to); if (!A || !B) continue;
         const p = (tau - v.tDep) / (v.tArr - v.tDep), s = p < 0.5 ? 2 * p * p : 1 - 2 * (1 - p) * (1 - p);
+        if (v.mai && nm < 64) { for (let k = 0; k < 3; k++) mp[3 * nm + k] = (A[k] + (B[k] - A[k]) * s - fa[k]) * U; nm++; continue; }
         for (let k = 0; k < 3; k++) { pos[3 * n + k] = (A[k] + (B[k] - A[k]) * s - fa[k]) * U; col[3 * n + k] = this.vc[i][k]; }
         n++;
       }
+      this.mai.geometry.setDrawRange(0, nm); this.mai.geometry.attributes.position.needsUpdate = true;
       this.pts.geometry.setDrawRange(0, n); this.pts.geometry.attributes.position.needsUpdate = true; this.pts.geometry.attributes.color.needsUpdate = true;
     }
     if (this.rub.visible) {
