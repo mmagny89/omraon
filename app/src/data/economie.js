@@ -37,30 +37,33 @@ export const CONSO_LUXE = { 'kebet-quartiers': 0.001, 'kebet-consortium': 0.002,
  *  tytsRequis : main-d'œuvre servile nécessaire ; sous ce seuil la production baisse au prorata.
  *  tytsAn     : variation naturelle des Tyts par an (fraction, conception) : naissances autorisées moins usure du travail.
  *               Le détail démographique relève de `physics/population.js` ; ici, une approximation à relier plus tard.
+ *  puits      : vitesse de libération du lieu (km/s) : plus elle est haute, plus il coûte de carburant de décoller avec de la cargaison (0 = astéroïde, quai en orbite).
  *  zone       : 'interieur' (mines, derrière l'octroi de Naksun) ou 'exterieur'.
  *  taxe       : part de la valeur des marchandises importées prélevée à l'arrivée (douane).
  *  peage      : part de la valeur prélevée au site (octroi) sur tout voyage qui franchit la limite de la zone intérieure.
  */
 export const PROFILS = {
-  'kalpra-mines': { prod: { minerai: 20, metaux: 6 }, tytsRequis: 2000, tytsAn: -0.06, zone: 'interieur' },
-  'sethis-cite-a': { prod: { minerai: 120, metaux: 20 }, tytsRequis: 85000, tytsAn: 0.012, zone: 'interieur' },
-  'sethis-cite-b': { prod: { minerai: 80, metaux: 12 }, tytsRequis: 55000, tytsAn: 0.012, zone: 'interieur' },
+  'kalpra-mines': { puits: 7.9, prod: { minerai: 20, metaux: 6 }, tytsRequis: 2000, tytsAn: -0.06, zone: 'interieur' },
+  'sethis-cite-a': { puits: 11.0, prod: { minerai: 120, metaux: 20 }, tytsRequis: 85000, tytsAn: 0.012, zone: 'interieur' },
+  'sethis-cite-b': { puits: 11.0, prod: { minerai: 80, metaux: 12 }, tytsRequis: 55000, tytsAn: 0.012, zone: 'interieur' },
   'naksun-octroi': { prod: {}, tytsRequis: 0, zone: 'interieur', peage: 0.06 },
-  'mahat-tribunaux': { prod: {}, tytsRequis: 0, zone: 'interieur' },
-  'sedbou-garnison': { prod: {}, tytsRequis: 0, zone: 'interieur' },
-  'iasha-relais': { prod: { equipements: 22 }, tytsRequis: 0, zone: 'exterieur' },
-  'astir-balise': { prod: {}, tytsRequis: 0, zone: 'exterieur' },
+  'mahat-tribunaux': { puits: 0.1, prod: {}, tytsRequis: 0, zone: 'interieur' },
+  'sedbou-garnison': { puits: 0.05, prod: {}, tytsRequis: 0, zone: 'interieur' },
+  'iasha-relais': { puits: 0.1, prod: { equipements: 22 }, tytsRequis: 0, zone: 'exterieur' },
+  'astir-balise': { puits: 0.05, prod: {}, tytsRequis: 0, zone: 'exterieur' },
   // Le port est tenu en place par une poussée continue (≈ 0,8 g, docs/modifications-lore.md n° 25) : il brûle en permanence ; 60 t/jour est un ordre de grandeur de conception.
   'kebet-orbite': { prod: {}, conso: { carburant: 60 }, tytsRequis: 400, tytsAn: 0, zone: 'exterieur', taxe: 0.1 },
-  'kebet-temples': { prod: { vivres: 40, eau: 6 }, tytsRequis: 1400, tytsAn: 0.005, zone: 'exterieur' },
-  'kebet-consortium': { prod: { eau: 5 }, tytsRequis: 700, tytsAn: 0.005, zone: 'exterieur' },
-  'kebet-quartiers': { prod: { vivres: 280, luxe: 30, eau: 25 }, tytsRequis: 4000, tytsAn: 0.01, zone: 'exterieur' },
-  'roushan-cites': { prod: { carburant: 330, equipements: 22, vivres: 20 }, conso: { minerai: 180 }, tytsRequis: 0, zone: 'exterieur' },
-  'nunka-glace': { prod: { eau: 200 }, tytsRequis: 2500, tytsAn: -0.02, zone: 'exterieur' },
-  'roukir-poste': { prod: { minerai: 5 }, tytsRequis: 0, zone: 'exterieur' },
-  'shukal-colonie': { prod: {}, tytsRequis: 600, tytsAn: 0, zone: 'exterieur' },
+  'kebet-temples': { puits: 10.5, prod: { vivres: 40, eau: 6 }, tytsRequis: 1400, tytsAn: 0.005, zone: 'exterieur' },
+  'kebet-consortium': { puits: 10.5, prod: { eau: 5 }, tytsRequis: 700, tytsAn: 0.005, zone: 'exterieur' },
+  'kebet-quartiers': { puits: 10.5, prod: { vivres: 280, luxe: 30, eau: 25 }, tytsRequis: 4000, tytsAn: 0.01, zone: 'exterieur' },
+  'roushan-cites': { puits: 12, prod: { carburant: 380, equipements: 22, vivres: 20 }, conso: { minerai: 200 }, tytsRequis: 0, zone: 'exterieur' },
+  'nunka-glace': { puits: 0.4, prod: { eau: 160 }, tytsRequis: 2500, tytsAn: -0.02, zone: 'exterieur' },
+  'roukir-poste': { puits: 0.05, prod: { minerai: 5 }, tytsRequis: 0, zone: 'exterieur' },
+  'shukal-colonie': { puits: 4.4, prod: {}, tytsRequis: 600, tytsAn: 0, zone: 'exterieur' },
   'shukal-arret': { prod: {}, tytsRequis: 0, zone: 'exterieur' },
-  'nunzir-repaire': { prod: {}, tytsRequis: 0, zone: 'ceinture' },
+  'nunzir-repaire': { puits: 0, prod: {}, tytsRequis: 0, zone: 'ceinture' },
+  'ceinture-fonderies': { puits: 0, prod: { minerai: 45, metaux: 14 }, tytsRequis: 150, tytsAn: 0.01, zone: 'ceinture' },
+  'ceinture-glace': { puits: 0, prod: { eau: 45 }, tytsRequis: 0, zone: 'ceinture' },
 };
 
 /**
@@ -89,6 +92,10 @@ export const TRANSPORTEURS = [
   { id: 'cabotage-4', nom: 'Cabotier de Shukal', faction: 'libre', soute: 120, aG: 8, base: 'shukal-colonie', caisse: 40000 },
   { id: 'cabotage-5', nom: 'Cabotier de Mahat', faction: 'libre', soute: 150, aG: 8, base: 'mahat-tribunaux', caisse: 40000 },
   { id: 'cabotage-6', nom: 'Cabotier d\u2019Astir', faction: 'libre', soute: 150, aG: 8, base: 'astir-balise', caisse: 40000 },
+  // La ceinture, hors du contrôle du Consortium
+  { id: 'ceinture-1', nom: 'Mineurs libres de la ceinture', faction: 'libre', soute: 2500, aG: 6, base: 'ceinture-fonderies', caisse: 500000 },
+  { id: 'ceinture-2', nom: 'Chalands de la ceinture', faction: 'libre', soute: 2500, aG: 4, base: 'ceinture-glace', caisse: 500000 },
+  { id: 'onkel-2', nom: 'Passeurs d\u2019Onkel', faction: 'contrebande', soute: 600, aG: 8, base: 'nunzir-repaire', caisse: 80000, risque: 0.12 },
   // Personnages
   { id: 'mai', nom: 'Le Mai (Ella Corren)', faction: 'libre', soute: 60, aG: 8, base: 'roushan-cites', caisse: 20000 },
   { id: 'onkel-1', nom: 'Réseau d\u2019Onkel', faction: 'contrebande', soute: 80, aG: 8, base: 'nunzir-repaire', caisse: 30000, risque: 0.12 },
@@ -101,6 +108,7 @@ export const REGLAGES = {
   prixMin: 0.2, prixMax: 5, // bornes en multiple du prix de base
   reserve: 0.25, // part de la cible qu'un site refuse de vendre au transporteur
   carburantParJour: 0.012, // carburant par jour de vol, par unité de soute, à pleine charge (proportionnel au chargement)
+  lancement: 0.04, // carburant par unité de cargaison qui quitte un lieu à 10 km/s de vitesse de libération ; ∝ (vitesse/10)²
   carburantVide: 0.004, // idem à vide
   escaleJours: 0.5, // chargement et déchargement
   profitMin: 50, // crédits : en dessous, le transporteur ne part pas

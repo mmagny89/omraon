@@ -170,3 +170,24 @@ test('hasard : une cargaison saisie ne livre rien', () => {
   avancer(e, 6);
   assert.ok(e.saisies > 0 && (e.transporte.eau ?? 0) === 0);
 });
+
+import { REGLAGES } from '../app/src/data/economie.js';
+const sansCeinture = { ...PROFILS, 'ceinture-fonderies': { ...PROFILS['ceinture-fonderies'], prod: {} }, 'ceinture-glace': { ...PROFILS['ceinture-glace'], prod: {} } };
+test('ceinture : ses mines libres baissent les prix, réduisent la misère et alimentent Sethis en eau', () => {
+  const avec = monde(), sans = monde({ profils: sansCeinture }); avancer(avec, 120); avancer(sans, 120);
+  assert.ok(misereSysteme(avec).total < misereSysteme(sans).total, `${misereSysteme(avec).total} vs ${misereSysteme(sans).total}`);
+  assert.ok(prix(avec, 'kebet-quartiers', 'metaux') < prix(sans, 'kebet-quartiers', 'metaux'));
+  assert.ok([...avec.flux.keys()].some((k) => k.startsWith('ceinture-glace|sethis') && k.endsWith('|eau')), 'eau de la ceinture vers les mines de Sethis');
+  assert.ok([...avec.flux.keys()].some((k) => k.startsWith('ceinture-fonderies|') && k.endsWith('|minerai')), 'minerai de la ceinture');
+});
+test('ceinture : quitter un puits de gravité coûte du carburant, pas un astéroïde', () => {
+  assert.ok(PROFILS['sethis-cite-a'].puits > PROFILS['kalpra-mines'].puits && PROFILS['ceinture-fonderies'].puits === 0);
+  const a = monde(), b = monde({ reglages: { ...REGLAGES, lancement: 0 } }); avancer(a, 60); avancer(b, 60);
+  assert.ok(a.raffinerie.stock.carburant < b.raffinerie.stock.carburant, `${a.raffinerie.stock.carburant} vs ${b.raffinerie.stock.carburant}`); // plus de carburant brûlé au décollage
+});
+test('ceinture : l\'expédition du Consortium coupe la ceinture le temps de la fenêtre', () => {
+  const fen = { de: 20, duree: 30 }, cibles = ['ceinture-fonderies', 'ceinture-glace', 'nunzir-repaire'];
+  const e = monde({ evenements: cibles.map((cible) => ({ type: 'blocus', cible, ...fen })) }); avancer(e, 70);
+  const dans = e.journal.filter((v) => v.t >= fen.de + 1 && v.t < fen.de + fen.duree - 7);
+  assert.ok(dans.every((v) => !cibles.includes(v.from) && !cibles.includes(v.to)));
+});

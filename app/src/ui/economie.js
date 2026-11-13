@@ -32,6 +32,7 @@ export const EVENEMENTS = {
   aucun: { label: 'Aucun', ev: () => null },
   blocusNunka: { label: 'Blocus de Nunka', ev: () => ({ type: 'blocus', cible: 'nunka-glace' }) },
   blocusKebet: { label: 'Blocus du port de Kebet', ev: () => ({ type: 'blocus', cible: 'kebet-orbite' }) },
+  ceinture: { label: 'Expédition du Consortium dans la ceinture (mines libres et repaire bloqués)', ev: () => ['ceinture-fonderies', 'ceinture-glace', 'nunzir-repaire'].map((cible) => ({ type: 'blocus', cible })) },
   pirates: { label: 'Pirates autour de Roushan (la moitié des cargaisons perdue)', ev: () => ({ type: 'piraterie', cible: 'roushan-cites', valeur: 0.5 }) },
   greve: { label: 'Grève des flottes du Consortium', ev: () => ({ type: 'greve', cible: 'consortium' }) },
   peage: { label: 'Péage de l\u2019octroi triplé', ev: () => ({ type: 'peage', valeur: 3 }) },
@@ -163,15 +164,15 @@ export function initEconomie({ root = document, getPos, getTime, getPopParams, a
 
   el('eco-go').addEventListener('click', async () => {
     const mon = ++jeton, t0 = getTime(), choc = el('eco-choc').value, evKey = el('eco-ev').value, jours = Math.max(1, Math.round(+el('eco-h').value)), dist = distanceDepuis(getPos()), graine = el('eco-hasard').checked ? Math.max(0, Math.round(+el('eco-graine').value || 0)) : null, cle = `${jours}|${t0}|${graine}`;
-    const de = Math.max(0, +el('eco-ev-de').value || 0) * jourKebet(), duree = Math.max(1, +el('eco-ev-du').value || 1) * jourKebet(), evBase = EVENEMENTS[evKey].ev();
-    const scen = { choc, graine, evenements: evBase ? [{ ...evBase, de, duree }] : [] }, neutre = choc === 'aucun' && !evBase;
-    const libelle = [choc !== 'aucun' && CHOCS[choc].label, evBase && `${EVENEMENTS[evKey].label} (${nf(duree / jourKebet())} j dès le jour ${nf(de / jourKebet())})`].filter(Boolean).join(' + ') || 'Aucun (situation de référence)';
+    const de = Math.max(0, +el('eco-ev-de').value || 0) * jourKebet(), duree = Math.max(1, +el('eco-ev-du').value || 1) * jourKebet(), evBase = [].concat(EVENEMENTS[evKey].ev() ?? []);
+    const scen = { choc, graine, evenements: evBase.map((e) => ({ ...e, de, duree })) }, neutre = choc === 'aucun' && !evBase.length;
+    const libelle = [choc !== 'aucun' && CHOCS[choc].label, evBase.length > 0 && `${EVENEMENTS[evKey].label} (${nf(duree / jourKebet())} j dès le jour ${nf(de / jourKebet())})`].filter(Boolean).join(' + ') || 'Aucun (situation de référence)';
     el('eco-stop').hidden = false; el('eco-go').disabled = true; el('eco-res').hidden = true; el('eco-prog').textContent = 'Simulation en cours…';
     let ref = cacheRef?.cle === cle ? cacheRef.run : null;
     if (!ref) { ref = await lancer({ choc: 'aucun', graine, evenements: [] }, jours, dist, mon, 'Référence'); if (mon !== jeton) return; cacheRef = { cle, run: ref }; }
     const run = neutre ? ref : await lancer(scen, jours, dist, mon, libelle);
     if (mon !== jeton) return;
-    dernier = { ...run, jours, choc, t0, graine, libelle, evenement: evBase ? { de, duree } : null, ref: neutre ? null : ref };
+    dernier = { ...run, jours, choc, t0, graine, libelle, evenement: evBase.length ? { de, duree } : null, ref: neutre ? null : ref };
     el('eco-prog').textContent = ''; el('eco-go').disabled = false; el('eco-stop').hidden = true; afficher(); comparer();
   });
   el('eco-appliquer').addEventListener('click', () => { const c = dernier?.couplage; if (c) { appliquerMisere(c.y0, c.niveau, c.duree); el('eco-prog').textContent = 'Crise appliquée : voir le panneau Population.'; } });

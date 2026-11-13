@@ -48,6 +48,12 @@ export const SITES = [
     role: "Là où le container endommagé force l'arrêt : abri de fortune, loin des yeux de la colonie. C'est là qu'Ella découvre Mira." },
   { id: 'nunzir-repaire', name: 'Repaire de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.32, e: 0.08, i: 3, Om: 80, w: 120, M: 40 }, habitat: 'underground', population: 1500, tyts: 200, invented: true,
     role: 'Repaire de pirates et de contrebandiers (Onkel, Ella) dans un astéroïde.' },
+  // Mines libres de la ceinture (conception) : l'extraction y est la moins chère du système (un astéroïde se quitte avec quelques dizaines de m/s),
+  // mais hors du contrôle du Consortium. Voir docs/ressources.md.
+  { id: 'ceinture-fonderies', name: 'Fonderies libres de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.17, e: 0.05, i: 2, Om: 210, w: 60, M: 150 }, habitat: 'underground', population: 4000, tyts: 150, invented: true,
+    role: 'Mineurs indépendants sur des astéroïdes métalliques : minerai et métaux vendus hors de la tutelle du Consortium, aux armateurs libres et aux contrebandiers.' },
+  { id: 'ceinture-glace', name: 'Chalands de glace de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.43, e: 0.07, i: 4, Om: 330, w: 200, M: 280 }, habitat: 'underground', population: 3000, tyts: 0, invented: true,
+    role: "Extraction d'eau sur des astéroïdes carbonés : une eau que ni Nunka ni le Consortium ne contrôlent." },
 ];
 
 // Le port de Kebet est tenu en place au-dessus de la capitale (le siège du Consortium) : `fixe` remplace son orbite par un point fixe dans le repère du corps,

@@ -131,7 +131,7 @@ function meilleur(etat, c, lieu) {
         cargo.push({ g, q, qLivree, achat }); reste -= q * bien.volume; utilise += q * bien.volume; achatT += achat; netT += net;
       }
       if (!cargo.length) continue;
-      const carb = d * def.soute * (r.carburantVide + r.carburantParJour * utilise / def.soute);
+      const carb = d * def.soute * (r.carburantVide + r.carburantParJour * utilise / def.soute) + r.lancement * (src.profil.puits ?? 0) ** 2 / 100 * utilise;
       const retenu = raff === src ? cargo.find((x) => x.g === 'carburant')?.q ?? 0 : 0, stockRaff = raff.stock.carburant - retenu;
       if (stockRaff < carb || carb > raff.stock.carburant * 0.2) continue;
       const fuel = valeurEchange(etat, raff, 'carburant', stockRaff, carb, -1), peage = achatT * tauxPeage;

@@ -41,5 +41,5 @@ Méthode : le stock exploitable d'un monde rocheux est ≈ 10⁻⁸ de sa croût
 ## Questions ouvertes
 
 - **Niveau industriel** : garder 2 kg par habitant et par jour, ou monter la consommation de métaux et d'équipements (× 5 à × 10) pour une société plus technique ?
-- **La ceinture** : lui donner une production réelle (métaux et eau) avec des mineurs de contrebande, des convois pirates et un prix que le Consortium ne contrôle pas ?
+- **La ceinture** : **décidé et fait (2026-11-13)** : deux mines libres (minerai, métaux, eau), des passeurs, un événement « expédition du Consortium » ; voir `modifications-lore.md` n° 27 et 28.
 - **Capacité d'extraction** : la modéliser par site (machines, énergie, main-d'œuvre tyt) plutôt que par une production fixe, pour que le dégel du contrôle ou une grève réduise vraiment l'extraction ?
