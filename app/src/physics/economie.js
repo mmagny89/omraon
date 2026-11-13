@@ -127,7 +127,7 @@ function partir(etat, c, o) {
   if (peage) { octroi.solde += peage; etat.taxes[octroi.site.id] = (etat.taxes[octroi.site.id] ?? 0) + peage; }
   c.caisse -= achat + fuel + peage;
   c.voyage = { from: c.lieu, to: idD, g, q, qLivree, contrebande: def.faction === 'contrebande', tDep: etat.t, tArr: etat.t + d, depense: achat + fuel + peage };
-  if (etat.journal.length < 2000) etat.journal.push({ t: etat.t, convoi: def.id, from: c.lieu, to: idD, g, q, jours: d });
+  if (etat.journal.length < 20000) etat.journal.push({ t: etat.t, tArr: etat.t + d, convoi: def.id, from: c.lieu, to: idD, g, q, jours: d, contrebande: def.faction === 'contrebande' });
 }
 
 function choisir(etat, c) {

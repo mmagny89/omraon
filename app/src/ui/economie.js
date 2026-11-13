@@ -2,6 +2,7 @@
 // paquets (l'interface reste fluide), puis montre prix, flux, transporteurs, taxes et pénuries. Tout est de la conception.
 import { SITES } from '../data/sites.js';
 import { MARCHANDISES, MONNAIE, PROFILS, TRANSPORTEURS } from '../data/economie.js';
+import { COULEURS_BIENS, COULEUR_CONTREBANDE } from '../render/flux.js';
 import { fmtDuree } from '../physics/calendrier.js';
 import { creerEconomie, avancer, releverPrix, distanceDepuis, indicateurs } from '../physics/economie.js';
 
@@ -28,11 +29,27 @@ const mix = (a, b, t) => { const h = (x) => [1, 3, 5].map((i) => parseInt(x.slic
 export const couleurPrix = (m) => (m == null ? null : m < 1 ? mix('#6fb4ff', '#e8eefc', Math.min(1, Math.max(0, (Math.log(m) - Math.log(0.2)) / -Math.log(0.2)))) : mix('#e8eefc', '#ff6b7a', Math.min(1, Math.log(m) / Math.log(5))));
 const classe = (m) => (m == null ? '' : m < 0.8 ? 'ok' : m > 3 ? 'bad' : m > 1.5 ? 'warn' : '');
 
-export function initEconomie({ root = document, getPos, setMarkers }) {
+export function initEconomie({ root = document, getPos, getTime, setMarkers, setFlux, rejouer }) {
   const el = (id) => $(`#${id}`, root);
   el('eco-choc').innerHTML = Object.entries(CHOCS).map(([k, c]) => `<option value="${k}">${c.label}</option>`).join('');
   el('eco-bien').innerHTML = MARCHANDISES.map((m) => `<option value="${m.id}">${m.nom}</option>`).join('');
   let jeton = 0, dernier = null;
+
+  const legende = () => {
+    el('eco-carte-leg').innerHTML = MARCHANDISES.map((m) => `<li><i style="background:${COULEURS_BIENS[m.id]}"></i>${m.nom.split(' (')[0]}</li>`).join('') + `<li><i style="background:${COULEUR_CONTREBANDE}"></i>contrebande</li>`;
+  };
+  /** Voyages datés (convois) et routes agrégées (volume transporté, tous biens) pour la scène 3D. */
+  const donneesCarte = ({ etat }, t0) => {
+    const voyages = etat.journal.filter((v) => v.g).map((v) => ({ from: v.from, to: v.to, tDep: v.t, tArr: v.tArr, couleur: v.contrebande ? COULEUR_CONTREBANDE : COULEURS_BIENS[v.g] }));
+    const routes = new Map();
+    for (const [k, q] of etat.flux) {
+      const [a, b, g] = k.split('|'), id = `${a}|${b}`, r = routes.get(id) ?? { from: a, to: b, vol: 0, parBien: {} }, vol = q * bien.get(g).volume;
+      r.vol += vol; r.parBien[g] = (r.parBien[g] ?? 0) + vol; routes.set(id, r);
+    }
+    const liste = [...routes.values()].filter((r) => r.from !== r.to).sort((x, y) => y.vol - x.vol).slice(0, 60).map((r) => ({ from: r.from, to: r.to, vol: r.vol, couleur: COULEURS_BIENS[Object.entries(r.parBien).sort((x, y) => y[1] - x[1])[0][0]] }));
+    return { t0, voyages, routes: liste };
+  };
+  const carte = () => setFlux(dernier ? donneesCarte(dernier, dernier.t0) : null, el('eco-vue').value);
 
   const marquer = () => {
     if (!dernier || !el('eco-marq').checked) return setMarkers(null);
@@ -68,11 +85,11 @@ export function initEconomie({ root = document, getPos, setMarkers }) {
     el('eco-convois').innerHTML = `<tr><th>Transporteur</th><th>Voyages</th><th>Gain</th></tr>` + etat.convois.map((c) => `<tr><td>${c.def.nom}</td><td>${nf(c.voyages)}</td><td class="${c.gain < 0 ? 'bad' : ''}">${cr(c.gain)}</td></tr>`).join('');
     const tx = Object.entries(ind.taxes).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
     el('eco-taxes').innerHTML = tx.length ? `<tr><th>Prélevé par</th><th>Total</th></tr>` + tx.map(([id, v]) => `<tr><td>${nom.get(id)} <small>(${PROFILS[id]?.peage ? 'péage' : 'douane'})</small></td><td>${cr(v)}</td></tr>`).join('') : '<tr><td>Aucune taxe prélevée.</td></tr>';
-    el('eco-res').hidden = false; dessiner(); marquer();
+    el('eco-res').hidden = false; dessiner(); marquer(); carte();
   }
 
   el('eco-go').addEventListener('click', () => {
-    const mon = ++jeton, choc = el('eco-choc').value, jours = Math.max(1, Math.round(+el('eco-h').value));
+    const mon = ++jeton, t0 = getTime(), choc = el('eco-choc').value, jours = Math.max(1, Math.round(+el('eco-h').value));
     const etat = creerEconomie({ sites: SITES, dist: distanceDepuis(getPos()), ...CHOCS[choc].params() }), hist = [releverPrix(etat)];
     el('eco-stop').hidden = false; el('eco-go').disabled = true; el('eco-res').hidden = true;
     const pas = () => {
@@ -80,13 +97,16 @@ export function initEconomie({ root = document, getPos, setMarkers }) {
       avancer(etat, Math.min(PAS, jours - etat.t)); hist.push(releverPrix(etat));
       el('eco-prog').textContent = `${fmtDuree(etat.t)} sur ${fmtDuree(jours)}…`;
       if (etat.t < jours) return void setTimeout(pas, 0);
-      dernier = { etat, hist, jours, choc }; el('eco-prog').textContent = ''; el('eco-go').disabled = false; el('eco-stop').hidden = true; afficher();
+      dernier = { etat, hist, jours, choc, t0 }; el('eco-prog').textContent = ''; el('eco-go').disabled = false; el('eco-stop').hidden = true; afficher();
     };
     el('eco-prog').textContent = 'Simulation en cours…'; setTimeout(pas, 0);
   });
   el('eco-stop').addEventListener('click', () => { jeton++; el('eco-prog').textContent = 'Simulation interrompue.'; el('eco-go').disabled = false; el('eco-stop').hidden = true; });
   el('eco-bien').addEventListener('change', () => { dessiner(); marquer(); });
   el('eco-marq').addEventListener('change', marquer);
+  el('eco-vue').addEventListener('change', carte);
+  el('eco-rejouer').addEventListener('click', () => dernier && rejouer(dernier.t0, dernier.jours));
+  legende();
   new ResizeObserver(() => { const w = el('eco-chart').clientWidth; if (w && dernier && w !== dernier.w) { dernier.w = w; dessiner(); } }).observe(el('eco-chart'));
   return { redessiner: dessiner };
 }

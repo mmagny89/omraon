@@ -69,7 +69,7 @@ export class UI {
     this.bindVoyage();
     this.bindGround();
     this.buildNet();
-    initEconomie({ root: $('#options'), getPos: () => this.sitePositions(), setMarkers: (m) => this.world.siteEls?.forEach((r, id) => (m?.has(id) ? r.el.style.setProperty('--c', m.get(id)) : r.el.style.removeProperty('--c'))) });
+    initEconomie({ root: $('#options'), getPos: () => this.sitePositions(), getTime: () => this.target, setFlux: (d, m) => this.world.setFlux(d, m), rejouer: (t0, j) => this.rejouerEco(t0, j), setMarkers: (m) => this.world.siteEls?.forEach((r, id) => (m?.has(id) ? r.el.style.setProperty('--c', m.get(id)) : r.el.style.removeProperty('--c'))) });
     this.buildPop();
     this.bind();
     world.onSelect = (i) => this.select(i, true);
@@ -297,6 +297,15 @@ export class UI {
   }
 
   stopNet() { this.net = null; $('#net-stop').hidden = true; this.world.siteEls?.forEach((r) => r.el.style.removeProperty('--c')); }
+
+  /** Ramène l'horloge au départ de la simulation économique et la lance à une vitesse qui fait défiler l'horizon en ≈ 60 s. */
+  rejouerEco(t0, jours) {
+    const go = () => {
+      const need = jours / 60; let best = 0, gap = Infinity; SPEEDS.forEach(([d], i) => { const g = Math.abs(Math.log(d / need)); if (g < gap) { gap = g; best = i; } });
+      this.speedIdx = best; $('#speed').value = best; $('#speed-out').textContent = SPEEDS[best][1]; this.playing = true; $('#play').textContent = '❚❚';
+    };
+    if (Math.abs(this.target - t0) > 1e-6) { this.goToTime(t0, true); setTimeout(go, 150); } else go();
+  }
 
   /** Position (UA) de chaque site à la date affichée. */
   sitePositions() {

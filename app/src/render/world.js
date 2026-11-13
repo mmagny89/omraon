@@ -9,6 +9,7 @@ import { SYSTEM_EDGE_AU } from '../data/omraon.js';
 import { siteState } from '../physics/sites.js';
 import { voyageAt } from '../physics/flight.js';
 import { GroundView } from './ground.js';
+import { FluxLayer } from './flux.js';
 import { overlapFraction } from '../physics/sky.js';
 import { lightMods, makeRingMesh } from './eclairage.js';
 
@@ -274,6 +275,12 @@ export class World {
     this.computeShip(this.sim.t);
   }
 
+  /** Flux commerciaux (convois animés et routes) : data = { t0, voyages, routes } de ui/economie.js, ou null pour effacer. */
+  setFlux(data, mode = 'tout') {
+    if (!this.flux) { if (!data) return; this.flux = new FluxLayer(this, UNIT); }
+    this.flux.set(data, mode);
+  }
+
   computeShip(tr) { const sh = this.ship; sh.state = voyageAt(sh.v, tr, sh.destNow ? sh.destNow() : null); sh.pos = sh.state.pos; }
 
   updateShip(fa) {
@@ -441,6 +448,7 @@ export class World {
     }
     this.updateSites(tr, fa);
     this.updateShip(fa);
+    this.flux?.update(tr, fa);
     this.stars.position.copy(cam.position);
     if (this.ground?.active) { this.groundInfo = this.ground.update(); this.ground.render(); }
     else this.renderer.render(this.scene, cam);
