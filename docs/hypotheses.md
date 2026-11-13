@@ -29,6 +29,7 @@
 | Réseau | taux de diffusion locale, répression, graines, filtre du Consortium (~65 %) | `physics/network.js` |
 | Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 0,7 (voir `modifications-lore.md`), contrôle requis 1,04, coefficients d'éveil, hybrides humain/Tyt | `physics/population.js` |
 | Habitabilité | seuils vert/orange/rouge, gravité 0,6–1,5 g, dose visée 0,2 mSv/j, etc. | `physics/habitability.js`, `physics/habitat.js` |
+| Économie | marchandises, prix par rareté (`(cible/stock)^0,7`, ×0,2 à ×5), transporteurs qui maximisent le profit par jour, grand livre fermé, carburant pris aux raffineries de Roushan, distances figées à la date des positions (voir `modifications-lore.md` #18–22) | `data/economie.js`, `physics/economie.js` |
 | Troyens de Zirkan | 400 astéroïdes, activés par défaut (non canon) | `physics/simulation.js` |
 
 ## Questions ouvertes du document, tranchées provisoirement

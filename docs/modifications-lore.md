@@ -45,6 +45,16 @@ Ce document liste tout ce que la simulation **invente, précise ou modifie** par
 | 16 | 2026-11-11 | Sites habités | Populations par ordre de grandeur (doc Échelles) | 18 sites et leurs populations (`invented: true`) | Conception | `data/sites.js` | |
 | 17 | 2026-11-11 | Shukal | Planète des confins, nom non fixé | **Nom provisoire** ; 0,06 M⊕, orbite de 9,5 M km autour de Roushan | Provisoire | `data/omraon.js` | |
 
+## Économie et commerce
+
+| # | Date | Sujet | Canon | Ce que fait la simulation | Statut | Où | Décision |
+|---|---|---|---|---|---|---|---|
+| 18 | 2026-11-13 | Monnaie | Aucune monnaie nommée | Le **crédit** (`cr`), nom **provisoire** : l'autrice cherche un nom ; un seul changement dans `MONNAIE` | Provisoire | `data/economie.js` | |
+| 19 | 2026-11-13 | Tyts, marchandise et main-d'œuvre | « Recensement du flux servile » à l'octroi de Naksun ; Tyts asservis | Les Tyts sont **achetés, vendus et transportés** (prix de base 2 500 cr, 0,25 de soute par tête) **et** font tourner les mines : sous la main-d'œuvre requise d'un site, sa production baisse au prorata ; on n'en exporte que le surplus | Décidé (principe, autrice) ; chiffres de conception | `MARCHANDISES`, `PROFILS.tytsRequis` | |
+| 20 | 2026-11-13 | Marchandises et flux | Mines (Kalpra, Sethis), glace de Nunka → cités de Roushan, raffineries de Roushan, luxe de Kebet | 8 marchandises ; productions et consommations **calées pour s'équilibrer** (eau, vivres, minerai, carburant…) ; Kebet nourrit le système, Roushan le ravitaille en carburant | Conception | `PROFILS`, `CONSO_HABITANT` | |
+| 21 | 2026-11-13 | Octroi, douane, contrebande | Octroi de Naksun (péage, fouille), douane du port de Kebet, réseau d'Onkel | **Péage de 6 %** sur tout voyage qui franchit la limite de la zone intérieure (mines) ; **douane de 10 %** à l'arrivée à Kebet ; la contrebande évite les deux mais **perd 12 % de sa cargaison** à la fouille (valeur moyenne, sans hasard) | Conception | `PROFILS.peage/taxe`, `TRANSPORTEURS.risque` | |
+| 22 | 2026-11-13 | Transporteurs | Ella Corren, capitaine du *Mai* ; Onkel | Flottes du Consortium, flottilles de Roushan, chalands de glace, convois des mines, cabotiers, plus *Mai* (soute 60) et le réseau d'Onkel (soute 80) ; **soutes, caisses et effectifs inventés** | Conception | `TRANSPORTEURS` | |
+
 ## À trancher dans le roman
 
 Questions que la simulation a dû poser sans réponse du lore :
@@ -53,3 +63,5 @@ Questions que la simulation a dû poser sans réponse du lore :
 - « Tyts plus nombreux » : au total, ou parmi les travailleurs asservis seulement (entrée 8) ?
 - Où sont les prisonniers de guerre après le génocide (entrée 7) ? Les hybrides sont-ils vraiment stériles (entrée 11) ?
 - Les hybrides sont-ils connus des humains, des Tyts, ou cachés (le lien de sang est « secret ») ?
+- Quel nom pour la monnaie (entrée 18) ? Existe-t-il une monnaie parallèle (contrebande, troc, crédit des Tyts) ?
+- Le prix d'un Tyt est-il un fait du roman (entrée 19) ? Qui l'encaisse : le Consortium, les armateurs ?
