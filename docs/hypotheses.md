@@ -19,7 +19,7 @@
 | Sujet | Choix | Fichier |
 |---|---|---|
 | Étoile | G0V, 1,10 M☉, 1,10 R☉, 5900 K (L = 1,32 L☉), **âge 5,8 Gyr** (valeur de conception pour respecter le canon « plus vieille que le Soleil » ; durée de vie ≈ 7,9 Gyr, il reste ≈ 2,1 Gyr), rotation ≈ 15 j, +13 % de luminosité par Gyr | `data/omraon.js`, `data/chronologie.js` |
-| Orbites | Kalpra 0,32 UA, Sethis 0,52, Naksun 0,75, ceinture 1,05–1,55, Zirkan 1,9 (zone habitable), Roushan 30 | `data/omraon.js` |
+| Orbites | Kalpra 0,32 UA, Sethis 0,52, Naksun 0,75, ceinture 1,05–1,55, Zirkan 1,9 (zone habitable), Roushan **20** (essai du 2026-11-13, était 30 ; fourchette crédible 10–15 UA, voir `modifications-lore.md` n° 29) | `data/omraon.js` |
 | Kebet | 345 000 km de Zirkan (jour 1,28 j), 1,1 bar, **+90 K d'effet de serre** (relevé de +56 K quand l'étoile est passée de F6V à G0V : Zirkan, à 1,9 UA, est au bord extérieur de la zone habitable), e ≈ 10⁻⁴ | `data/omraon.js` |
 | Zirkan, Roushan | champ magnétique 0,0005 et 0,03 × Jupiter ; Roushan T(1 bar) = 1,63 × T équilibre | `data/omraon.js` |
 | Sethis | atmosphère ténue 0,05 bar (vent, poussière) | `data/omraon.js` |

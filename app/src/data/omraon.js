@@ -107,7 +107,7 @@ export const PLANETS = [
   {
     id: 'roushan', name: 'Roushan', kind: 'gas', texture: 'roushan', color: '#d8d0b4',
     massJup: 0.35, radiusKm: 0.86 * 71492, albedo: 0.4,
-    orbit: { a: 30, e: 0.03, i: 0.9, Om: 290, w: 14, M: 60 },
+    orbit: { a: 20, e: 0.03, i: 0.9, Om: 290, w: 14, M: 60 },
     rotation: { periodH: 10.7, tiltDeg: 26, nodeDeg: 80 },
     names: { tyt: 'RUKH-SHU', tytCourant: 'Rukhshu', sens: 'le Grand-Souffle' },
     role: 'Géante externe pâle et froide : cités flottantes, raffineries de gaz, carburant des moteurs. Monde d\'origine d\'Ella.',
