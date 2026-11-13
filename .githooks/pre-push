@@ -11,7 +11,14 @@ if [ "${SKIP_CHECKS:-}" = "1" ]; then
 fi
 cd "$(git rev-parse --show-toplevel)" || exit 1
 if [ ! -x outils/ci-local.sh ]; then
-	echo "pre-push : outils/ci-local.sh absent, aucun contrôle lancé." >&2
+	# Un hook qui ne contrôle rien en le disant à voix basse est un faux ami : si le projet a des
+	# portes de CI, leur absence en local bloque le push ; sans workflow qualité, il n'y a rien à rejouer.
+	if [ -f .github/workflows/qualite.yml ]; then
+		echo "pre-push : .github/workflows/qualite.yml existe mais outils/ci-local.sh est absent ou non exécutable : push annulé." >&2
+		echo "           (synchroniser-outils.sh, ou SKIP_CHECKS=1 git push, à justifier)" >&2
+		exit 1
+	fi
+	echo "pre-push : pas de workflow qualité ni d'outils/ci-local.sh : rien à rejouer."
 	exit 0
 fi
 echo "pre-push : portes de la CI en local…"
