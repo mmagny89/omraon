@@ -107,7 +107,7 @@ export const PLANETS = [
   {
     id: 'roushan', name: 'Roushan', kind: 'gas', texture: 'roushan', color: '#d8d0b4',
     massJup: 0.35, radiusKm: 0.86 * 71492, albedo: 0.4,
-    orbit: { a: 20, e: 0.03, i: 0.9, Om: 290, w: 14, M: 60 },
+    orbit: { a: 12, e: 0.03, i: 0.9, Om: 290, w: 14, M: 60 },
     rotation: { periodH: 10.7, tiltDeg: 26, nodeDeg: 80 },
     names: { tyt: 'RUKH-SHU', tytCourant: 'Rukhshu', sens: 'le Grand-Souffle' },
     role: 'Géante externe pâle et froide : cités flottantes, raffineries de gaz, carburant des moteurs. Monde d\'origine d\'Ella.',
@@ -150,4 +150,14 @@ export const BELT = {
   names: { tyt: 'NUNN-ZIR', tytCourant: 'Nunzir', sens: "l'Abîme-nuit" },
   role: "Vaste nuage d'astéroïdes entre les telluriques et les gazeuses : repaire de pirates et de contrebandiers (Onkel, Ella).",
   aMin: 1.05, aMax: 1.55, // conception : entre Naksun (0,75) et l'instabilité de Zirkan (~1,57)
+  // Lacunes de Kirkwood (conception, calcul) : résonances intérieures avec Zirkan (a = 1,9 UA), a_res = a_Z·(q/p)^(2/3) : 7:3 → 1,081 UA, 2:1 → 1,197 UA (demi-largeurs 0,012 et 0,02).
+  // Amas de Hilda (3:2 → 1,45 UA) : un groupe stable de ≈ 6 % des astéroïdes.
+  gaps: [[1.081, 0.012], [1.197, 0.02]], hilda: { a: 1.45, spread: 0.012, share: 0.06 },
 };
+
+// Ceinture froide (conception, équivalent de la ceinture de Kuiper) : corps de glace entre la 3:2 de Roushan (a·1,31) et le bord de 35 UA.
+// `share` : part du nombre de traceurs de la ceinture principale.
+export const COLD_BELT = { name: 'Ceinture froide', aMin: 17, aMax: 34, share: 0.6, role: 'Corps de glace, planètes naines et comètes : la frontière réelle du système.' };
+// Troyens de Roushan (aux points L4 et L5) et comètes / centaures (orbites très excentriques, du périhélie entre les géantes à l'aphélie dans la ceinture froide).
+export const ROUSHAN_TROJANS = 300;
+export const COMETS = { count: 40, qMin: 3, qMax: 15, QMin: 24, QMax: 40 };

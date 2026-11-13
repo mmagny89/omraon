@@ -1,7 +1,7 @@
 import { G, AU_KM, DAYS_PER_YEAR, DEG, R_EARTH_KM, R_JUP_KM } from '../physics/constants.js';
 import { poleVector } from '../physics/system.js';
 import { equilibriumTemp, insolation, starLuminosity, habitableZone, hillRadius, stableSatelliteLimit, rocheLimitKm, bulk, fmtMass } from '../physics/derived.js';
-import { BELT, STAR } from '../data/omraon.js';
+import { BELT, COLD_BELT, STAR } from '../data/omraon.js';
 import { assess, distanceForTemp } from '../physics/habitability.js';
 import { SITES } from '../data/sites.js';
 import { EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
@@ -108,6 +108,10 @@ export class UI {
       if (moons.length) {
         mk(g, 'div', 'sub', 'Lunes');
         moons.forEach((m) => { bodyBtn(g, m); sitesOf(m.def.name).forEach((x) => siteBtn(g, x, 'site deep')); });
+      }
+      if (p.def.id === 'roushan') {
+        const cs = sitesOf('Ceinture froide');
+        if (cs.length) { const gc = group(); mk(gc, 'div', 'sub', `Ceinture froide (${COLD_BELT.aMin}–${COLD_BELT.aMax} UA)`); cs.forEach((x) => siteBtn(gc, x)); }
       }
       if (p.def.id === 'naksun') {
         const gb = group();

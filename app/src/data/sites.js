@@ -50,10 +50,15 @@ export const SITES = [
     role: 'Repaire de pirates et de contrebandiers (Onkel, Ella) dans un astéroïde.' },
   // Mines libres de la ceinture (conception) : l'extraction y est la moins chère du système (un astéroïde se quitte avec quelques dizaines de m/s),
   // mais hors du contrôle du Consortium. Voir docs/ressources.md.
-  { id: 'ceinture-fonderies', name: 'Fonderies libres de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.17, e: 0.05, i: 2, Om: 210, w: 60, M: 150 }, habitat: 'underground', population: 4000, tyts: 150, invented: true,
+  { id: 'ceinture-fonderies', name: 'Fonderies libres de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.13, e: 0.05, i: 2, Om: 210, w: 60, M: 150 }, habitat: 'underground', population: 4000, tyts: 150, invented: true,
     role: 'Mineurs indépendants sur des astéroïdes métalliques : minerai et métaux vendus hors de la tutelle du Consortium, aux armateurs libres et aux contrebandiers.' },
   { id: 'ceinture-glace', name: 'Chalands de glace de la ceinture', body: 'Nunzir', type: 'heliocentric', orbit: { a: 1.43, e: 0.07, i: 4, Om: 330, w: 200, M: 280 }, habitat: 'underground', population: 3000, tyts: 0, invented: true,
     role: "Extraction d'eau sur des astéroïdes carbonés : une eau que ni Nunka ni le Consortium ne contrôlent." },
+  // Troyens de Roushan (point L4, 60° devant la géante, même orbite) et ceinture froide (conception).
+  { id: 'troyens-roushan', name: 'Chantiers des troyens de Roushan', body: 'Roushan', type: 'heliocentric', orbit: { a: 12, e: 0.03, i: 0.9, Om: 290, w: 14, M: 120 }, habitat: 'underground', population: 1800, tyts: 250, invented: true,
+    role: "Glace et minerai d'un essaim d'astéroïdes qui accompagne Roushan sur son orbite : le ravitaillement le plus proche des cités flottantes." },
+  { id: 'froide-relais', name: 'Avant-poste de la ceinture froide', body: 'Ceinture froide', type: 'heliocentric', orbit: { a: 26, e: 0.06, i: 6, Om: 40, w: 100, M: 200 }, habitat: 'underground', population: 500, tyts: 0, invented: true,
+    role: 'Guet des comètes et extraction de glace pure, au bord de la frontière réelle du système.' },
 ];
 
 // Le port de Kebet est tenu en place au-dessus de la capitale (le siège du Consortium) : `fixe` remplace son orbite par un point fixe dans le repère du corps,

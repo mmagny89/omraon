@@ -163,7 +163,7 @@ export class World {
     // ceinture
     const gb = new THREE.BufferGeometry();
     this.beltPos = new Float32Array(3 * 40000); this.beltCol = new Float32Array(3 * 40000);
-    this.beltTmpP = new Float64Array(3 * 40000); this.beltTmpB = new Float32Array(40000);
+    this.beltTmpP = new Float64Array(3 * 40000); this.beltTmpB = new Float32Array(40000); this.beltTmpK = new Uint8Array(40000);
     gb.setAttribute('position', new THREE.BufferAttribute(this.beltPos, 3).setUsage(THREE.DynamicDrawUsage));
     gb.setAttribute('color', new THREE.BufferAttribute(this.beltCol, 3).setUsage(THREE.DynamicDrawUsage));
     this.belt = new THREE.Points(gb, new THREE.PointsMaterial({ size: 1.7, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false }));
@@ -425,13 +425,15 @@ export class World {
       }
     }
     // ceinture
-    const n = sim.particleRender(tr, this.beltTmpP, this.beltTmpB);
+    const n = sim.particleRender(tr, this.beltTmpP, this.beltTmpB, this.beltTmpK);
     this.belt.visible = this.opts.belt;
     if (this.opts.belt) {
       const m = Math.min(n, 40000);
       for (let i = 0; i < m; i++) {
         this.beltPos[3 * i] = (this.beltTmpP[3 * i] - fa[0]) * UNIT; this.beltPos[3 * i + 1] = (this.beltTmpP[3 * i + 1] - fa[1]) * UNIT; this.beltPos[3 * i + 2] = (this.beltTmpP[3 * i + 2] - fa[2]) * UNIT;
-        const c = this.beltTmpB[i]; this.beltCol[3 * i] = c; this.beltCol[3 * i + 1] = c * 0.93; this.beltCol[3 * i + 2] = c * 0.85;
+        const c = this.beltTmpB[i], kd = this.beltTmpK[i]; // couleur par famille : roche chaude, glace bleutée (ceinture froide), comètes blanc-cyan
+        const cc = Math.max(c, 0.8);
+        this.beltCol[3 * i] = kd === 2 ? cc * 0.4 : kd === 3 ? 0.8 : c; this.beltCol[3 * i + 1] = kd === 2 ? cc * 0.75 : kd === 3 ? 1 : c * 0.93; this.beltCol[3 * i + 2] = kd === 2 ? cc : kd === 3 ? 1 : c * 0.85;
       }
       this.belt.geometry.setDrawRange(0, m);
       this.belt.geometry.attributes.position.needsUpdate = true; this.belt.geometry.attributes.color.needsUpdate = true;

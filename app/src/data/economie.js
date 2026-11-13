@@ -56,14 +56,16 @@ export const PROFILS = {
   'kebet-temples': { puits: 10.5, prod: { vivres: 40, eau: 6 }, tytsRequis: 1400, tytsAn: 0.005, zone: 'exterieur' },
   'kebet-consortium': { puits: 10.5, prod: { eau: 5 }, tytsRequis: 700, tytsAn: 0.005, zone: 'exterieur' },
   'kebet-quartiers': { puits: 10.5, prod: { vivres: 280, luxe: 30, eau: 25 }, tytsRequis: 4000, tytsAn: 0.01, zone: 'exterieur' },
-  'roushan-cites': { puits: 12, prod: { carburant: 380, equipements: 22, vivres: 20 }, conso: { minerai: 200 }, tytsRequis: 0, zone: 'exterieur' },
-  'nunka-glace': { puits: 0.4, prod: { eau: 160 }, tytsRequis: 2500, tytsAn: -0.02, zone: 'exterieur' },
+  'roushan-cites': { puits: 12, prod: { carburant: 330, equipements: 22, vivres: 20 }, conso: { minerai: 200 }, tytsRequis: 0, zone: 'exterieur' },
+  'nunka-glace': { puits: 0.4, prod: { eau: 120 }, tytsRequis: 2500, tytsAn: -0.02, zone: 'exterieur' },
   'roukir-poste': { puits: 0.05, prod: { minerai: 5 }, tytsRequis: 0, zone: 'exterieur' },
   'shukal-colonie': { puits: 4.4, prod: {}, tytsRequis: 600, tytsAn: 0, zone: 'exterieur' },
   'shukal-arret': { prod: {}, tytsRequis: 0, zone: 'exterieur' },
   'nunzir-repaire': { puits: 0, prod: {}, tytsRequis: 0, zone: 'ceinture' },
   'ceinture-fonderies': { puits: 0, prod: { minerai: 45, metaux: 14 }, tytsRequis: 150, tytsAn: 0.01, zone: 'ceinture' },
-  'ceinture-glace': { puits: 0, prod: { eau: 45 }, tytsRequis: 0, zone: 'ceinture' },
+  'troyens-roushan': { puits: 0, prod: { eau: 30, minerai: 12 }, tytsRequis: 200, tytsAn: 0.01, zone: 'exterieur' },
+  'froide-relais': { puits: 0, prod: { eau: 15 }, tytsRequis: 0, zone: 'exterieur' },
+  'ceinture-glace': { puits: 0, prod: { eau: 35 }, tytsRequis: 0, zone: 'ceinture' },
 };
 
 /**
@@ -96,6 +98,8 @@ export const TRANSPORTEURS = [
   { id: 'ceinture-1', nom: 'Mineurs libres de la ceinture', faction: 'libre', soute: 2500, aG: 6, base: 'ceinture-fonderies', caisse: 500000 },
   { id: 'ceinture-2', nom: 'Chalands de la ceinture', faction: 'libre', soute: 2500, aG: 4, base: 'ceinture-glace', caisse: 500000 },
   { id: 'onkel-2', nom: 'Passeurs d\u2019Onkel', faction: 'contrebande', soute: 600, aG: 8, base: 'nunzir-repaire', caisse: 80000, risque: 0.12 },
+  { id: 'troyens-1', nom: 'Chalands des troyens', faction: 'libre', soute: 1200, aG: 6, base: 'troyens-roushan', caisse: 300000 },
+  { id: 'cabotage-7', nom: 'Cabotier de la ceinture froide', faction: 'libre', soute: 120, aG: 8, base: 'froide-relais', caisse: 40000 },
   // Personnages
   { id: 'mai', nom: 'Le Mai (Ella Corren)', faction: 'libre', soute: 60, aG: 8, base: 'roushan-cites', caisse: 20000 },
   { id: 'onkel-1', nom: 'Réseau d\u2019Onkel', faction: 'contrebande', soute: 80, aG: 8, base: 'nunzir-repaire', caisse: 30000, risque: 0.12 },

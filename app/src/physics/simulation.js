@@ -1,6 +1,6 @@
 import { G, C_AU_DAY, TWO_PI, DEG, R_SUN_KM, AU_KM } from './constants.js';
 import { stateToElements, elementsToState, railState } from './kepler.js';
-import { BELT } from '../data/omraon.js';
+import { BELT, COLD_BELT, COMETS, ROUSHAN_TROJANS } from '../data/omraon.js';
 
 const PARTICLE_STEP_DAYS = 3;
 
@@ -153,40 +153,54 @@ export class Simulation {
   makeParticles(count, trojans, seed) {
     this.pParams = { count, trojans, seed };
     const rnd = mulberry32(seed);
+    this.pRnd = rnd;
     const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(TWO_PI * rnd());
-    const nT = trojans ? 400 : 0;
-    const n = count + nT;
+    // familles de traceurs (pKind) : 0 ceinture principale, 1 troyens, 2 ceinture froide, 3 comètes et centaures, 4 amas de Hilda
+    const nHilda = Math.round(count * BELT.hilda.share), nCold = Math.round(count * COLD_BELT.share), nCom = COMETS.count;
+    const nT = trojans ? 400 + ROUSHAN_TROJANS : 0;
+    const n = count + nHilda + nCold + nCom + nT;
     this.pN = n;
     for (const k of ['px', 'py', 'pz', 'pvx', 'pvy', 'pvz', 'pax', 'pay', 'paz']) this[k] = new Float64Array(n);
     this.pBright = new Float32Array(n);
+    this.pKind = new Uint8Array(n);
     const mu = G * this.bodies[0].mass;
     const star = this.bodies[0];
     // sources : étoile + planètes (masses totales)
     const heavy = this.nHeavy;
-    const rot = (o, i, Om) => o;
-    void rot;
-    const place = (idx, a, e, inc, Om, w, M) => {
+    const place = (idx, a, e, inc, Om, w, M, kind = 0) => {
       const s = elementsToState(mu, { a, e, i: inc, Om, w, M });
       this.px[idx] = s.r[0] + this.pos[0]; this.py[idx] = s.r[1] + this.pos[1]; this.pz[idx] = s.r[2] + this.pos[2];
       this.pvx[idx] = s.v[0] + this.vel[0]; this.pvy[idx] = s.v[1] + this.vel[1]; this.pvz[idx] = s.v[2] + this.vel[2];
-      this.pBright[idx] = 0.45 + 0.55 * rnd();
+      this.pBright[idx] = kind === 3 ? 1 : 0.45 + 0.55 * rnd();
+      this.pKind[idx] = kind;
     };
-    for (let i = 0; i < count; i++) {
-      const a = BELT.aMin + (BELT.aMax - BELT.aMin) * rnd();
+    // comète ou centaure : périhélie entre les géantes, aphélie dans la ceinture froide, placée près de l'aphélie (elle retombe lentement)
+    this.respawnComet = (idx) => {
+      const q = COMETS.qMin + (COMETS.qMax - COMETS.qMin) * rnd(), Q = COMETS.QMin + (COMETS.QMax - COMETS.QMin) * rnd();
+      place(idx, (q + Q) / 2, (Q - q) / (Q + q), 0.1 + 0.6 * rnd(), TWO_PI * rnd(), TWO_PI * rnd(), Math.PI + 0.3 * (rnd() - 0.5), 3);
+    };
+    let k = 0;
+    for (; k < count; k++) {
+      let a;
+      do a = BELT.aMin + (BELT.aMax - BELT.aMin) * rnd(); while (BELT.gaps.some(([c, w]) => Math.abs(a - c) < w)); // lacunes de Kirkwood
       const e = Math.min(0.28, Math.abs(gauss()) * 0.07);
       const inc = Math.min(0.3, Math.abs(gauss()) * 0.08);
-      place(i, a, e, inc, TWO_PI * rnd(), TWO_PI * rnd(), TWO_PI * rnd());
+      place(k, a, e, inc, TWO_PI * rnd(), TWO_PI * rnd(), TWO_PI * rnd());
     }
+    for (let i = 0; i < nHilda; i++, k++) place(k, BELT.hilda.a + BELT.hilda.spread * gauss(), Math.min(0.25, Math.abs(gauss()) * 0.1), Math.min(0.3, Math.abs(gauss()) * 0.08), TWO_PI * rnd(), TWO_PI * rnd(), TWO_PI * rnd(), 4);
+    for (let i = 0; i < nCold; i++, k++) place(k, COLD_BELT.aMin + (COLD_BELT.aMax - COLD_BELT.aMin) * rnd(), Math.min(0.2, Math.abs(gauss()) * 0.05), Math.min(0.25, Math.abs(gauss()) * 0.06), TWO_PI * rnd(), TWO_PI * rnd(), TWO_PI * rnd(), 2);
+    for (let i = 0; i < nCom; i++, k++) this.respawnComet(k);
     if (trojans) {
-      const zi = this.planetIdx[3];
-      const rel = [0, 1, 2].map((k) => this.pos[3 * zi + k] - this.pos[k]);
-      const el = stateToElements(G * (star.mass + this.mEff[zi]), rel, [0, 1, 2].map((k) => this.vel[3 * zi + k] - this.vel[k]));
-      for (let i = 0; i < nT; i++) {
-        const lead = i % 2 === 0 ? 1 : -1;
-        const a = el.a * (1 + 0.012 * gauss());
-        const M = el.M + lead * (Math.PI / 3) + 0.15 * gauss();
-        place(count + i, a, Math.abs(0.02 * gauss()) + 0.01, el.i + 0.05 * gauss(), el.Om, el.w, M);
-      }
+      const troyens = (pi, nb) => { // L4 et L5 : à ±60° de la planète sur sa propre orbite
+        const rel = [0, 1, 2].map((c) => this.pos[3 * pi + c] - this.pos[c]);
+        const el = stateToElements(G * (star.mass + this.mEff[pi]), rel, [0, 1, 2].map((c) => this.vel[3 * pi + c] - this.vel[c]));
+        for (let i = 0; i < nb; i++, k++) {
+          const lead = i % 2 === 0 ? 1 : -1;
+          place(k, el.a * (1 + 0.012 * gauss()), Math.abs(0.02 * gauss()) + 0.01, el.i + 0.05 * gauss(), el.Om, el.w, el.M + lead * (Math.PI / 3) + 0.15 * gauss(), 1);
+        }
+      };
+      troyens(this.planetIdx[3], 400); // Zirkan
+      troyens(this.planetIdx[4], ROUSHAN_TROJANS); // Roushan
     }
     // rayons de capture (étoile + planètes)
     this.captureR2 = new Float64Array(heavy);
@@ -207,7 +221,7 @@ export class Simulation {
         const f = G * m[j] / (r2 * Math.sqrt(r2));
         ax += dx * f; ay += dy * f; az += dz * f;
       }
-      if (hit || x * x + y * y + z * z > 2.25e4) { this.removeParticle(i, hit); continue; }
+      if (hit || x * x + y * y + z * z > 2.25e4) { if (this.pKind[i] === 3) { this.respawnComet(i); continue; } this.removeParticle(i, hit); continue; }
       this.pax[i] = ax; this.pay[i] = ay; this.paz[i] = az;
       i++;
     }
@@ -215,7 +229,7 @@ export class Simulation {
 
   removeParticle(i, impact) {
     const l = --this.pN;
-    for (const k of ['px', 'py', 'pz', 'pvx', 'pvy', 'pvz', 'pax', 'pay', 'paz', 'pBright']) this[k][i] = this[k][l];
+    for (const k of ['px', 'py', 'pz', 'pvx', 'pvy', 'pvz', 'pax', 'pay', 'paz', 'pBright', 'pKind']) this[k][i] = this[k][l];
     if (impact) this.impacts++;
   }
 
@@ -240,6 +254,7 @@ export class Simulation {
         ax += dx * f; ay += dy * f; az += dz * f;
       }
       if (hit || x * x + y * y + z * z > 2.25e4) {
+        if (this.pKind[i] === 3) { this.respawnComet(i); ox[i] = oy[i] = oz[i] = 0; continue; } // une comète perdue est remplacée par une autre
         const l = this.pN - 1;
         ox[i] = ox[l]; oy[i] = oy[l]; oz[i] = oz[l];
         this.removeParticle(i, hit);
@@ -350,13 +365,14 @@ export class Simulation {
     return [o[0] / M, o[1] / M, o[2] / M];
   }
 
-  particleRender(tr, outPos, outBright) {
+  particleRender(tr, outPos, outBright, outKind) {
     const tau = tr - this.tPart, h2 = 0.5 * tau * tau, n = this.pN;
     for (let i = 0; i < n; i++) {
       outPos[3 * i] = this.px[i] + this.pvx[i] * tau + this.pax[i] * h2;
       outPos[3 * i + 1] = this.py[i] + this.pvy[i] * tau + this.pay[i] * h2;
       outPos[3 * i + 2] = this.pz[i] + this.pvz[i] * tau + this.paz[i] * h2;
       outBright[i] = this.pBright[i];
+      if (outKind) outKind[i] = this.pKind[i];
     }
     return n;
   }
