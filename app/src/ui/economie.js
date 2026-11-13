@@ -4,7 +4,10 @@ import { SITES } from '../data/sites.js';
 import { MARCHANDISES, MONNAIE, PROFILS, TRANSPORTEURS } from '../data/economie.js';
 import { COULEURS_BIENS, COULEUR_CONTREBANDE } from '../render/flux.js';
 import { fmtDuree } from '../physics/calendrier.js';
-import { creerEconomie, avancer, releverPrix, distanceDepuis, indicateurs } from '../physics/economie.js';
+import { creerEconomie, avancer, releverPrix, distanceDepuis, indicateurs, misereSysteme } from '../physics/economie.js';
+import { simulatePopulation } from '../physics/population.js';
+import { fmtAn } from '../data/chronologie.js';
+import { DAYS_PER_YEAR } from '../physics/constants.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const nf = (n, d = 0) => n.toLocaleString('fr-FR', { maximumFractionDigits: d, minimumFractionDigits: d });
@@ -29,11 +32,11 @@ const mix = (a, b, t) => { const h = (x) => [1, 3, 5].map((i) => parseInt(x.slic
 export const couleurPrix = (m) => (m == null ? null : m < 1 ? mix('#6fb4ff', '#e8eefc', Math.min(1, Math.max(0, (Math.log(m) - Math.log(0.2)) / -Math.log(0.2)))) : mix('#e8eefc', '#ff6b7a', Math.min(1, Math.log(m) / Math.log(5))));
 const classe = (m) => (m == null ? '' : m < 0.8 ? 'ok' : m > 3 ? 'bad' : m > 1.5 ? 'warn' : '');
 
-export function initEconomie({ root = document, getPos, getTime, setMarkers, setFlux, rejouer }) {
+export function initEconomie({ root = document, getPos, getTime, getPopParams, appliquerMisere, setMarkers, setFlux, rejouer }) {
   const el = (id) => $(`#${id}`, root);
   el('eco-choc').innerHTML = Object.entries(CHOCS).map(([k, c]) => `<option value="${k}">${c.label}</option>`).join('');
   el('eco-bien').innerHTML = MARCHANDISES.map((m) => `<option value="${m.id}">${m.nom}</option>`).join('');
-  let jeton = 0, dernier = null;
+  let jeton = 0, dernier = null, cacheRef = null;
 
   const legende = () => {
     el('eco-carte-leg').innerHTML = MARCHANDISES.map((m) => `<li><i style="background:${COULEURS_BIENS[m.id]}"></i>${m.nom.split(' (')[0]}</li>`).join('') + `<li><i style="background:${COULEUR_CONTREBANDE}"></i>contrebande</li>`;
@@ -88,19 +91,72 @@ export function initEconomie({ root = document, getPos, getTime, setMarkers, set
     el('eco-res').hidden = false; dessiner(); marquer(); carte();
   }
 
-  el('eco-go').addEventListener('click', () => {
-    const mon = ++jeton, t0 = getTime(), choc = el('eco-choc').value, jours = Math.max(1, Math.round(+el('eco-h').value));
-    const etat = creerEconomie({ sites: SITES, dist: distanceDepuis(getPos()), ...CHOCS[choc].params() }), hist = [releverPrix(etat)];
-    el('eco-stop').hidden = false; el('eco-go').disabled = true; el('eco-res').hidden = true;
+  /** Indicateurs d'une exécution, pour la comparaison. */
+  const bilan = ({ etat, hist }) => {
+    const ind = indicateurs(etat), fin = hist.at(-1).prix, pen = [...etat.noeuds.values()].map((n) => Object.values(n.penurie).reduce((s, x) => s + x, 0));
+    const fac = {}; for (const c of etat.convois) fac[c.def.faction] = (fac[c.def.faction] ?? 0) + c.gain;
+    return {
+      voyages: ind.voyages, volume: Object.values(ind.transporte).reduce((s, x) => s + x, 0), penuries: pen.reduce((s, x) => s + x, 0), sitesPen: pen.filter((x) => x >= 1).length,
+      misere: misereSysteme(etat).total * 100, taxes: Object.values(ind.taxes).reduce((s, x) => s + x, 0), fac,
+      prix: Object.fromEntries(MARCHANDISES.map((m) => { const xs = SITES.map((x) => fin[x.id]?.[m.id]).filter((x) => x != null); return [m.id, xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null]; })),
+    };
+  };
+  const ecart = (a, b, pct) => { const d = b - a; if (Math.abs(d) < 1e-9) return '–'; return pct && Math.abs(a) > 1e-9 ? `${d > 0 ? '+' : '−'}${nf(Math.abs(100 * d / a))} %` : `${d > 0 ? '+' : '−'}${nf(Math.abs(d), Number.isInteger(d) ? 0 : 1)}`; };
+
+  function comparer() {
+    const { ref, choc } = dernier, cmp = el('eco-cmp'), cpl = el('eco-couple');
+    if (!ref || choc === 'aucun') { cmp.hidden = true; cpl.hidden = true; return; }
+    const A = bilan(ref), B = bilan(dernier);
+    // sens : +1 = plus haut, c'est pire ; −1 = plus haut, c'est mieux ; 0 = neutre
+    const lignes = [
+      ['Voyages', A.voyages, B.voyages, nf, 0, true], ['Unités livrées', A.volume, B.volume, nf, -1, true], ['Jours de pénurie (tous sites)', A.penuries, B.penuries, nf, 1, true],
+      ['Sites en pénurie', A.sitesPen, B.sitesPen, nf, 1, false], ['Misère du système (% de la population)', A.misere, B.misere, (x) => nf(x, 1), 1, false],
+      ['Taxes prélevées', A.taxes, B.taxes, cr, 0, true],
+      ['Gain des flottes du Consortium', A.fac.consortium ?? 0, B.fac.consortium ?? 0, cr, -1, true], ['Gain des armateurs libres', A.fac.libre ?? 0, B.fac.libre ?? 0, cr, -1, true], ['Gain de la contrebande', A.fac.contrebande ?? 0, B.fac.contrebande ?? 0, cr, -1, true],
+      ...MARCHANDISES.filter((m) => A.prix[m.id] != null).map((m) => [`Prix moyen : ${m.nom.split(' (')[0]}`, A.prix[m.id], B.prix[m.id], (x) => `${nf(x, 2)}×`, 1, true]),
+    ];
+    el('eco-cmp-t').innerHTML = `<tr><th>Indicateur</th><th>Référence</th><th>${CHOCS[choc].label}</th><th>Écart</th></tr>` + lignes.map(([l, a, b, f, sens, pct]) => {
+      const d = b - a, cl = sens === 0 || Math.abs(d) < 1e-9 ? '' : (d * sens > 0 ? 'bad' : 'ok');
+      return `<tr><td>${l}</td><td>${f(a)}</td><td>${f(b)}</td><td class="${cl}">${ecart(a, b, pct)}</td></tr>`;
+    }).join('');
+    cmp.hidden = false;
+
+    // couplage : la misère en plus de la référence devient une crise dans le modèle de population
+    const niveau = Math.min(1, Math.max(0, (B.misere - A.misere) / 100)), y0 = dernier.t0 / DAYS_PER_YEAR, duree = Math.max(0.25, dernier.jours / DAYS_PER_YEAR);
+    const base = getPopParams(), sans = simulatePopulation(base), avec = simulatePopulation({ ...base, misereYear: y0, misereYears: duree, misereLevel: niveau });
+    const yr = (y) => (y == null ? 'jamais' : fmtAn(y)), pc = (x) => `${(x * 100).toFixed(1)} %`;
+    el('eco-couple-t').innerHTML = `La misère supplémentaire (<b>${nf(100 * niveau, 1)} %</b> de la population, pendant ${fmtDuree(dernier.jours)}) devient une crise dans le modèle de population à partir de l'${fmtAn(y0)} : elle accélère l'éveil des Tyts et détourne des gardes vers le ravitaillement. Effets de conception, sans canon.`;
+    el('eco-couple-tab').innerHTML = `<tr><th>Mesure</th><th>Sans la crise</th><th>Avec la crise</th></tr>` + [
+      ['Contrôle des humains, 5 ans après', pc(sans.at(y0 + 5).C), pc(avec.at(y0 + 5).C)],
+      ['Tyts éveillés, 20 ans après', pc(sans.at(y0 + 20).A), pc(avec.at(y0 + 20).A)],
+      ['Point de bascule (combattants > gardes)', yr(sans.summary.tippingYear), yr(avec.summary.tippingYear)],
+    ].map(([l, a, b]) => `<tr><td>${l}</td><td>${a}</td><td class="${a === b ? '' : 'warn'}">${b}</td></tr>`).join('');
+    dernier.couplage = { y0, duree, niveau }; cpl.hidden = false;
+  }
+
+  const lancer = (choc, jours, dist, mon, libelle) => new Promise((ok) => {
+    const etat = creerEconomie({ sites: SITES, dist, ...CHOCS[choc].params() }), hist = [releverPrix(etat)];
     const pas = () => {
       if (mon !== jeton) return;
       avancer(etat, Math.min(PAS, jours - etat.t)); hist.push(releverPrix(etat));
-      el('eco-prog').textContent = `${fmtDuree(etat.t)} sur ${fmtDuree(jours)}…`;
+      el('eco-prog').textContent = `${libelle} : ${fmtDuree(etat.t)} sur ${fmtDuree(jours)}…`;
       if (etat.t < jours) return void setTimeout(pas, 0);
-      dernier = { etat, hist, jours, choc, t0 }; el('eco-prog').textContent = ''; el('eco-go').disabled = false; el('eco-stop').hidden = true; afficher();
+      ok({ etat, hist });
     };
-    el('eco-prog').textContent = 'Simulation en cours…'; setTimeout(pas, 0);
+    setTimeout(pas, 0);
   });
+
+  el('eco-go').addEventListener('click', async () => {
+    const mon = ++jeton, t0 = getTime(), choc = el('eco-choc').value, jours = Math.max(1, Math.round(+el('eco-h').value)), dist = distanceDepuis(getPos()), cle = `${jours}|${t0}`;
+    el('eco-stop').hidden = false; el('eco-go').disabled = true; el('eco-res').hidden = true; el('eco-prog').textContent = 'Simulation en cours…';
+    let ref = cacheRef?.cle === cle ? cacheRef.run : null;
+    if (!ref) { ref = await lancer('aucun', jours, dist, mon, 'Référence'); if (mon !== jeton) return; cacheRef = { cle, run: ref }; }
+    const run = choc === 'aucun' ? ref : await lancer(choc, jours, dist, mon, CHOCS[choc].label);
+    if (mon !== jeton) return;
+    dernier = { ...run, jours, choc, t0, ref: choc === 'aucun' ? null : ref };
+    el('eco-prog').textContent = ''; el('eco-go').disabled = false; el('eco-stop').hidden = true; afficher(); comparer();
+  });
+  el('eco-appliquer').addEventListener('click', () => { const c = dernier?.couplage; if (c) { appliquerMisere(c.y0, c.niveau, c.duree); el('eco-prog').textContent = 'Crise appliquée : voir le panneau Population.'; } });
   el('eco-stop').addEventListener('click', () => { jeton++; el('eco-prog').textContent = 'Simulation interrompue.'; el('eco-go').disabled = false; el('eco-stop').hidden = true; });
   el('eco-bien').addEventListener('change', () => { dessiner(); marquer(); });
   el('eco-marq').addEventListener('change', marquer);

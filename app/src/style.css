@@ -175,7 +175,7 @@ body.ground #bar { opacity: .92; }
 @media (max-width: 860px) { #reseau .grid, #eco .grid { grid-template-columns: 1fr; } #reseau label, #reseau select, #reseau input[type=number], #eco label, #eco select, #eco button, #eco input[type=checkbox] { min-height: 44px; } }
 #eco h3 { margin: 12px 0 4px; font-size: 13px; } #eco-chart { width: 100%; height: 170px; display: block; border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,.25); margin: 6px 0; }
 .eco-wrap { max-height: 260px; overflow: auto; } .eco-tab { width: 100%; border-collapse: collapse; font-size: 12px; }
-.eco-tab th, .eco-tab td { text-align: right; padding: 3px 5px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; } .eco-tab td:first-child, .eco-tab th:first-child { text-align: left; position: sticky; left: 0; background: #0e1424; }
+.eco-tab th, .eco-tab td { text-align: right; padding: 3px 5px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; } .eco-tab td:first-child, .eco-tab th:first-child { text-align: left; } #eco-prix td:first-child, #eco-prix th:first-child { position: sticky; left: 0; background: #0e1424; }
 .eco-tab .ok { color: var(--ok); } .eco-tab .warn { color: var(--warn); } .eco-tab .bad { color: #ff6b7a; } .eco-tab .vide { color: var(--mute); }
 
 /* ---------- barre d'outils, panneaux repliables, interface masquable ---------- */

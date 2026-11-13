@@ -148,6 +148,9 @@
         <label>Demi-vie du désespoir (ans) <input id="pop-dh" type="number" min="20" step="20" value="460" inputmode="numeric"></label>
         <label>Vérité rapportée à l'An <input id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
         <label>… force (0–1) <input id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
+        <label>Crise de misère à l'An <input id="pop-my" type="number" step="0.1" placeholder="aucune" inputmode="decimal"></label>
+        <label>… niveau (0–1) <input id="pop-ml" type="number" min="0" max="1" step="0.05" value="0" inputmode="decimal"></label>
+        <label>… durée (ans) <input id="pop-md" type="number" min="0.1" step="0.1" value="1" inputmode="decimal"></label>
         <label>Monde natal tyt avant le génocide <input id="pop-nat" type="number" min="1000" step="1000000" value="30000000" inputmode="numeric"></label>
         <label>Prisonniers de guerre épargnés <input id="pop-pow" type="number" min="0" step="100" value="2000" inputmode="numeric"></label>
         <label>Tyts partis sur Terre <input id="pop-earth" type="number" min="0" step="100" value="1500" inputmode="numeric"></label>
@@ -195,6 +198,8 @@
       <p id="eco-prog" class="note" role="status" aria-live="polite"></p>
       <div id="eco-res" hidden>
         <div id="eco-sum" class="note"></div>
+        <div id="eco-cmp" hidden><h3>Écart avec la référence</h3><div class="eco-wrap"><table id="eco-cmp-t" class="eco-tab"></table></div></div>
+        <div id="eco-couple" hidden><h3>Effet sur le dégel du contrôle</h3><p id="eco-couple-t" class="note"></p><div class="eco-wrap"><table id="eco-couple-tab" class="eco-tab"></table></div><button type="button" id="eco-appliquer" class="wide">Appliquer au panneau Population</button></div>
         <div class="grid">
           <label>Marchandise <select id="eco-bien"></select></label>
           <label><input type="checkbox" id="eco-marq"> Colorier les sites (prix à la fin)</label>

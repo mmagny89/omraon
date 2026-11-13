@@ -5,8 +5,7 @@
 // (prix au stock réel d'alors) ; 3. chaque convoi à quai choisit le trajet (marchandise × destination) au meilleur profit par jour,
 // achète, paie carburant et péage, et part. Le temps de vol vient de `flight.js` (hyperpropulsion).
 // Argent : un grand livre fermé. Chaque site a un solde, chaque convoi une caisse ; un échange déplace de l'argent, rien n'en crée
-// (voir `masseMonetaire`, testée constante). Limites : les distances sont figées à la date des positions fournies ; un convoi ne
-// transporte qu'une marchandise par voyage ; le carburant des vaisseaux est pris à la raffinerie (Roushan), pas au quai de départ.
+// (voir `masseMonetaire`, testée constante). Limites : les distances sont figées à la date des positions fournies ; le carburant des vaisseaux est pris à la raffinerie (Roushan), pas au quai de départ.
 import { planFlight } from './flight.js';
 import { AU_KM, DAYS_PER_YEAR } from './constants.js';
 import { MARCHANDISES, CONSO_HABITANT, CONSO_LUXE, PROFILS, TRANSPORTEURS, REGLAGES } from '../data/economie.js';
@@ -71,49 +70,62 @@ function valeurEchange(etat, noeud, g, stock0, q, sens) {
 
 function livrer(etat, c) {
   const v = c.voyage, n = etat.noeuds.get(v.to);
-  if (v.g) {
-    const brut = valeurEchange(etat, n, v.g, n.stock[v.g], v.qLivree, +1);
+  for (const x of v.cargo) {
+    const brut = valeurEchange(etat, n, x.g, n.stock[x.g], x.qLivree, +1);
     const taxe = v.contrebande ? 0 : brut * (n.profil.taxe ?? 0), net = brut - taxe;
-    n.stock[v.g] += v.qLivree; n.enRoute[v.g] -= v.qLivree;
+    n.stock[x.g] += x.qLivree; n.enRoute[x.g] -= x.qLivree;
     n.solde -= net; c.caisse += net;
     etat.taxes[v.to] = (etat.taxes[v.to] ?? 0) + taxe;
-    etat.transporte[v.g] = (etat.transporte[v.g] ?? 0) + v.qLivree;
-    const k = `${v.from}|${v.to}|${v.g}`; etat.flux.set(k, (etat.flux.get(k) ?? 0) + v.qLivree);
+    etat.transporte[x.g] = (etat.transporte[x.g] ?? 0) + x.qLivree;
+    const k = `${v.from}|${v.to}|${x.g}`; etat.flux.set(k, (etat.flux.get(k) ?? 0) + x.qLivree);
     c.gain += net;
   }
   c.gain -= v.depense; c.voyages++;
   c.lieu = v.to; c.dispo = v.tArr + etat.reglages.escaleJours; c.voyage = null;
 }
 
-/** Meilleur trajet marchand (une marchandise, une destination) pour le convoi `c` supposé à quai en `lieu`. Ne modifie rien. */
+/**
+ * Meilleure cargaison (plusieurs marchandises possibles) et meilleure destination pour le convoi `c` supposé à quai en `lieu`.
+ * Pour chaque destination : on remplit la soute en commençant par la marchandise qui rapporte le plus par unité de volume,
+ * on n'ajoute une marchandise que si elle rapporte net (achat, péage compris), et on essaie la soute pleine, à moitié, au quart.
+ * Ne modifie rien.
+ */
 function meilleur(etat, c, lieu) {
   const r = etat.reglages, { def } = c, src = etat.noeuds.get(lieu), contrebande = def.faction === 'contrebande';
-  const octroi = etat.octroi, raff = etat.raffinerie;
+  const octroi = etat.octroi, raff = etat.raffinerie, dispo = {}, pSrc = {};
+  for (const g of etat.biens.keys()) {
+    const d = src.stock[g] - (g === 'tyts' ? RESERVE_TYTS : r.reserve) * src.cible[g], p = prix(etat, lieu, g);
+    if (d > 0 && p != null) { dispo[g] = d; pSrc[g] = p; }
+  }
+  const goods = Object.keys(dispo);
+  if (!goods.length) return null;
   let best = null;
-  for (const [g, bien] of etat.biens) {
-    const reserve = (g === 'tyts' ? RESERVE_TYTS : r.reserve) * src.cible[g];
-    const dispo = src.stock[g] - reserve;
-    const pSrc = prix(etat, lieu, g);
-    if (!(dispo > 0) || pSrc == null) continue;
-    const qMax = Math.min(def.soute / bien.volume, dispo), retenu = raff === src && g === 'carburant';
-    for (const [idD, nd] of etat.noeuds) {
-      if (idD === lieu || !(nd.cible[g] > 0)) continue;
-      if (prixAuStock(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0)) <= pSrc) continue; // jamais rentable : élagage
-      const d = etat.duree(lieu, idD, def.aG), vol = d + r.escaleJours;
-      const franchit = src.profil.zone !== nd.profil.zone && (src.profil.zone === 'interieur' || nd.profil.zone === 'interieur');
-      for (const q0 of [qMax, qMax / 2, qMax / 4]) {
-        const carb = d * def.soute * (r.carburantVide + r.carburantParJour * q0 * bien.volume / def.soute);
-        const stockRaff = raff.stock.carburant - (retenu ? q0 : 0);
-        if (stockRaff < carb || carb > raff.stock.carburant * 0.2) continue;
-        const achat = valeurEchange(etat, src, g, src.stock[g], q0, -1);
-        const fuel = valeurEchange(etat, raff, 'carburant', stockRaff, carb, -1);
-        const peage = !contrebande && franchit && octroi ? achat * octroi.profil.peage : 0;
-        if (achat + fuel + peage > c.caisse) continue;
-        const qLivree = contrebande ? q0 * (1 - (def.risque ?? 0)) : q0;
-        const brut = valeurEchange(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0), qLivree, +1);
-        const profit = brut * (1 - (contrebande ? 0 : nd.profil.taxe ?? 0)) - achat - fuel - peage;
-        if (profit > r.profitMin && (!best || profit / vol > best.score)) best = { g, idD, q: q0, qLivree, d, achat, fuel, peage, carb, profit, score: profit / vol };
+  for (const [idD, nd] of etat.noeuds) {
+    if (idD === lieu) continue;
+    const pD = {}, cand = goods.filter((g) => { if (!(nd.cible[g] > 0)) return false; pD[g] = prixAuStock(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0)); return pD[g] > pSrc[g]; }); // élagage : jamais rentable sinon
+    if (!cand.length) continue;
+    cand.sort((x, y) => (pD[y] - pSrc[y]) / etat.biens.get(y).volume - (pD[x] - pSrc[x]) / etat.biens.get(x).volume);
+    const d = etat.duree(lieu, idD, def.aG), vol = d + r.escaleJours, tauxPeage = !contrebande && octroi && src.profil.zone !== nd.profil.zone && (src.profil.zone === 'interieur' || nd.profil.zone === 'interieur') ? octroi.profil.peage : 0;
+    const taxeD = contrebande ? 0 : nd.profil.taxe ?? 0;
+    for (const f of [1, 0.5, 0.25]) {
+      let reste = def.soute * f, utilise = 0, achatT = 0, netT = 0; const cargo = [];
+      for (const g of cand) {
+        if (reste <= 1e-9) break;
+        const bien = etat.biens.get(g), q = Math.min(reste / bien.volume, dispo[g]);
+        if (!(q > 0)) continue;
+        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1), qLivree = contrebande ? q * (1 - (def.risque ?? 0)) : q;
+        const net = valeurEchange(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0), qLivree, +1) * (1 - taxeD);
+        if (net <= achat * (1 + tauxPeage)) continue;
+        cargo.push({ g, q, qLivree, achat }); reste -= q * bien.volume; utilise += q * bien.volume; achatT += achat; netT += net;
       }
+      if (!cargo.length) continue;
+      const carb = d * def.soute * (r.carburantVide + r.carburantParJour * utilise / def.soute);
+      const retenu = raff === src ? cargo.find((x) => x.g === 'carburant')?.q ?? 0 : 0, stockRaff = raff.stock.carburant - retenu;
+      if (stockRaff < carb || carb > raff.stock.carburant * 0.2) continue;
+      const fuel = valeurEchange(etat, raff, 'carburant', stockRaff, carb, -1), peage = achatT * tauxPeage;
+      if (achatT + fuel + peage > c.caisse) continue;
+      const profit = netT - achatT - fuel - peage;
+      if (profit > r.profitMin && (!best || profit / vol > best.score)) best = { idD, d, cargo, achat: achatT, fuel, peage, carb, profit, score: profit / vol };
     }
   }
   return best;
@@ -121,13 +133,15 @@ function meilleur(etat, c, lieu) {
 
 function partir(etat, c, o) {
   const { def } = c, src = etat.noeuds.get(c.lieu), raff = etat.raffinerie, octroi = etat.octroi;
-  const { g, idD, q, qLivree, d, achat, fuel, peage, carb } = o, dest = etat.noeuds.get(idD);
-  if (g) { src.stock[g] -= q; src.solde += achat; dest.enRoute[g] = (dest.enRoute[g] ?? 0) + qLivree; }
+  const { idD, d, cargo, achat, fuel, peage, carb } = o, dest = etat.noeuds.get(idD);
+  for (const x of cargo) { src.stock[x.g] -= x.q; dest.enRoute[x.g] = (dest.enRoute[x.g] ?? 0) + x.qLivree; }
+  src.solde += achat;
   raff.stock.carburant -= carb; raff.solde += fuel;
   if (peage) { octroi.solde += peage; etat.taxes[octroi.site.id] = (etat.taxes[octroi.site.id] ?? 0) + peage; }
   c.caisse -= achat + fuel + peage;
-  c.voyage = { from: c.lieu, to: idD, g, q, qLivree, contrebande: def.faction === 'contrebande', tDep: etat.t, tArr: etat.t + d, depense: achat + fuel + peage };
-  if (etat.journal.length < 20000) etat.journal.push({ t: etat.t, tArr: etat.t + d, convoi: def.id, from: c.lieu, to: idD, g, q, jours: d, contrebande: def.faction === 'contrebande' });
+  c.voyage = { from: c.lieu, to: idD, cargo, contrebande: def.faction === 'contrebande', tDep: etat.t, tArr: etat.t + d, depense: achat + fuel + peage };
+  const grand = cargo.reduce((m, x) => (!m || x.q * etat.biens.get(x.g).volume > m.q * etat.biens.get(m.g).volume ? x : m), null);
+  if (etat.journal.length < 20000) etat.journal.push({ t: etat.t, tArr: etat.t + d, convoi: def.id, from: c.lieu, to: idD, g: grand?.g ?? null, q: grand?.q, cargo: cargo.map((x) => ({ g: x.g, q: x.q })), jours: d, contrebande: def.faction === 'contrebande' });
 }
 
 function choisir(etat, c) {
@@ -146,7 +160,7 @@ function choisir(etat, c) {
     const score = (o.profit - fuel) / (d + o.d + 2 * r.escaleJours);
     if (!pick || score > pick.score) pick = { score, idX, d, carb, fuel };
   }
-  if (pick) return partir(etat, c, { g: null, idD: pick.idX, d: pick.d, achat: 0, fuel: pick.fuel, peage: 0, carb: pick.carb });
+  if (pick) return partir(etat, c, { cargo: [], idD: pick.idX, d: pick.d, achat: 0, fuel: pick.fuel, peage: 0, carb: pick.carb });
   c.dispo = etat.t + 2; // rien nulle part : on réessaie dans deux jours
 }
 
@@ -190,6 +204,22 @@ export const releverPrix = (etat) => ({
   t: etat.t,
   prix: Object.fromEntries([...etat.noeuds].map(([id, n]) => [id, Object.fromEntries([...etat.biens].map(([g, b]) => { const p = prixAuStock(etat, n, g, n.stock[g]); return [g, p == null ? null : p / b.prixBase]; }))])),
 });
+
+/**
+ * Misère du système : part de la population qui manque de l'essentiel (vivres, eau, un peu de carburant), moyennée sur la durée simulée.
+ * Par site : somme pondérée des jours de pénurie ÷ jours simulés (plafonnée à 1). Pondération par la population du site.
+ * Renvoie { tyts, humains, total } (parts de 0 à 1) et le détail par site.
+ */
+export function misereSysteme(etat, poids = { vivres: 1, eau: 1, carburant: 0.4 }) {
+  const jours = Math.max(etat.t, 1), parSite = new Map();
+  let ht = 0, tt = 0, hm = 0, tm = 0;
+  for (const [id, n] of etat.noeuds) {
+    const f = Math.min(1, Object.entries(poids).reduce((s, [g, w]) => s + w * (n.penurie[g] ?? 0), 0) / jours);
+    parSite.set(id, f);
+    ht += n.site.population; tt += n.site.tyts; hm += n.site.population * f; tm += n.site.tyts * f;
+  }
+  return { humains: hm / Math.max(ht, 1), tyts: tm / Math.max(tt, 1), total: (hm + tm) / Math.max(ht + tt, 1), parSite };
+}
 
 /** Simule `jours` jours et renvoie l'état final et l'historique des prix (un relevé tous les `pas` jours). */
 export function simulerEconomie(params, jours, pas = 5) {

@@ -20,6 +20,10 @@ export const DEFAULTS = {
   // Conceptions par an = hybridContact × √(H·T) / 1e6 (30 pour 1 M d'humains et 1 M de Tyts) ; part menée à terme, mortalité maternelle, survie de l'enfant jusqu'à l'âge adulte, mortalité annuelle des adultes.
   hybridContact: 30, hybridTerm: 0.4, maternalDeath: 0.15, hybridChild: 0.5, hybridMortality: 0.03,
   nativeN0: 30e6, warPrisoners: 2000, earthTyts: 1500, genocideYears: 0.5,
+  // Crise de misère (couplage avec physics/economie.js : `misereSysteme`) : part de la population privée de l'essentiel, de l'An `misereYear` pendant
+  // `misereYears` ans, puis qui s'estompe (demi-vie `misereHalfLife`). Elle accélère l'éveil (× 1 + misereAwake·m) et fait perdre du contrôle
+  // (gardes détournées vers le ravitaillement : − misereControl·m). Conception : le roman ne chiffre pas. Niveau 0 = aucun effet.
+  misereYear: 1e9, misereYears: 1, misereLevel: 0, misereHalfLife: 3, misereAwake: 2, misereControl: 0.25,
 };
 
 const LN2 = Math.LN2;
@@ -49,7 +53,8 @@ export function simulatePopulation(p = {}) {
     if (y >= P.truthYear) d *= 1 - P.truthStrength * smoothstep((y - P.truthYear) / 3); // la vérité rapportée rend l'espérance
     return d;
   };
-  const control = (y, H_, T_) => (y < P.crimeYear ? 1 : Math.min(1, (know(y) * H_ / Math.max(T_, 1)) / P.controlNeeded));
+  const misere = (y) => (P.misereLevel <= 0 || y < P.misereYear ? 0 : P.misereLevel * (y <= P.misereYear + P.misereYears ? 1 : Math.exp(-(y - P.misereYear - P.misereYears) * LN2 / P.misereHalfLife)));
+  const control = (y, H_, T_) => (y < P.crimeYear ? 1 : Math.min(1, (know(y) * H_ / Math.max(T_, 1)) / P.controlNeeded) * (1 - P.misereControl * misere(y)));
   let seeded = false;
   const record = () => {
     const Kk = know(t), C = control(t, H, T), D = despair(t), guards = Kk * H * P.guardShare, fighters = A * T * P.fighterShare;
@@ -69,7 +74,8 @@ export function simulatePopulation(p = {}) {
       else if (P.tytMode === 'nature') T += T * P.tytGrowth * dt;
       else T += (P.tytAdjust * (P.tytRatio * H - T) - P.cull * A * T) * dt; // gestion : on « produit » vers le ratio visé, on « réduit » si l'éveil inquiète
       // éveil : logistique freinée par le contrôle et le désespoir, avec une graine (rumeurs, cristaux, contacts)
-      A += (P.awakeRate * (1 - C) * (1 - 0.8 * D) * A * (1 - A) + P.awakeSeed * (1 - C) * (1 - A)) * dt;
+      const M = 1 + P.misereAwake * misere(t);
+      A += (M * P.awakeRate * (1 - C) * (1 - 0.8 * D) * A * (1 - A) + M * P.awakeSeed * (1 - C) * (1 - A)) * dt;
       if (t >= P.truthYear && !seeded) { A = Math.min(1, A + 0.05 * P.truthStrength); seeded = true; }
       t += dt;
     }

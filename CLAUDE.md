@@ -24,7 +24,7 @@ dans l'image ; `.dockerignore` les exclut de l'image. `check-stack.sh` les signa
 
 ```sh
 docker compose up -d --wait        # https://localhost, certificat auto-signé
-npm test                           # 61 tests
+npm test                           # 63 tests
 outils/ci-local.sh                 # rejoue les portes de la CI (hook pre-push)
 npm run vendor                     # recopie Three.js depuis node_modules vers app/vendor/ (après une montée de version)
 ```

@@ -40,12 +40,12 @@ test('économie : le prix baisse quand le stock monte, borné entre prixMin et p
 
 test('économie : les flux du lore existent (glace de Nunka, vivres de Kebet, minerai des mines vers Roushan)', () => {
   const e = monde(); avancer(e, 120);
-  const flux = (g, a, b) => e.journal.some((v) => v.g === g && v.from === a && v.to === b);
+  const porte = (v, g) => v.cargo.some((x) => x.g === g), flux = (g, a, b) => e.journal.some((v) => porte(v, g) && v.from === a && v.to === b);
   assert.ok(e.journal.length > 20, `${e.journal.length} voyages`);
-  assert.ok(e.journal.some((v) => v.g === 'eau' && v.from === 'nunka-glace'), 'eau de Nunka');
-  assert.ok(e.journal.some((v) => v.g === 'vivres' && v.from.startsWith('kebet')), 'vivres de Kebet');
-  assert.ok(e.journal.some((v) => v.g === 'minerai' && (v.from.startsWith('sethis') || v.from === 'kalpra-mines')), 'minerai des mines');
-  assert.ok(flux('carburant', 'roushan-cites', e.journal.find((v) => v.g === 'carburant')?.to ?? ''), 'carburant de Roushan');
+  assert.ok(e.journal.some((v) => porte(v, 'eau') && v.from === 'nunka-glace'), 'eau de Nunka');
+  assert.ok(e.journal.some((v) => porte(v, 'vivres') && v.from.startsWith('kebet')), 'vivres de Kebet');
+  assert.ok(e.journal.some((v) => porte(v, 'minerai') && (v.from.startsWith('sethis') || v.from === 'kalpra-mines')), 'minerai des mines');
+  assert.ok(flux('carburant', 'roushan-cites', e.journal.find((v) => porte(v, 'carburant'))?.to ?? ''), 'carburant de Roushan');
 });
 
 test('économie : sans transporteurs, les pénuries explosent ; avec, elles reculent', () => {
@@ -66,7 +66,7 @@ test('économie : choc — couper la glace de Nunka renchérit l\'eau et crée d
 
 test('économie : les Tyts circulent du surplus vers le déficit sans descendre sous la main-d\'œuvre requise', () => {
   const e = monde(); avancer(e, 200);
-  const tyts = e.journal.filter((v) => v.g === 'tyts');
+  const tyts = e.journal.filter((v) => v.cargo.some((x) => x.g === 'tyts'));
   assert.ok(tyts.length > 0, 'au moins un convoi de Tyts');
   for (const id of ['sethis-cite-a', 'sethis-cite-b']) { const n = e.noeuds.get(id); assert.ok(n.stock.tyts >= n.profil.tytsRequis * 0.9, `${id} ${n.stock.tyts}`); }
 });
@@ -86,9 +86,9 @@ test('économie : la douane taxe le convoi libre ; la contrebande l\'évite mais
   avancer(l, 6); avancer(c, 6);
   assert.ok((l.taxes.b ?? 0) > 0, 'taxe prélevée');
   assert.ok(c.journal.length > 0 && (c.taxes.b ?? 0) === 0, 'aucune taxe en contrebande');
-  const parti = c.journal.filter((v) => v.g === 'eau').reduce((s, v) => s + v.q, 0);
+  const eauDe = (e) => e.journal.reduce((s, v) => s + v.cargo.filter((x) => x.g === 'eau').reduce((t, x) => t + x.q, 0), 0), parti = eauDe(c);
   assert.ok(Math.abs(c.transporte.eau - parti * 0.9) < 1e-9, `${c.transporte.eau} vs ${parti * 0.9}`); // 10 % saisis à la fouille
-  assert.ok(Math.abs(l.transporte.eau - l.journal.filter((v) => v.g === 'eau').reduce((s, v) => s + v.q, 0)) < 1e-9);
+  assert.ok(Math.abs(l.transporte.eau - eauDe(l)) < 1e-9);
 });
 
 test('économie : le temps de vol suit l\'hyperpropulsion (≈ 35 UA en ≈ 6 jours à 8 g)', () => {
@@ -109,4 +109,23 @@ test('économie : le relevé de prix est en multiple du prix de base et le regis
   avancer(e, 60);
   const somme = [...e.flux.values()].reduce((s, x) => s + x, 0), total = Object.values(e.transporte).reduce((s, x) => s + x, 0);
   assert.ok(Math.abs(somme - total) < 1e-6 * total, `${somme} vs ${total}`);
+});
+
+import { simulatePopulation } from '../app/src/physics/population.js';
+import { misereSysteme } from '../app/src/physics/economie.js';
+test('couplage : une crise de misère fait perdre du contrôle et avancer le point de bascule ; niveau 0 = aucun effet', () => {
+  const base = simulatePopulation({}), nul = simulatePopulation({ misereYear: 0, misereLevel: 0 });
+  for (const y of [-100, 0, 20, 60]) assert.equal(base.at(y).C, nul.at(y).C);
+  const crise = simulatePopulation({ misereYear: 0, misereYears: 1, misereLevel: 0.4 });
+  assert.ok(crise.at(0.5).C < base.at(0.5).C, `${crise.at(0.5).C} vs ${base.at(0.5).C}`);
+  assert.ok(crise.at(20).A >= base.at(20).A);
+  assert.ok(crise.summary.tippingYear <= base.summary.tippingYear, `${crise.summary.tippingYear} vs ${base.summary.tippingYear}`);
+  assert.equal(crise.at(-50).C, base.at(-50).C); // avant la crise, rien ne change
+});
+test('couplage : la misère du système monte quand on coupe la glace de Nunka', () => {
+  const ref = monde(), choc = monde({ profils: { ...PROFILS, 'nunka-glace': { ...PROFILS['nunka-glace'], prod: {} } } });
+  avancer(ref, 120); avancer(choc, 120);
+  const a = misereSysteme(ref), b = misereSysteme(choc);
+  assert.ok(b.total > a.total, `${b.total} vs ${a.total}`);
+  assert.ok(b.total <= 1 && b.tyts >= 0 && b.humains >= 0);
 });
