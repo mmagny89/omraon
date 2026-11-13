@@ -157,7 +157,7 @@ export const BELT = {
 
 // Ceinture froide (conception, équivalent de la ceinture de Kuiper) : corps de glace entre la 3:2 de Roushan (a·1,31) et le bord de 35 UA.
 // `share` : part du nombre de traceurs de la ceinture principale.
-export const COLD_BELT = { name: 'Ceinture froide', aMin: 17, aMax: 34, share: 0.6, role: 'Corps de glace, planètes naines et comètes : la frontière réelle du système.' };
+export const COLD_BELT = { name: 'Ceinture froide', aMin: 17, aMax: 34, share: 0.6, role: 'Corps de glace, planètes naines et comètes, au-delà de Roushan et de ses lunes.' };
 // Troyens de Roushan (aux points L4 et L5) et comètes / centaures (orbites très excentriques, du périhélie entre les géantes à l'aphélie dans la ceinture froide).
 export const ROUSHAN_TROJANS = 300;
 export const COMETS = { count: 40, qMin: 3, qMax: 15, QMin: 24, QMax: 40 };

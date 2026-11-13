@@ -20,9 +20,10 @@ export function overlapFraction(r1, r2, d) {
  * Retourne les objets (azimut, hauteur, rayon angulaire, phase), la hauteur de l'étoile et l'éclipse éventuelle.
  */
 export function computeSky(sim, site, st) {
-  const P = sim.rPos, bodies = sim.bodies, own = st.idx;
-  const ob = bodies[own];
-  const bodyPos = [P[3 * own], P[3 * own + 1], P[3 * own + 2]];
+  // Un site en orbite autour de l'étoile (ceinture, troyens…) n'est posé sur aucun corps : st.idx vaut 0 (l'étoile), qu'il ne faut pas écarter du ciel.
+  const P = sim.rPos, bodies = sim.bodies, helio = site.type === 'heliocentric', own = helio ? -1 : st.idx;
+  const ob = bodies[helio ? 0 : own];
+  const bodyPos = [P[3 * ob.idx], P[3 * ob.idx + 1], P[3 * ob.idx + 2]];
   const up = site.type === 'heliocentric' ? [0, 0, 1] : unit([st.pos[0] - bodyPos[0], st.pos[1] - bodyPos[1], st.pos[2] - bodyPos[2]]);
   const pole = site.type === 'heliocentric' ? [1, 0, 0] : poleVector(ob.tilt, ob.node);
   let north = [pole[0] - dot(pole, up) * up[0], pole[1] - dot(pole, up) * up[1], pole[2] - dot(pole, up) * up[2]];
@@ -59,5 +60,5 @@ export function computeSky(sim, site, st) {
     if (f > 0 && (!eclipse || f > eclipse.fraction) && o.dist < star.dist) eclipse = { by: o.name, fraction: f, total: f >= 0.999 };
   }
   const horizon = site.type === 'orbit' ? -Math.acos(Math.min(1, ob.radiusKm / (st.radiusKm || ob.radiusKm))) : 0;
-  return { objs, sunEl: star ? star.el : 0, eclipse, horizon, own: ob.def.name, ownColor: ob.def.color, frame: { east, north, up } };
+  return { objs, sunEl: star ? star.el : 0, eclipse, horizon, own: helio ? null : ob.def.name, ownColor: helio ? null : ob.def.color, frame: { east, north, up } };
 }

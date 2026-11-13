@@ -56,9 +56,9 @@ export const SITES = [
     role: "Extraction d'eau sur des astéroïdes carbonés : une eau que ni Nunka ni le Consortium ne contrôlent." },
   // Troyens de Roushan (point L4, 60° devant la géante, même orbite) et ceinture froide (conception).
   { id: 'troyens-roushan', name: 'Chantiers des troyens de Roushan', body: 'Roushan', type: 'heliocentric', orbit: { a: 12, e: 0.03, i: 0.9, Om: 290, w: 14, M: 120 }, habitat: 'underground', population: 1800, tyts: 250, invented: true,
-    role: "Glace et minerai d'un essaim d'astéroïdes qui accompagne Roushan sur son orbite : le ravitaillement le plus proche des cités flottantes." },
+    role: "Glace et minerai d'un essaim d'astéroïdes qui partage l'orbite de Roushan, soixante degrés devant elle : aussi loin d'elle que d'Omraon (12 UA), mais toujours au même endroit." },
   { id: 'froide-relais', name: 'Avant-poste de la ceinture froide', body: 'Ceinture froide', type: 'heliocentric', orbit: { a: 26, e: 0.06, i: 6, Om: 40, w: 100, M: 200 }, habitat: 'underground', population: 500, tyts: 0, invented: true,
-    role: 'Guet des comètes et extraction de glace pure, au bord de la frontière réelle du système.' },
+    role: 'Guet des comètes et extraction de glace pure dans la ceinture froide, bien au-delà de la douane de Roukir.' },
 ];
 
 // Le port de Kebet est tenu en place au-dessus de la capitale (le siège du Consortium) : `fixe` remplace son orbite par un point fixe dans le repère du corps,
