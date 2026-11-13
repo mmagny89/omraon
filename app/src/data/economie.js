@@ -8,18 +8,19 @@ export const MONNAIE = { nom: 'crédit', pluriel: 'crédits', symbole: 'cr', pro
 
 /**
  * prixBase : prix d'équilibre (crédits par unité) quand le stock couvre `joursCible` de consommation.
+ * prixMin, prixMax : bornes du prix en multiple du prix de base (défauts `REGLAGES.prixMin` et `prixMax`) ; les biens à forte valeur par volume (Tyts, luxe) varient peu : sinon leur arbitrage enrichirait n'importe quel petit convoi : un bien de luxe ou d'équipement ne flambe pas, on s'en passe ; un bien vital, si.
  * volume : place occupée en soute par unité (un Tyt = 0,25 : compartiment, vivres et eau du trajet compris).
  * Les Tyts sont aussi une marchandise (décision de l'autrice, 2026-11-13) : leur flux est celui que l'octroi « recense ».
  */
 export const MARCHANDISES = [
-  { id: 'eau', nom: 'Eau et glace', prixBase: 8, volume: 1 },
-  { id: 'carburant', nom: 'Carburant raffiné', prixBase: 40, volume: 1 },
-  { id: 'minerai', nom: 'Minerai brut', prixBase: 25, volume: 1 },
-  { id: 'metaux', nom: 'Métaux traités', prixBase: 120, volume: 1 },
-  { id: 'vivres', nom: 'Vivres', prixBase: 60, volume: 1 },
-  { id: 'equipements', nom: 'Pièces et équipements', prixBase: 300, volume: 1 },
-  { id: 'luxe', nom: 'Produits de luxe', prixBase: 1500, volume: 0.2 },
-  { id: 'tyts', nom: 'Tyts (main-d’œuvre servile)', prixBase: 8500, volume: 0.25 }, // ≈ dix ans de production d'un extracteur moyen (2,3 cr/jour : `valeurParMineur` dans physics/economie.js)
+  { id: 'eau', nom: 'Eau et glace', prixBase: 8, volume: 1, prixMax: 5 },
+  { id: 'carburant', nom: 'Carburant raffiné', prixBase: 40, volume: 1, prixMax: 5 },
+  { id: 'minerai', nom: 'Minerai brut', prixBase: 25, volume: 1, prixMax: 4 },
+  { id: 'metaux', nom: 'Métaux traités', prixBase: 120, volume: 1, prixMin: 0.3, prixMax: 3 },
+  { id: 'vivres', nom: 'Vivres', prixBase: 60, volume: 1, prixMax: 5 },
+  { id: 'equipements', nom: 'Pièces et équipements', prixBase: 300, volume: 1, prixMin: 0.5, prixMax: 2 },
+  { id: 'luxe', nom: 'Produits de luxe', prixBase: 1500, volume: 0.2, prixMin: 0.8, prixMax: 1.3 },
+  { id: 'tyts', nom: 'Tyts (main-d’œuvre servile)', prixBase: 5800, volume: 0.25, prixMin: 0.8, prixMax: 1.3 }, // ≈ dix ans de production d'un extracteur moyen (1,6 cr/jour : `valeurParMineur` dans physics/economie.js)
 ];
 
 /** Consommation par habitant et par jour (tonnes ; net du recyclage). Les Tyts mangent un peu moins, ne consomment pas de luxe. */
@@ -40,27 +41,27 @@ export const CONSO_LUXE = { 'kebet-quartiers': 0.001, 'kebet-consortium': 0.002,
  *  productivite : kg par jour et par personne qui extrait réellement (travail forcé à l'outil : ≈ 10 ; machines et jardins : 40–100). Les autres Tyts du site (la grande majorité à Sethis) travaillent à d'autres tâches (service, construction, entretien, transport) que le modèle ne compte pas : `extracteurs(profil)` donne le nombre d'extracteurs.
  *  puits      : vitesse de libération du lieu (km/s) : plus elle est haute, plus il coûte de carburant de décoller avec de la cargaison (0 = astéroïde, quai en orbite).
  *  zone       : 'interieur' (mines, derrière l'octroi de Naksun) ou 'exterieur'.
- *  taxe       : part de la valeur des marchandises importées prélevée à l'arrivée (douane).
+ *  taxe       : part de la valeur des marchandises importées prélevée à l'arrivée (douane) ; `douane` : groupe douanier (Kebet) : un transfert entre deux sites du même groupe ne paie rien.
  *  peage      : part de la valeur prélevée au site (octroi) sur tout voyage qui franchit la limite de la zone intérieure.
  */
 export const PROFILS = {
-  'kalpra-mines': { productivite: 10, puits: 7.9, prod: { minerai: 20, metaux: 6 }, tytsRequis: 4000, tytsAn: -0.06, zone: 'interieur' },
-  'sethis-cite-a': { productivite: 10, puits: 11.0, prod: { minerai: 120, metaux: 20 }, tytsRequis: 170000, tytsAn: 0.012, zone: 'interieur' },
-  'sethis-cite-b': { productivite: 10, puits: 11.0, prod: { minerai: 80, metaux: 12 }, tytsRequis: 110000, tytsAn: 0.012, zone: 'interieur' },
+  'kalpra-mines': { productivite: 10, puits: 7.9, prod: { minerai: 20, metaux: 6 }, tytsRequis: 3150, tytsAn: -0.06, zone: 'interieur' },
+  'sethis-cite-a': { productivite: 5, puits: 11.0, prod: { minerai: 120, metaux: 20 }, tytsRequis: 170000, tytsAn: 0.008, zone: 'interieur' },
+  'sethis-cite-b': { productivite: 5, puits: 11.0, prod: { minerai: 80, metaux: 12 }, tytsRequis: 110000, tytsAn: 0.008, zone: 'interieur' },
   'naksun-octroi': { prod: {}, tytsRequis: 0, zone: 'interieur', peage: 0.06 },
   'mahat-tribunaux': { puits: 0.1, prod: {}, tytsRequis: 0, zone: 'interieur' },
   'sedbou-garnison': { puits: 0.05, prod: {}, tytsRequis: 0, zone: 'interieur' },
   'iasha-relais': { puits: 0.1, prod: { equipements: 28 }, tytsRequis: 0, zone: 'exterieur' },
   'astir-balise': { puits: 0.05, prod: {}, tytsRequis: 0, zone: 'exterieur' },
   // Le port est tenu en place par une poussée continue (≈ 0,8 g, docs/modifications-lore.md n° 25) : il brûle en permanence ; 60 t/jour est un ordre de grandeur de conception.
-  'kebet-orbite': { prod: {}, conso: { carburant: 60 }, tytsRequis: 800, tytsAn: 0, zone: 'exterieur', taxe: 0.1 },
-  'kebet-temples': { productivite: 50, puits: 10.5, prod: { vivres: 56, eau: 8 }, tytsRequis: 2800, tytsAn: 0.005, zone: 'exterieur' },
-  'kebet-consortium': { productivite: 30, puits: 10.5, prod: { eau: 7 }, tytsRequis: 1400, tytsAn: 0.005, zone: 'exterieur' },
-  'kebet-quartiers': { productivite: 60, puits: 10.5, prod: { vivres: 392, luxe: 35, eau: 35 }, tytsRequis: 8000, tytsAn: 0.01, zone: 'exterieur' },
-  'roushan-cites': { puits: 12, prod: { carburant: 330, equipements: 28, vivres: 28 }, conso: { minerai: 200 }, tytsRequis: 0, zone: 'exterieur' },
-  'nunka-glace': { productivite: 40, puits: 0.4, prod: { eau: 167 }, tytsRequis: 5000, tytsAn: -0.02, zone: 'exterieur' },
+  'kebet-orbite': { prod: {}, conso: { carburant: 60 }, tytsRequis: 950, tytsAn: 0, zone: 'exterieur', taxe: 0.1, douane: 'kebet' },
+  'kebet-temples': { productivite: 50, puits: 10.5, prod: { vivres: 56, eau: 8 }, tytsRequis: 2850, tytsAn: 0.005, zone: 'exterieur', taxe: 0.1, douane: 'kebet' },
+  'kebet-consortium': { productivite: 30, puits: 10.5, prod: { eau: 7 }, tytsRequis: 1520, tytsAn: 0.005, zone: 'exterieur', taxe: 0.1, douane: 'kebet' },
+  'kebet-quartiers': { productivite: 150, puits: 10.5, prod: { vivres: 392, luxe: 35, eau: 35 }, tytsRequis: 9500, tytsAn: 0.01, zone: 'exterieur', taxe: 0.1, douane: 'kebet' },
+  'roushan-cites': { puits: 12, prod: { carburant: 420, equipements: 28, vivres: 28 }, conso: { minerai: 200 }, tytsRequis: 0, zone: 'exterieur' },
+  'nunka-glace': { productivite: 40, puits: 0.4, prod: { eau: 167 }, tytsRequis: 4200, tytsAn: -0.02, zone: 'exterieur' },
   'roukir-poste': { puits: 0.05, prod: { minerai: 5 }, tytsRequis: 0, zone: 'exterieur' },
-  'shukal-colonie': { puits: 4.4, prod: {}, tytsRequis: 1200, tytsAn: 0, zone: 'exterieur' },
+  'shukal-colonie': { puits: 4.4, prod: {}, tytsRequis: 700, tytsAn: 0, zone: 'exterieur' },
   'shukal-arret': { prod: {}, tytsRequis: 0, zone: 'exterieur' },
   'nunzir-repaire': { puits: 0, prod: {}, tytsRequis: 0, zone: 'ceinture' },
   'ceinture-fonderies': { productivite: 100, puits: 0, prod: { minerai: 45, metaux: 14 }, tytsRequis: 300, tytsAn: 0.01, zone: 'ceinture' },
@@ -89,18 +90,32 @@ export const TRANSPORTEURS = [
   { id: 'mineurs-2', nom: 'Convoi des mines II', faction: 'libre', soute: 3000, aG: 6, base: 'sethis-cite-b', caisse: 800000 },
   { id: 'mineurs-3', nom: 'Convoi de Kalpra', faction: 'libre', soute: 1500, aG: 6, base: 'kalpra-mines', caisse: 300000 },
   // Cabotage : petits armateurs indépendants qui desservent les sites trop petits pour une flotte.
-  { id: 'cabotage-1', nom: 'Cabotier de Naksun', faction: 'libre', soute: 150, aG: 8, base: 'naksun-octroi', caisse: 40000 },
-  { id: 'cabotage-2', nom: 'Cabotier d\u2019Iasha', faction: 'libre', soute: 150, aG: 8, base: 'iasha-relais', caisse: 40000 },
-  { id: 'cabotage-3', nom: 'Cabotier des confins', faction: 'libre', soute: 120, aG: 8, base: 'roukir-poste', caisse: 40000 },
-  { id: 'cabotage-4', nom: 'Cabotier de Shukal', faction: 'libre', soute: 120, aG: 8, base: 'shukal-colonie', caisse: 40000 },
-  { id: 'cabotage-5', nom: 'Cabotier de Mahat', faction: 'libre', soute: 150, aG: 8, base: 'mahat-tribunaux', caisse: 40000 },
-  { id: 'cabotage-6', nom: 'Cabotier d\u2019Astir', faction: 'libre', soute: 150, aG: 8, base: 'astir-balise', caisse: 40000 },
+  { id: 'cabotage-1', nom: 'Cabotier de Naksun', faction: 'libre', soute: 300, aG: 8, base: 'naksun-octroi', caisse: 40000 },
+  { id: 'cabotage-2', nom: 'Cabotier d\u2019Iasha', faction: 'libre', soute: 300, aG: 8, base: 'iasha-relais', caisse: 40000 },
+  { id: 'cabotage-3', nom: 'Cabotier des confins', faction: 'libre', soute: 300, aG: 8, base: 'roukir-poste', caisse: 40000 },
+  { id: 'cabotage-4', nom: 'Cabotier de Shukal', faction: 'libre', soute: 300, aG: 8, base: 'shukal-colonie', caisse: 40000 },
+  { id: 'cabotage-5', nom: 'Cabotier de Mahat', faction: 'libre', soute: 300, aG: 8, base: 'mahat-tribunaux', caisse: 40000 },
+  { id: 'cabotage-6', nom: 'Cabotier d\u2019Astir', faction: 'libre', soute: 300, aG: 8, base: 'astir-balise', caisse: 40000 },
   // La ceinture, hors du contrôle du Consortium
   { id: 'ceinture-1', nom: 'Mineurs libres de la ceinture', faction: 'libre', soute: 2500, aG: 6, base: 'ceinture-fonderies', caisse: 500000 },
   { id: 'ceinture-2', nom: 'Chalands de la ceinture', faction: 'libre', soute: 2500, aG: 4, base: 'ceinture-glace', caisse: 500000 },
   { id: 'onkel-2', nom: 'Passeurs d\u2019Onkel', faction: 'contrebande', soute: 600, aG: 8, base: 'nunzir-repaire', caisse: 80000, risque: 0.12 },
   { id: 'troyens-1', nom: 'Chalands des troyens', faction: 'libre', soute: 1200, aG: 6, base: 'troyens-roushan', caisse: 300000 },
-  { id: 'cabotage-7', nom: 'Cabotier de la ceinture froide', faction: 'libre', soute: 120, aG: 8, base: 'froide-relais', caisse: 40000 },
+  { id: 'cabotage-8', nom: 'Cabotier de Sedbou', faction: 'libre', soute: 300, aG: 8, base: 'sedbou-garnison', caisse: 40000 },
+  { id: 'cabotage-9', nom: 'Cabotier de Kalpra', faction: 'libre', soute: 300, aG: 8, base: 'kalpra-mines', caisse: 40000 },
+  { id: 'cabotage-10', nom: 'Cabotier de Roushan', faction: 'libre', soute: 300, aG: 8, base: 'roushan-cites', caisse: 40000 },
+  { id: 'cabotage-11', nom: 'Cabotier de Kebet', faction: 'libre', soute: 300, aG: 8, base: 'kebet-temples', caisse: 40000 },
+  { id: 'petit-1', nom: 'Petit armateur 1', faction: 'libre', soute: 80, aG: 8, base: 'roushan-cites', caisse: 20000 },
+  { id: 'petit-2', nom: 'Petit armateur 2', faction: 'libre', soute: 80, aG: 8, base: 'kebet-orbite', caisse: 20000 },
+  { id: 'petit-3', nom: 'Petit armateur 3', faction: 'libre', soute: 80, aG: 8, base: 'sethis-cite-a', caisse: 20000 },
+  { id: 'petit-4', nom: 'Petit armateur 4', faction: 'libre', soute: 80, aG: 8, base: 'naksun-octroi', caisse: 20000 },
+  { id: 'petit-5', nom: 'Petit armateur 5', faction: 'libre', soute: 80, aG: 8, base: 'iasha-relais', caisse: 20000 },
+  { id: 'petit-6', nom: 'Petit armateur 6', faction: 'libre', soute: 80, aG: 8, base: 'nunka-glace', caisse: 20000 },
+  { id: 'petit-7', nom: 'Petit armateur 7', faction: 'libre', soute: 80, aG: 8, base: 'troyens-roushan', caisse: 20000 },
+  { id: 'petit-8', nom: 'Petit armateur 8', faction: 'libre', soute: 80, aG: 8, base: 'mahat-tribunaux', caisse: 20000 },
+  { id: 'petit-9', nom: 'Petit armateur 9', faction: 'libre', soute: 80, aG: 8, base: 'kebet-quartiers', caisse: 20000 },
+  { id: 'petit-10', nom: 'Petit armateur 10', faction: 'libre', soute: 80, aG: 8, base: 'astir-balise', caisse: 20000 },
+  { id: 'cabotage-7', nom: 'Cabotier de la ceinture froide', faction: 'libre', soute: 300, aG: 8, base: 'froide-relais', caisse: 40000 },
   // Personnages
   { id: 'mai', nom: 'Le Mai (Ella Corren)', faction: 'libre', soute: 60, aG: 8, base: 'roushan-cites', caisse: 20000 },
   { id: 'onkel-1', nom: 'Réseau d\u2019Onkel', faction: 'contrebande', soute: 80, aG: 8, base: 'nunzir-repaire', caisse: 30000, risque: 0.12 },
@@ -114,6 +129,9 @@ export const REGLAGES = {
   reserve: 0.25, // part de la cible qu'un site refuse de vendre au transporteur
   carburantParJour: 0.012, // carburant par jour de vol, par unité de soute, à pleine charge (proportionnel au chargement)
   lancement: 0.04, // carburant par unité de cargaison qui quitte un lieu à 10 km/s de vitesse de libération ; ∝ (vitesse/10)²
+  frais: 0.02, // part du prix prélevée par le marché local à l'achat et à la vente (courtage, manutention) : elle ne comprime que les petits écarts
+  exploitation: 0.03, // crédits par jour et par unité de soute (équipage, entretien, assurance), versés au site où le convoi est à quai
+  croissanceHumains: 0.007, // par an : celle du modèle de population (canon 0,6–0,8 %)
   carburantVide: 0.004, // idem à vide
   escaleJours: 0.5, // chargement et déchargement
   profitMin: 50, // crédits : en dessous, le transporteur ne part pas

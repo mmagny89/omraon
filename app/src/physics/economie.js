@@ -58,7 +58,7 @@ export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = M
       cible[m.id] = m.id === 'tyts' ? (profil.tytsRequis ?? 0) : reglages.joursCible * Math.max(besoin[m.id], profil.prod[m.id] ?? 0);
       stock[m.id] = m.id === 'tyts' ? site.tyts : cible[m.id];
     }
-    noeuds.set(site.id, { site, profil, cible, stock, besoin, solde: 0, penurie: {}, enRoute: {} });
+    noeuds.set(site.id, { site, profil, cible, stock, besoin, pop: site.population, solde: 0, penurie: {}, enRoute: {} });
   }
   const convois = transporteurs.filter((c) => noeuds.has(c.base)).map((def) => ({ def, caisse: def.caisse, lieu: def.base, dispo: 0, voyage: null, gain: 0, voyages: 0 }));
   const vols = new Map();
@@ -75,9 +75,9 @@ export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = M
 export function prixAuStock(etat, noeud, g, stock) {
   const cible = noeud.cible[g];
   if (!(cible > 0)) return null;
-  const r = etat.reglages;
+  const r = etat.reglages, bien = etat.biens.get(g);
   const ratio = cible / Math.max(stock, cible * 0.02);
-  return etat.biens.get(g).prixBase * Math.min(r.prixMax, Math.max(r.prixMin, ratio ** r.elasticite));
+  return bien.prixBase * Math.min(bien.prixMax ?? r.prixMax, Math.max(bien.prixMin ?? r.prixMin, ratio ** r.elasticite));
 }
 export const prix = (etat, siteId, g) => { const n = etat.noeuds.get(siteId); return prixAuStock(etat, n, g, n.stock[g]); };
 
@@ -88,11 +88,14 @@ function valeurEchange(etat, noeud, g, stock0, q, sens) {
   return v;
 }
 
+/** Taux de douane à l'arrivée en `dest` depuis `src` : rien entre deux sites du même groupe douanier (Kebet). */
+const tauxDouane = (src, dest) => (src.profil.douane && src.profil.douane === dest.profil.douane ? 0 : dest.profil.taxe ?? 0);
+
 function livrer(etat, c) {
   const v = c.voyage, n = etat.noeuds.get(v.to);
   for (const x of v.cargo) {
-    const brut = valeurEchange(etat, n, x.g, n.stock[x.g], x.qLivree, +1);
-    const taxe = v.contrebande ? 0 : brut * (n.profil.taxe ?? 0), net = brut - taxe;
+    const brut = valeurEchange(etat, n, x.g, n.stock[x.g], x.qLivree, +1) * (1 - etat.reglages.frais);
+    const taxe = v.contrebande ? 0 : brut * tauxDouane(etat.noeuds.get(v.from), n), net = brut - taxe;
     n.stock[x.g] += x.qLivree; n.enRoute[x.g] -= x.qLivree;
     n.solde -= net; c.caisse += net;
     etat.taxes[v.to] = (etat.taxes[v.to] ?? 0) + taxe;
@@ -129,15 +132,15 @@ function meilleur(etat, c, lieu) {
     if (!cand.length) continue;
     cand.sort((x, y) => (pD[y] - pSrc[y]) / etat.biens.get(y).volume - (pD[x] - pSrc[x]) / etat.biens.get(x).volume);
     const d = etat.duree(lieu, idD, def.aG), vol = d + r.escaleJours, tauxPeage = !contrebande && octroi && src.profil.zone !== nd.profil.zone && (src.profil.zone === 'interieur' || nd.profil.zone === 'interieur') ? octroi.profil.peage * multPeage : 0;
-    const taxeD = contrebande ? 0 : nd.profil.taxe ?? 0, perte = 1 - (1 - (contrebande ? def.risque ?? 0 : 0)) * (1 - pirates); // probabilité (ou part) de cargaison perdue
+    const taxeD = contrebande ? 0 : tauxDouane(src, nd), perte = 1 - (1 - (contrebande ? def.risque ?? 0 : 0)) * (1 - pirates); // probabilité (ou part) de cargaison perdue
     for (const f of [1, 0.5, 0.25]) {
       let reste = def.soute * f, utilise = 0, achatT = 0, netT = 0; const cargo = [];
       for (const g of cand) {
         if (reste <= 1e-9) break;
         const bien = etat.biens.get(g), q = Math.min(reste / bien.volume, dispo[g]);
         if (!(q > 0)) continue;
-        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1), qLivree = (contrebande ? q * (1 - (def.risque ?? 0)) : q) * (1 - pirates);
-        const net = valeurEchange(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0), qLivree, +1) * (1 - taxeD);
+        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1) * (1 + r.frais), qLivree = (contrebande ? q * (1 - (def.risque ?? 0)) : q) * (1 - pirates);
+        const net = valeurEchange(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0), qLivree, +1) * (1 - r.frais) * (1 - taxeD);
         if (net <= achat * (1 + tauxPeage)) continue;
         cargo.push({ g, q, qLivree, achat }); reste -= q * bien.volume; utilise += q * bien.volume; achatT += achat; netT += net;
       }
@@ -198,17 +201,23 @@ function choisir(etat, c) {
 function jour(etat) {
   const t1 = etat.t + 1;
   etat.actifs = etat.evenements.filter((e) => etat.t >= e.de && etat.t < e.de + e.duree);
+  const croiss = (1 + etat.reglages.croissanceHumains) ** (1 / DAYS_PER_YEAR);
   for (const n of etat.noeuds.values()) {
+    n.pop *= croiss;
     const req = n.profil.tytsRequis ?? 0, lambda = req > 0 ? Math.min(1, n.stock.tyts / req) : 1;
     for (const g of etat.biens.keys()) {
       if (g === 'tyts') { n.stock.tyts = Math.max(0, n.stock.tyts * (1 + (n.profil.tytsAn ?? 0) / DAYS_PER_YEAR)); continue; }
       n.stock[g] = Math.min(n.cible[g] * 10 || Infinity, n.stock[g] + (n.profil.prod[g] ?? 0) * lambda);
-      const need = n.besoin[g];
+      const need = besoinJour({ id: n.site.id, population: n.pop, tyts: n.stock.tyts }, n.profil, g); // la population croît, et seuls les Tyts présents consomment
       if (need > 0) {
         if (n.stock[g] >= need) n.stock[g] -= need;
         else { n.penurie[g] = (n.penurie[g] ?? 0) + 1 - n.stock[g] / need; n.stock[g] = 0; }
       }
     }
+  }
+  for (const c of etat.convois) { // exploitation : équipage, entretien, assurance, dépensés là où le convoi est à quai (ou au départ de son voyage)
+    const frais = c.def.soute * etat.reglages.exploitation, lieu = etat.noeuds.get(c.voyage ? c.voyage.from : c.lieu);
+    c.caisse -= frais; c.gain -= frais; lieu.solde += frais;
   }
   for (const c of etat.convois) if (c.voyage && c.voyage.tArr <= t1) livrer(etat, c);
   for (const c of etat.convois) if (!c.voyage && c.dispo <= t1) choisir(etat, c);

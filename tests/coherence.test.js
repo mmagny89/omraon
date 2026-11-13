@@ -18,7 +18,7 @@ test('cohérence : la productivité par extracteur reste plausible, et les extra
   for (const s of SITES) {
     const p = PROFILS[s.id], k = extracteurs(p);
     if (!p.productivite) continue;
-    assert.ok(p.productivite >= 10 && p.productivite <= 400, `${s.id} : ${p.productivite} kg/jour par extracteur`);
+    assert.ok(p.productivite >= 5 && p.productivite <= 400, `${s.id} : ${p.productivite} kg/jour par extracteur`);
     assert.ok(k <= s.population + s.tyts, `${s.id} : ${k} extracteurs pour ${s.population + s.tyts} personnes`);
   }
   // les mines tenues par des Tyts : au moins 5 % d'extracteurs, le reste fait d'autres tâches (service, construction, entretien)

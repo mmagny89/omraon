@@ -127,7 +127,7 @@ export const PLANETS = [
         radiusKm: 85, density: 1900, albedo: 0.06,
         orbit: { a: 4500000, e: 0.02, i: 1.5, Om: 250, w: 330, M: 180 },
         names: { tyt: 'Rukh-Kir', tytCourant: 'Rukhir', sens: "l'Enfant-du-vent" },
-        role: 'Poste avancé : la vraie frontière extérieure du système, avant-poste minier et militaire des confins.',
+        role: 'Poste avancé : la dernière douane du système habité, avant-poste minier et militaire des confins (au-delà, seule la ceinture froide).',
       },
       {
         // Planète en cours de colonisation du Mouvement II (le document la situe « autour de Roukir », sans la nommer ni fixer sa nature).

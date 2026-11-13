@@ -7,15 +7,15 @@ Tout ce document est de la **conception** (ordres de grandeur, jamais de canon) 
 | Marchandise | Extraction (t/jour) | Où |
 |---|---|---|
 | Vivres | 476 | Kebet (jardins) |
-| Carburant | 330 | Roushan (raffineries de gaz) |
+| Carburant | 420 | Roushan (raffineries de gaz) |
 | Eau et glace | 329 | Nunka, un peu de Kebet |
 | Minerai | 282 | Sethis, Kalpra, confins |
 | Équipements | 56 | Roushan, Iasha |
 | Métaux traités | 52 | Sethis, Kalpra |
 | Luxe | 35 | Kebet |
-| **Total** | **≈ 1 560 t/jour, soit ≈ 570 000 t/an** | |
+| **Total** | **≈ 1 650 t/jour, soit ≈ 600 000 t/an** | |
 
-Pour ≈ 830 000 habitants (497 000 humains, 331 000 Tyts) : **≈ 1,9 kg par habitant et par jour**. La Terre actuelle extrait de l'ordre de 12 t par habitant et par an (≈ 34 kg par jour), soit **18 fois plus**.
+Pour ≈ 830 000 habitants (497 000 humains, 331 000 Tyts) : **≈ 2,0 kg par habitant et par jour**. La Terre actuelle extrait de l'ordre de 12 t par habitant et par an (≈ 34 kg par jour), soit **17 fois plus**.
 
 ## Ce que les corps contiennent (ordres de grandeur)
 
