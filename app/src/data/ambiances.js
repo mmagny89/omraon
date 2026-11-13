@@ -132,9 +132,9 @@ export const AMBIANCES_SITES = {
   'kebet-orbite': {
     canon: false, source: '01 Système (Kebet, Iasha), 13 Quotidien Kebet', titre: 'Port orbital de Kebet — la douane avant le Jardin',
     voir: ['Docks clairs côté passagers, coursives de service côté ouvriers ; hublots sur le monde vert ; navettes de descente.'],
-    entendre: ['Annonces feutrées côté Haut, vacarme des soutes côté service.'],
+    entendre: ['Annonces feutrées côté Haut, vacarme des soutes côté service, et sous tout cela le grondement sourd des tuyères qui tiennent la station.'],
     sentir: ['Air filtré et parfumé côté passagers, huile et sueur côté service.'],
-    toucher: ['Rotation douce, rampes polies d\'un côté, métal usé de l\'autre.'],
+    toucher: ['Une pesanteur de poussée, constante, jamais de rotation ; rampes polies d\'un côté, métal usé de l\'autre.'],
     corps: ['Deux corps dans la même station : ceux qui descendent, et ceux qui font tourner.'],
     faussenote: 'Le Jardin est là, sous le hublot : tout proche, et réservé.',
   },

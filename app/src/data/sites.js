@@ -29,7 +29,7 @@ export const SITES = [
   { id: 'astir-balise', name: "Balise d'Astir", body: 'Astir', type: 'surface', lat: 30, lon: 90, habitat: 'underground', population: 8000, tyts: 0, invented: true,
     role: 'Observatoire et balise de navigation vers Kebet ; logement d\'ouvriers-navetteurs.' },
   { id: 'kebet-orbite', name: 'Port orbital de Kebet', body: 'Kebet', type: 'orbit', altKm: 600, incl: 10, node: 0, phase: 90, habitat: 'orbital', population: 5000, tyts: 500, invented: true,
-    role: "Port d'entrée du monde habité : douane et transit avant la descente (stations de service, dont celle où Heru fut trouvé). Tenu en place au-dessus de la capitale (conception : aucune orbite ne le permet)." },
+    role: "Port d'entrée du monde habité : douane et transit avant la descente (stations de service, dont celle où Heru fut trouvé). Tenu en place au-dessus de la capitale par une poussée continue (aucune orbite ne le permet)." },
   { id: 'kebet-temples', name: "Grands temples d'Osaon", body: 'Kebet', type: 'surface', lat: 30, lon: 20, land: true, habitat: 'open', population: 3000, tyts: 1500, invented: true,
     role: "Centre religieux : archives, Histoire officielle, temples solaires ouverts sur le ciel — bâtis sur le sanctuaire tyt volé." },
   { id: 'kebet-consortium', name: 'Siège du Consortium', body: 'Kebet', type: 'surface', lat: 33, lon: 28, land: true, habitat: 'open', population: 2000, tyts: 800, invented: true,
