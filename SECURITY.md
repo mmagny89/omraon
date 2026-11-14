@@ -14,4 +14,6 @@ Seule la dernière version publiée (branche `main`) reçoit des correctifs de s
 
 - Les dépendances sont surveillées par Dependabot (`.github/dependabot.yml`).
 - L'audit des dépendances (`composer audit`) est une porte de la CI, sans dépendance envers les autres portes.
+- L'accès exige un compte (rôles Lecteur et Admin, comptes créés par l'admin) ; connexion limitée à 5 essais par 15 minutes, jetons CSRF sur tous les formulaires et sur la déconnexion, échecs de connexion journalisés. Le code de la vue et les données ne sont servis qu'aux comptes connectés.
+- Les valeurs modifiées par un admin sont validées côté serveur (type, identifiants, aucune balise HTML) ; les illustrations téléversées sont limitées à PNG, JPEG et WebP (2 Mo), jamais de SVG.
 - Aucun secret n'est versionné : les fichiers `.env.*.local` restent hors du dépôt.
