@@ -77,6 +77,14 @@ jobs:
         run: |
           npm run --silent vendor
           git diff --exit-code -- app/front/vendor
+      # Diagnostic temporaire (erreur « No files matching patterns » sur la validation HTML) : à retirer une fois la cause trouvée.
+      - name: Diagnostic de la validation HTML
+        run: |
+          echo "commit testé : $(git rev-parse HEAD) (ref ${GITHUB_REF}, événement ${GITHUB_EVENT_NAME})"
+          pwd
+          ls -la app/front || echo "app/front ABSENT"
+          git ls-files app/front | head -5
+          git check-ignore -v app/front/index.html || echo "app/front/index.html non ignoré"
       - name: Validation HTML
         run: npx --yes html-validate@9 "app/front/index.html"
       - name: Liens internes
