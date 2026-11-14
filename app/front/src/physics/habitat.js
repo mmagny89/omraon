@@ -1,6 +1,7 @@
 import { equilibriumTemp, bulk, starLuminosity } from './derived.js';
 import { doseRemPerDay } from './habitability.js';
 import { AU_KM, R_JUP_KM } from './constants.js';
+import { temperatureSite } from './thermique.js';
 
 const SIGMA = 5.670374e-8, T_HAB = 293; // K
 export const PERSON = { internalKW: 1.5, baselineKW: 2.0, leakWperK: 5, hydroponicKW: 6, o2: 0.84, co2: 1.0, water: 0.1, food: 0.62, spinTonnes: 20 };
@@ -48,14 +49,15 @@ export function siteReport(ctx, site, st, t) {
     const elev = Math.asin(Math.max(-1, Math.min(1, cosz))) / (Math.PI / 180), la = Math.abs(site.lat) * Math.PI / 180;
     env.push(['Soleil', cosz > 0 ? `jour, élévation ${fmt(elev, 0)}°` : `nuit (${fmt(-elev, 0)}° sous l'horizon)`]);
     g = bulk(body.mass, body.radiusKm).gSurf / 9.80665;
+    const Tdehors = temperatureSite(sim, ctx.el, site, st).dehors; // même modèle que la tuile « Dehors, maintenant »
+    env.push(['Température au sol, maintenant', `${fmt(Tdehors, 0)} K (${fmt(Tdehors - 273.15, 0)} °C)`]);
     if (atm) {
       const Tmean = Teq + (hab.greenhouseK ?? 0) - 30 * Math.sin(la) ** 2;
       env.push(['Température au sol (moyenne)', `${fmt(Tmean, 0)} K (${fmt(Tmean - 273.15, 0)} °C)`]);
       Tenv = Tmean; gcr = 0.007 * P;
     } else {
       const Tmean = Teq * Math.pow(Math.max(Math.cos(la), 0.3), 0.25);
-      const Tnow = cosz > 0 ? Math.max(0.35 * Teq, Teq * Math.SQRT2 * Math.pow(cosz, 0.25)) : 0.35 * Teq;
-      env.push(['Température au sol, maintenant', `${fmt(Tnow, 0)} K (${fmt(Tnow - 273.15, 0)} °C)`], ['Température moyenne (sous-sol)', `${fmt(Tmean, 0)} K (${fmt(Tmean - 273.15, 0)} °C)`]);
+      env.push(['Température moyenne (sous-sol)', `${fmt(Tmean, 0)} K (${fmt(Tmean - 273.15, 0)} °C)`]);
       Tenv = site.habitat === 'dome' ? Teq : Tmean; gcr = 0.65;
     }
     env.push(['Gravité', `${fmt(g, g < 0.1 ? 3 : 2)} g`]);
@@ -88,7 +90,7 @@ export function siteReport(ctx, site, st, t) {
   sec('Environnement', env);
 
   // --- Thermique ---
-  const th = thermalPowerPerPerson(Tenv), rows = [['Température extérieure (habitat)', `${fmt(Tenv, 0)} K`]];
+  const th = thermalPowerPerPerson(Tenv), rows = [['Température de référence du chauffage (moyenne)', `${fmt(Tenv, 0)} K (${fmt(Tenv - 273.15, 0)} °C)`]];
   if (site.type === 'orbit' || site.type === 'heliocentric') {
     const rad = PERSON.internalKW * 1000 / (2 * 0.9 * SIGMA * 300 ** 4);
     rows.push(['Radiateurs', `≈ ${fmt(rad, 1)} m² par habitant (à 300 K)`]);

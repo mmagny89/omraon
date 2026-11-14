@@ -28,7 +28,7 @@ final class DonneesService
     public const JEUX_REGEX = 'systeme|sites|economie|lore|glossaire|ambiances|chronologie';
     private const TAILLE_MAX = 524288;
 
-    /** @var array<string, \stdClass> */
+    /** @var array<string, array{mtime: int, valeur: \stdClass}> */
     private array $canons = [];
 
     public function __construct(
@@ -145,6 +145,15 @@ final class DonneesService
             throw new \InvalidArgumentException('Jeu inconnu : '.$jeu);
         }
 
-        return $this->canons[$jeu] ??= json_decode((string) file_get_contents($this->dossier.'/'.$jeu.'.json'), false, 64, \JSON_THROW_ON_ERROR);
+        // Le worker FrankenPHP garde le service en mémoire d'une requête à l'autre : la date du fichier invalide le cache
+        // quand le canon change (sans cela, un fichier modifié n'est vu qu'au redémarrage).
+        $fichier = $this->dossier.'/'.$jeu.'.json';
+        clearstatcache(true, $fichier);
+        $mtime = (int) filemtime($fichier);
+        if (($this->canons[$jeu]['mtime'] ?? null) !== $mtime) {
+            $this->canons[$jeu] = ['mtime' => $mtime, 'valeur' => json_decode((string) file_get_contents($fichier), false, 64, \JSON_THROW_ON_ERROR)];
+        }
+
+        return $this->canons[$jeu]['valeur'];
     }
 }
