@@ -43,8 +43,8 @@ final class FrontController extends AbstractController
         }
         // La feuille Tailwind de la vue porte un nom empreinté (AssetMapper) : la page l'y référence au service.
         $html = str_replace(
-            ['<!--VUE_CSS-->', '<!--LOGOUT-->'],
-            ['<link rel="stylesheet" href="'.$this->assets->getUrl('styles/vue.css').'">', htmlspecialchars($this->deconnexion->getLogoutPath(), \ENT_QUOTES)],
+            ['<!--VUE_CSS-->', '<!--LOGOUT-->', '<!--FAVICON-->'],
+            ['<link rel="stylesheet" href="'.$this->assets->getUrl('styles/vue.css').'">', htmlspecialchars($this->deconnexion->getLogoutPath(), \ENT_QUOTES), $this->assets->getUrl('favicon.svg')],
             (string) file_get_contents($fichier),
         );
 

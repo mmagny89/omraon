@@ -57,6 +57,9 @@ final class AccesTest extends WebTestCase
         $this->client->request('GET', '/connexion');
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('form input[name=_password]');
+        self::assertSelectorExists('link[rel=icon][href*="favicon"]');
+        self::assertSelectorExists('img[src*="apercu"][alt]');
+        self::assertSelectorTextContains('main', 'Accès réservé');
     }
 
     public function testLecteurVoitLeSystemeMaisPasLAdmin(): void
@@ -126,5 +129,16 @@ final class AccesTest extends WebTestCase
         $this->client->loginUser($this->creer('vue@example.test'));
         $this->client->request('GET', '/');
         self::assertMatchesRegularExpression('#id="btn-logout" class="tb" href="/deconnexion\?_csrf_token=[^"]+"#', (string) $this->client->getResponse()->getContent());
+    }
+
+    public function testLeFaviconEstPubliqueEtLaVueLaReference(): void
+    {
+        $this->client->request('GET', '/connexion');
+        $href = (string) $this->client->getCrawler()->filter('link[rel=icon]')->attr('href');
+        $this->client->request('GET', $href);
+        self::assertResponseIsSuccessful('le favicon se charge sans compte');
+        $this->client->loginUser($this->creer('fav@example.test'));
+        $this->client->request('GET', '/');
+        self::assertMatchesRegularExpression('#<link rel="icon" href="/assets/favicon-[^"]+\.svg"#', (string) $this->client->getResponse()->getContent());
     }
 }

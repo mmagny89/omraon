@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>À l'ombre d'Omraon</title>
+  <defs>
+    <radialGradient id="soleil" cx="0.5" cy="0.5" r="0.5"><stop offset="0.35" stop-color="#ffe2b0"/><stop offset="1" stop-color="#ffbf6b" stop-opacity="0"/></radialGradient>
+    <radialGradient id="planete" cx="0.35" cy="0.3" r="0.9"><stop offset="0" stop-color="#9ec5ff"/><stop offset="0.55" stop-color="#3c7bd9"/><stop offset="1" stop-color="#0d1f45"/></radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#07090f"/>
+  <circle cx="46" cy="18" r="16" fill="url(#soleil)"/>
+  <circle cx="46" cy="18" r="6" fill="#ffe2b0"/>
+  <circle cx="26" cy="38" r="17" fill="url(#planete)"/>
+  <path d="M26 21 a17 17 0 0 1 0 34 a22 22 0 0 0 -2 -34z" fill="#000" opacity="0.38"/>
+</svg>

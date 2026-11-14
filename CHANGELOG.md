@@ -5,6 +5,11 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Ajouté
+
+- **Favicon** (SVG : planète et soleil) sur les pages et dans la vue, publique pour l'écran de connexion.
+- **Page de connexion** : présentation de l'application (vue 3D, fiches, simulations, rôles) avec une capture de la vue, à côté du formulaire.
+
 ## [2.0.0] - 2026-11-14
 
 Le site n'est plus statique : c'est une application Symfony 8 (FrankenPHP, PostgreSQL) dont l'accès demande un compte. Changement incompatible : plus rien n'est lisible sans connexion.

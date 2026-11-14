@@ -1,26 +1,46 @@
 {% extends 'base.html.twig' %}
 {% block title %}Connexion — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="mx-auto mt-[8vh] w-full max-w-md">
-  <div class="rounded-2xl border border-ligne bg-carte p-6 shadow-2xl shadow-black/40 sm:p-8">
-    <p aria-hidden="true" class="text-3xl text-accent">✦</p>
-    <h1 class="mt-2 text-2xl font-semibold tracking-tight">À l'ombre d'Omraon</h1>
-    <p class="mt-2 text-sm text-doux">Accès réservé. Les comptes sont créés par l'administrateur.</p>
-    <form method="post" class="mt-6 space-y-4">
-      {% if erreur %}<p role="alert" class="rounded-lg border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger">{{ erreur.messageKey|trans(erreur.messageData, 'security') }}</p>{% endif %}
-      <div class="space-y-1.5">
-        <label for="email" class="block text-sm font-medium text-doux">Email</label>
-        <input type="email" id="email" name="_username" value="{{ dernier_email }}" autocomplete="username" autofocus required
-               class="min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 focus:border-accent">
-      </div>
-      <div class="space-y-1.5">
-        <label for="mdp" class="block text-sm font-medium text-doux">Mot de passe</label>
-        <input type="password" id="mdp" name="_password" autocomplete="current-password" required
-               class="min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 focus:border-accent">
-      </div>
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-      <button type="submit" class="min-h-11 w-full rounded-lg bg-accent px-4 font-semibold text-fond hover:brightness-110">Se connecter</button>
-    </form>
+<div class="mx-auto mt-[4vh] grid w-full max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-12">
+
+  <section aria-labelledby="presentation" class="order-2 space-y-6 lg:order-1">
+    <div>
+      <p aria-hidden="true" class="text-3xl text-accent">✦</p>
+      <h1 id="presentation" class="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">À l'ombre d'Omraon</h1>
+      <p class="mt-3 max-w-xl text-base leading-relaxed text-doux">Un atlas vivant du système d'Omraon, celui du roman : on s'y promène, on remonte le temps jusqu'à l'arrivée des humains, on simule ce qui s'y passait.</p>
+    </div>
+    <ul class="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+      <li class="rounded-xl border border-ligne bg-carte p-4"><p class="font-semibold"><span aria-hidden="true">🪐</span> Une vue 3D</p><p class="mt-1 text-sm leading-relaxed text-doux">Étoile, planètes, lunes, cités et stations à l'échelle, avec un temps réglable et un vol libre.</p></li>
+      <li class="rounded-xl border border-ligne bg-carte p-4"><p class="font-semibold"><span aria-hidden="true">📖</span> Des fiches</p><p class="mt-1 text-sm leading-relaxed text-doux">Astres, sites, personnages, scènes, lexique et chronologie, avec leurs illustrations.</p></li>
+      <li class="rounded-xl border border-ligne bg-carte p-4"><p class="font-semibold"><span aria-hidden="true">🕰</span> Des simulations</p><p class="mt-1 text-sm leading-relaxed text-doux">Population, commerce et pénuries organisées par le Consortium, à la date de ton choix.</p></li>
+    </ul>
+    <figure>
+      <img src="{{ asset('images/apercu.jpg') }}" width="1552" height="784" alt="Capture de la vue 3D : Kebet, lune habitée, avec la liste des lieux à gauche, la fiche de l'astre à droite et la frise chronologique en haut." class="w-full rounded-xl border border-ligne shadow-2xl shadow-black/40">
+      <figcaption class="mt-2 text-xs text-doux">La vue du système, ici sur Kebet : la liste des lieux, la fiche de l'astre et la frise du temps.</figcaption>
+    </figure>
+    <p class="text-sm leading-relaxed text-doux">Chaque information porte sa provenance (canon, suggéré, calculé, simulé…). Un <b class="text-texte">lecteur</b> consulte et simule ; un <b class="text-texte">administrateur</b> modifie les valeurs par défaut et gère les comptes.</p>
+  </section>
+
+  <div class="order-1 lg:order-2 lg:sticky lg:top-8">
+    <div class="rounded-2xl border border-ligne bg-carte p-6 shadow-2xl shadow-black/40 sm:p-8">
+      <h2 class="text-xl font-semibold tracking-tight">Connexion</h2>
+      <p class="mt-2 text-sm text-doux">Accès réservé. Les comptes sont créés par l'administrateur.</p>
+      <form method="post" class="mt-6 space-y-4">
+        {% if erreur %}<p role="alert" class="rounded-lg border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger">{{ erreur.messageKey|trans(erreur.messageData, 'security') }}</p>{% endif %}
+        <div class="space-y-1.5">
+          <label for="email" class="block text-sm font-medium text-doux">Email</label>
+          <input type="email" id="email" name="_username" value="{{ dernier_email }}" autocomplete="username" autofocus required
+                 class="min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 focus:border-accent">
+        </div>
+        <div class="space-y-1.5">
+          <label for="mdp" class="block text-sm font-medium text-doux">Mot de passe</label>
+          <input type="password" id="mdp" name="_password" autocomplete="current-password" required
+                 class="min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 focus:border-accent">
+        </div>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        <button type="submit" class="min-h-11 w-full rounded-lg bg-accent px-4 font-semibold text-fond hover:brightness-110">Se connecter</button>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}
