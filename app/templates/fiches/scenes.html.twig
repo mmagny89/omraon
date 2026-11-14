@@ -18,7 +18,7 @@
   {% for s in sites %}
   <li data-filtrable data-corps="{{ s.body }}">
     <a href="{{ path('fiches_scene', {id: s.id}) }}" class="flex h-full min-h-11 flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 motion-reduce:transition-none">
-      <span class="font-semibold">{{ s.name }}</span>
+      <span class="flex items-center gap-3">{{ c.illustration('site', s.id, '', 'size-14') }}<span class="font-semibold">{{ s.name }}</span></span>
       <span>{{ c.badge(s.body, 'accent') }}</span>
     </a>
   </li>

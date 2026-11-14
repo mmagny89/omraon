@@ -4,7 +4,7 @@
 {% block title %}{{ d.name }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Astres', url: path('fiches_astres')}, {texte: d.name}]) }}
-{{ c.entete(d.name, d.role ?? null, [{texte: a.type, ton: 'accent'}]) }}
+{{ c.entete(d.name, d.role ?? null, [{texte: a.type, ton: 'accent'}], c.illustration('astre', id, 'Illustration de ' ~ d.name, 'size-24 sm:size-36')) }}
 
 <div class="grid gap-6 lg:grid-cols-[1fr_16rem]">
   <div class="space-y-6">
@@ -80,6 +80,7 @@
       <h2 id="vestiges" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Vestiges des Anciens</h2>
       <ul class="space-y-4">{% for v in a.vestiges %}<li><p class="flex flex-wrap items-center gap-2 font-semibold">{{ v.titre }} {{ c.badge(v.niveau, v.niveau == 'canon' ? 'ok' : (v.niveau == 'iceberg' ? 'accent' : 'neutre')) }}</p><p class="mt-1 text-doux">{{ v.texte }}</p></li>{% endfor %}</ul>
     </section>{% endif %}
+    {% if is_granted('ROLE_ADMIN') %}{% include '_illustration_admin.html.twig' with {type: 'astre', cle: id, televersee: televersee} only %}{% endif %}
   </div>
 
   <aside class="space-y-4 lg:sticky lg:top-20 lg:self-start" aria-label="Navigation de la fiche">

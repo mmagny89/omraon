@@ -13,8 +13,8 @@
       {% for a in astres|filter(x => x.type in types) %}
       <li data-filtrable>
         <a href="{{ path('fiches_astre', {id: a.id}) }}" class="flex h-full flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 hover:bg-carte/70 motion-reduce:transition-none">
-          <span class="flex items-center gap-2">
-            <span aria-hidden="true" class="size-3 shrink-0 rounded-full ring-1 ring-white/20" style="background: {{ a.couleur ?? '#8d9bb8' }}"></span>
+          <span class="flex items-center gap-3">
+            {{ c.illustration('astre', a.id, '', 'size-14') }}
             <span class="text-lg font-semibold">{{ a.nom }}</span>
           </span>
           <span class="flex flex-wrap gap-2">{{ c.badge(a.type, a.type == 'Étoile' ? 'accent' : 'neutre') }}{% if a.parent %}{{ c.badge('de ' ~ a.parent) }}{% endif %}</span>

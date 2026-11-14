@@ -18,7 +18,7 @@
   {% for s in sites %}
   <li data-filtrable data-corps="{{ s.body }}">
     <a href="{{ path('fiches_site', {id: s.id}) }}" class="flex h-full flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 motion-reduce:transition-none">
-      <span class="font-semibold">{{ s.name }}</span>
+      <span class="flex items-center gap-3">{{ c.illustration('site', s.id, '', 'size-14') }}<span class="font-semibold">{{ s.name }}</span></span>
       <span class="flex flex-wrap gap-2">{{ c.badge(s.body, 'accent') }}{{ c.badge(s.habitat) }}</span>
       <span class="mt-auto text-sm tabular-nums text-doux">{{ s.population|number_format(0, ',', ' ') }} humains · {{ s.tyts|number_format(0, ',', ' ') }} Tyts</span>
     </a>

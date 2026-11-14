@@ -4,7 +4,7 @@
 {% block title %}{{ p.nom }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Personnages', url: path('fiches_personnages')}, {texte: p.nom}]) }}
-{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}]|merge(p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : [])) }}
+{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}]|merge(p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : []), c.illustration('personnage', p.id, 'Illustration : ' ~ p.nom, 'size-24 sm:size-36')) }}
 <div class="max-w-3xl space-y-6">
   <section aria-labelledby="resume" class="rounded-xl border border-ligne bg-carte p-5">
     <h2 id="resume" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Portrait</h2>
@@ -18,5 +18,6 @@
       <dd>{% if f.corps %}<a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: f.corps}) }}">{{ p.origine.corps }}</a>{% else %}{{ p.origine.corps }}{% endif %}{% if f.site %} — <a class="text-accent hover:underline" href="{{ path('fiches_site', {id: f.site.id}) }}">{{ f.site.name }}</a>{% endif %} {{ c.badge(p.origine.statut, p.origine.statut == 'canon' ? 'ok' : 'alerte') }}</dd>
     </dl>
   </section>
+  {% if is_granted('ROLE_ADMIN') %}{% include '_illustration_admin.html.twig' with {type: 'personnage', cle: p.id, televersee: televersee} only %}{% endif %}
 </div>
 {% endblock %}

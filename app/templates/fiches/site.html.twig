@@ -4,7 +4,7 @@
 {% block title %}{{ s.name }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Sites', url: path('fiches_sites')}, {texte: s.name}]) }}
-{{ c.entete(s.name, s.role, [{texte: s.body, ton: 'accent'}, {texte: s.type}, {texte: s.habitat}]|merge(s.invented is defined and s.invented ? [{texte: 'conception'}] : [])) }}
+{{ c.entete(s.name, s.role, [{texte: s.body, ton: 'accent'}, {texte: s.type}, {texte: s.habitat}]|merge(s.invented is defined and s.invented ? [{texte: 'conception'}] : []), c.illustration('site', s.id, 'Illustration : ' ~ s.name, 'size-24 sm:size-36')) }}
 <div class="grid gap-6 lg:grid-cols-[1fr_16rem]">
   <div class="space-y-6">
     <div class="grid gap-3 sm:grid-cols-3">
@@ -32,6 +32,7 @@
       <h2 id="vest" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Vestiges</h2>
       <ul class="space-y-4">{% for v in f.vestiges %}<li><p class="flex flex-wrap items-center gap-2 font-semibold">{{ v.titre }} {{ c.badge(v.niveau, v.niveau == 'canon' ? 'ok' : 'accent') }}</p><p class="mt-1 text-doux">{{ v.texte }}</p></li>{% endfor %}</ul>
     </section>{% endif %}
+    {% if is_granted('ROLE_ADMIN') %}{% include '_illustration_admin.html.twig' with {type: 'site', cle: s.id, televersee: televersee} only %}{% endif %}
   </div>
   <aside class="space-y-3 lg:sticky lg:top-20 lg:self-start" aria-label="Actions">
     {% if f.scene %}<a class="flex min-h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-semibold text-fond hover:brightness-110" href="{{ path('fiches_scene', {id: s.id}) }}">Ambiance pour une scène</a>{% endif %}

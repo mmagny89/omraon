@@ -40,11 +40,18 @@
   </nav>
 {% endmacro %}
 
-{% macro entete(titre, sousTitre = null, badges = []) %}
-  <header class="mb-6">
-    <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ titre }}</h1>
-    {% if badges %}<div class="mt-2 flex flex-wrap gap-2">{% for b in badges %}{{ _self.badge(b.texte, b.ton ?? 'neutre') }}{% endfor %}</div>{% endif %}
-    {% if sousTitre %}<p class="mt-3 max-w-3xl text-base text-doux">{{ sousTitre }}</p>{% endif %}
+{% macro illustration(type, cle, alt = '', classe = 'size-14') %}
+  <img src="{{ path('illustration', {type: type, cle: cle}) }}" alt="{{ alt }}" width="128" height="128" loading="lazy" decoding="async" class="{{ classe }} shrink-0 rounded-xl bg-fond object-cover ring-1 ring-ligne">
+{% endmacro %}
+
+{% macro entete(titre, sousTitre = null, badges = [], image = null) %}
+  <header class="mb-6 flex items-start gap-4 sm:gap-5">
+    {% if image %}{{ image }}{% endif %}
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ titre }}</h1>
+      {% if badges %}<div class="mt-2 flex flex-wrap gap-2">{% for b in badges %}{{ _self.badge(b.texte, b.ton ?? 'neutre') }}{% endfor %}</div>{% endif %}
+      {% if sousTitre %}<p class="mt-3 max-w-3xl text-base text-doux">{{ sousTitre }}</p>{% endif %}
+    </div>
   </header>
 {% endmacro %}
 

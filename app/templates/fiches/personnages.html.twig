@@ -9,7 +9,7 @@
   {% for p in personnages %}
   <li data-filtrable>
     <a href="{{ path('fiches_personnage', {id: p.id}) }}" class="flex h-full flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 motion-reduce:transition-none">
-      <span class="font-semibold">{{ p.nom }}</span>
+      <span class="flex items-center gap-3">{{ c.illustration('personnage', p.id, '', 'size-14') }}<span class="font-semibold">{{ p.nom }}</span></span>
       <span class="flex flex-wrap gap-2">{{ c.badge(p.origine.corps, 'accent') }}{{ c.badge(p.espece) }}{% if p.vivant is defined and not p.vivant %}{{ c.badge('disparu', 'alerte') }}{% endif %}</span>
       <span class="text-sm text-doux">{{ p.role }}</span>
     </a>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\FichesService;
+use App\Service\IllustrationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -15,7 +16,7 @@ final class FichesController extends AbstractController
 {
     private const ID = '[a-z0-9-]+';
 
-    public function __construct(private readonly FichesService $fiches)
+    public function __construct(private readonly FichesService $fiches, private readonly IllustrationService $illustrations)
     {
     }
 
@@ -28,7 +29,7 @@ final class FichesController extends AbstractController
     #[Route('/astres/{id}', name: 'fiches_astre', requirements: ['id' => self::ID], methods: ['GET'])]
     public function astre(string $id): Response
     {
-        return $this->render('fiches/astre.html.twig', ['id' => $id, 'a' => $this->ou404($this->fiches->astre($id))]);
+        return $this->render('fiches/astre.html.twig', ['id' => $id, 'a' => $this->ou404($this->fiches->astre($id)), 'televersee' => $this->illustrations->estTeleversee('astre', $id)]);
     }
 
     #[Route('/sites', name: 'fiches_sites', methods: ['GET'])]
@@ -42,7 +43,7 @@ final class FichesController extends AbstractController
     #[Route('/sites/{id}', name: 'fiches_site', requirements: ['id' => self::ID], methods: ['GET'])]
     public function site(string $id): Response
     {
-        return $this->render('fiches/site.html.twig', ['f' => $this->ou404($this->fiches->site($id))]);
+        return $this->render('fiches/site.html.twig', ['f' => $this->ou404($this->fiches->site($id)), 'televersee' => $this->illustrations->estTeleversee('site', $id)]);
     }
 
     #[Route('/personnages', name: 'fiches_personnages', methods: ['GET'])]
@@ -54,7 +55,7 @@ final class FichesController extends AbstractController
     #[Route('/personnages/{id}', name: 'fiches_personnage', requirements: ['id' => self::ID], methods: ['GET'])]
     public function personnage(string $id): Response
     {
-        return $this->render('fiches/personnage.html.twig', ['f' => $this->ou404($this->fiches->personnage($id))]);
+        return $this->render('fiches/personnage.html.twig', ['f' => $this->ou404($this->fiches->personnage($id)), 'televersee' => $this->illustrations->estTeleversee('personnage', $id)]);
     }
 
     #[Route('/scenes', name: 'fiches_scenes', methods: ['GET'])]

@@ -4,7 +4,7 @@
 {% block title %}{{ s.site.name }} — scène — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Scènes', url: path('fiches_scenes')}, {texte: s.site.name}]) }}
-{{ c.entete(a.titre ?? s.site.name, null, [{texte: a.canon ? 'canon' : 'non canon', ton: a.canon ? 'ok' : 'alerte'}, {texte: s.site.body}]) }}
+{{ c.entete(a.titre ?? s.site.name, null, [{texte: a.canon ? 'canon' : 'non canon', ton: a.canon ? 'ok' : 'alerte'}, {texte: s.site.body}], c.illustration('site', s.site.id, 'Illustration : ' ~ s.site.name, 'size-24 sm:size-36')) }}
 <div class="grid gap-4 md:grid-cols-2">
   {% for cle, titre in {voir: 'Voir', entendre: 'Entendre', sentir: 'Sentir', toucher: 'Toucher', corps: 'Corps'} %}
     {% if attribute(a, cle) is defined and attribute(a, cle) %}
