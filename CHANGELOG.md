@@ -8,6 +8,7 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 ### Ajouté
 
 - **Favicon** (SVG : planète et soleil) sur les pages et dans la vue, publique pour l'écran de connexion.
+- **Copyright** avec liens vers mmagny.fr et GitHub : pied de page des pages, pied de la vue, écran de chargement, panneau À propos.
 - **Page de connexion** : présentation de l'application (vue 3D, fiches, simulations, rôles) avec une capture de la vue, à côté du formulaire.
 
 ## [2.0.0] - 2026-11-14

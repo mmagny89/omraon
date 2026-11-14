@@ -60,6 +60,8 @@ final class AccesTest extends WebTestCase
         self::assertSelectorExists('link[rel=icon][href*="favicon"]');
         self::assertSelectorExists('img[src*="apercu"][alt]');
         self::assertSelectorTextContains('main', 'Accès réservé');
+        self::assertSelectorExists('footer a[href="https://mmagny.fr"]');
+        self::assertSelectorExists('footer a[href="https://github.com/mmagny89"]');
     }
 
     public function testLecteurVoitLeSystemeMaisPasLAdmin(): void

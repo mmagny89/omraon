@@ -360,6 +360,8 @@ body.ui-hidden #tour { display: none; }
 
 /* Mention de droits et à propos */
 #copyright { position: fixed; left: 14px; bottom: 8px; z-index: 1; font-size: 11px; color: var(--mute); opacity: .65; pointer-events: none; }
+#copyright a { pointer-events: auto; color: inherit; }
+.ld-c a { color: inherit; }
 #apropos p { margin: 6px 0; font-size: 12.5px; color: #cfd8ec; } #apropos a { color: var(--accent); }
 
 /* Lore : listes de personnages, vestiges, glossaire ; pastilles de niveau */
