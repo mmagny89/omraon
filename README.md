@@ -10,12 +10,13 @@
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](README.docker.md)
 
 Simulation physique (N-corps) et vue 3D du système décrit dans la *Bible géographique v3* : l'étoile Omraon, trois telluriques (Kalpra, Sethis, Naksun),
-la ceinture Nunzir, deux géantes (Zirkan, Roushan), huit lunes dont Kebet et la planète-colonie des confins (Shukal), et vingt-deux sites habités. Application
-statique : aucun serveur applicatif, aucune ressource externe.
+la ceinture Nunzir, deux géantes (Zirkan, Roushan), huit lunes dont Kebet et la planète-colonie des confins (Shukal), et quarante et un sites habités. Application
+Symfony derrière connexion : aucune ressource externe.
 
 ```sh
 docker compose up -d --wait   # https://localhost (certificat auto-signé de Caddy)
-npm test                      # 89 tests de physique, d'économie, de ciel et de cohérence avec le canon
+docker compose exec php php bin/console app:utilisateur:creer <email> <nom> --admin   # premier admin
+npm test                      # 108 tests de physique, d'économie, de ciel, de chronique et de cohérence avec le canon
 ```
 
 Stack Symfony 8 / FrankenPHP / PostgreSQL : accès par compte uniquement (rôles Lecteur et Admin, comptes créés par l'admin). La vue vit dans `app/front/`, servie derrière connexion, sans étape de build ; Three.js est copié dans `app/front/vendor/` (importmap).
@@ -92,16 +93,18 @@ Hors simulation : monde natal tyt, hangar-musée, Terre.
 ## Arborescence
 
 ```
-app/
-├── index.html, vendor/three.*       page, Three.js local (importmap) — package.json épingle la version, `npm run vendor` recopie
-└── src/
-    ├── data/       omraon.js (étoile, planètes, lunes), sites.js, economie.js, chronologie.js, ambiances.js
-    ├── physics/    simulation, kepler, system, sites, habitability, habitat, habscan, transfers, flight,
-    │               sky, scene, ephem, ephemeris, network, population, economie, horizon, derived, constants
-    ├── render/     world, ground (vue au sol), flux (convois), skyView, cameraRig, textures, noise
-    └── ui/ui.js    interface (panneaux, frise, fiches, options)
-tests/                              node --test (physique, économie, particules, ciel, cohérence)
-outils/, .github/, docker/          exploitation, CI, Caddy (stack statique d'agence)
+app/                                Symfony 8 : src/ (contrôleurs, services, entités), templates/ (Twig + Tailwind), assets/, migrations/, tests/
+├── donnees/canon/                  valeurs par défaut en JSON (système, sites, économie, lore, glossaire, ambiances, chronologie)
+└── front/                          la vue du système, servie derrière connexion (jamais dans public/)
+    ├── index.html, vendor/three.*  page, Three.js local (importmap)
+    └── src/
+        ├── data/       chargeurs des jeux de données (charger.js) et fonctions (ambianceFor, fmtAn)
+        ├── physics/    simulation, kepler, system, sites, habitability, habitat, thermique, chronique, transfers, flight,
+        │               sky, scene, ephem, network, population, economie, derived, constants
+        ├── render/     world, ground (vue au sol), flux (convois), skyView, cameraRig (orbite et vol libre), textures
+        └── ui/         ui.js, composants.js (Tailwind), chronique.js, economie.js, optionsNav.js, statut.js
+tests/                              node --test (physique, économie, thermique, chronique, éditeur)
+outils/, .github/, docker/          exploitation, CI, FrankenPHP + PostgreSQL (stack Symfony d'agence)
 CLAUDE.md                           mémoire du projet (règles, décisions actées)
 docs/hypotheses.md                  canon / propositions de conception
 ```

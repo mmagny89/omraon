@@ -5,6 +5,35 @@ le [versionnement sémantique](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+## [2.0.0] - 2026-11-14
+
+Le site n'est plus statique : c'est une application Symfony 8 (FrankenPHP, PostgreSQL) dont l'accès demande un compte. Changement incompatible : plus rien n'est lisible sans connexion.
+
+### Ajouté
+
+- **Comptes et rôles** : connexion par formulaire (jeton CSRF, limitation à 5 essais par 15 minutes), rôles Lecteur et Admin, pas d'inscription autonome ; l'admin gère les comptes (`/admin/utilisateurs`), le premier admin se crée par `app:utilisateur:creer`. Un compte désactivé ne peut plus se connecter ; le dernier admin actif ne peut être ni retiré ni désactivé.
+- **Vue du système derrière connexion** : HTML, JavaScript et Three.js sont servis par Symfony aux comptes connectés seulement (hors de `public/`), sans cache partagé ; bouton « Quitter » dans la vue, déconnexion par jeton.
+- **Données en base** : le canon est en JSON (`app/donnees/canon/`), chargé par `GET /api/donnees/<jeu>` ; un admin modifie chaque section par un **formulaire généré** qui produit le JSON (listes à ajouter, dupliquer, déplacer, supprimer), ou en JSON brut ; le serveur valide, refuse les textes qui ressemblent à une balise HTML, et la section peut être remise au canon.
+- **Pages de détail** (`/astres`, `/sites`, `/personnages`, `/scenes`, `/lexique`, `/chronologie`) en Tailwind CSS v4 : navigation, fil d'Ariane, filtres en direct, températures des faces éclairée et sombre, textes d'orientation tirés des documents 01 et 08, légende des pastilles.
+- **Illustrations** : SVG générés pour les astres, les sites et les personnages ; l'admin les remplace par un PNG, JPEG ou WebP (2 Mo), stocké en base.
+- **Pastilles de provenance** : canon, suggéré, calculé, simulé, modifié, provisoire, sur les pages et dans la vue.
+- **Températures** : face éclairée et face sombre de chaque astre, température extérieure en direct de chaque site, habitat à 20 °C ; Sethis refroidie (nuits glaciales).
+- **Chronique** (Options) : l'état du monde à une date, de l'arrivée des humains au présent (population, sites fondés, pénuries, événements, commerce simulé) ; dans le passé, les sites non fondés et les personnages pas encore nés disparaissent.
+- **Pénuries organisées par le Consortium** : 8 épisodes datés, couplés au modèle de population, à l'économie (rationnement) et à la chronologie.
+- **Vol libre** (touche F) : se déplacer librement dans le système, vitesse suivant l'altitude.
+- **41 sites** au lieu de 22 (population répartie, totaux inchangés), toutes les stations tenues en place, marché commun par site d'origine.
+- `docs/modifications-lore.md` : entrées 43 à 51.
+
+### Modifié
+
+- Projet renommé **« À l'ombre d'Omraon »**.
+- Panneaux de la vue en grande partie migrés en Tailwind (tuiles, sections, valeurs, formulaires d'options), espacements augmentés ; « conception » s'affiche « suggéré ».
+- `app/` devient l'application Symfony ; la vue est dans `app/front/`.
+
+### Sécurité
+
+- Audit du 2026-11-14 : déconnexion protégée par jeton CSRF, aucune balise HTML acceptée dans les valeurs saisies, adresse de l'admin masquée aux lecteurs sur les pastilles « modifié », échecs de connexion journalisés.
+
 ## [1.2.0] - 2026-11-14
 
 ### Ajouté
