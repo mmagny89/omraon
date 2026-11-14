@@ -23,14 +23,19 @@
       "a": 1.45,
       "spread": 0.012,
       "share": 0.06
-    }
+    },
+    "fonction": "Vaste nuage d'astéroïdes qui sépare les telluriques des gazeuses : débris, champs de roches, épaves. Repaire de pirates et de contrebandiers, c'est l'angle mort du système : entre l'octroi intérieur de Naksun et la frontière extérieure des confins, elle n'est surveillée par personne. Pour les Tyts, zone sacrée et redoutée, le chaos primordial qu'il faut traverser pour atteindre le sanctuaire.",
+    "erosion": "Nunn-Zir → Nunzir",
+    "explication": "Nom quasi intact : zone informe et mal fréquentée, personne n'a poli son nom. Il sonne âpre, comme la ceinture qu'il désigne.",
+    "lien": "Terrain de jeu d'Onkel et d'Ella."
   },
   "COLD_BELT": {
     "name": "Ceinture froide",
     "aMin": 17,
     "aMax": 34,
     "share": 0.6,
-    "role": "Corps de glace, planètes naines et comètes, au-delà de Roushan et de ses lunes."
+    "role": "Corps de glace, planètes naines et comètes, au-delà de Roushan et de ses lunes.",
+    "fonction": "Corps de glace, planètes naines et comètes, au-delà de Roushan et de ses lunes (proposition de conception : le document ne la décrit pas)."
   },
   "COMETS": {
     "count": 40,
@@ -68,7 +73,10 @@
         "sens": "la Pierre-brûlée"
       },
       "role": "La brûlée : roche sans atmosphère respirable, avant-poste extrême, exploitation en sous-sol sous coupole blindée.",
-      "moons": []
+      "moons": [],
+      "fonction": "La plus interne des telluriques, cuite par Omraon. Rocheuse, sans atmosphère respirable. On l'exploite en sous-sol ou sous coupole blindée ; peu peuplée, c'est l'avant-poste extrême.",
+      "erosion": "Kal-Pyr → Kalpir → Kalpra",
+      "explication": "Le squelette kal-p-r est conservé en entier, seule la voyelle finale glisse : un nom très traçable."
     },
     {
       "id": "sethis",
@@ -129,9 +137,15 @@
             "tytCourant": "Sun-Dub",
             "sens": ""
           },
-          "role": "Petite lune-garnison : caserne et prison des mines. Sinistre."
+          "role": "Petite lune-garnison : caserne et prison des mines. Sinistre.",
+          "fonction": "Petite lune-garnison : caserne et prison des mines, la lune d'où l'on surveille les esclaves de Sethis. Sinistre.",
+          "erosion": "Sun-Dub → Sedbou",
+          "explication": "Forme courante donnée par le lexique ; la forme sacrée longue reste à forger."
         }
-      ]
+      ],
+      "fonction": "Tellurique aride et désertique, riche en métaux et en minerais : le monde-mine par excellence. C'est là que se trouvent le plus de Tyts réduits en esclavage et les conditions les plus dures. Monde d'origine de Théa.",
+      "erosion": "Set-Kal-Duruk → Sethka → Sethis",
+      "explication": "Le nom perd duruk (le travail) : les maîtres n'en gardent pas le nom de la peine. Sethka se durcit en Sethis. Mot neutre avant l'esclavage, le nom tyt désigne désormais le bagne."
     },
     {
       "id": "naksun",
@@ -183,9 +197,16 @@
             "tytCourant": "Maa-it",
             "sens": ""
           },
-          "role": "Lune administrative et judiciaire : tribunaux, archives douanières. Nom ironique."
+          "role": "Lune administrative et judiciaire : tribunaux, archives douanières. Nom ironique.",
+          "fonction": "Lune administrative et judiciaire : tribunaux, archives douanières. Le nom est ironique, la « justice » qu'on y rend est celle des corporations. C'est ici qu'on juge, et qu'on condamne, contrebandiers et Tyts.",
+          "erosion": "Maa-it → Mahat",
+          "explication": "Forme courante donnée par le lexique ; la forme sacrée longue reste à forger."
         }
-      ]
+      ],
+      "fonction": "Tellurique-relais, poste de contrôle intérieur du système. Elle filtre ce qui remonte des mondes miniers (Kalpra, Sethis) vers le cœur habité : péage sur les minerais, fouille des cargaisons, recensement et transit des Tyts-esclaves. Ce n'est pas une frontière extérieure mais un octroi, un point de contrôle social au seuil de la zone d'extraction.",
+      "erosion": "Nakh-Sunn → Nakhsun → Naksun",
+      "explication": "Le squelette nak-s-n est conservé entièrement, seule la gutturale kh tombe. Chez les Tyts le rôle était protecteur ; il est devenu un poste de flicage et de taxation.",
+      "lien": "Sa lune Mahat prend tout son sens ici : on y juge les esclaves en fuite et les fraudeurs pris à l'octroi."
     },
     {
       "id": "zirkan",
@@ -252,7 +273,10 @@
             "tytCourant": "Iashk",
             "sens": "la Petite-Lumière"
           },
-          "role": "Lune-relais orbitale, station de transit : premier arrêt avant de descendre sur « la Promise »."
+          "role": "Lune-relais orbitale, station de transit : premier arrêt avant de descendre sur « la Promise ».",
+          "fonction": "Lune-relais orbitale au-dessus de Kebet : station de transit, port d'entrée du monde habité. Premier arrêt avant de descendre sur « la Promise ».",
+          "erosion": "Ii-Ashk → Iashk → Iasha",
+          "explication": "« La Petite-Lumière » : ashk (lumière) précédé du redoublement ii- (diminutif, proximité). Le noyau i-ash survit, la gutturale finale tombe."
         },
         {
           "id": "kebet",
@@ -285,7 +309,10 @@
             "pressureBar": 1.1,
             "greenhouseK": 90
           },
-          "clouds": true
+          "clouds": true,
+          "fonction": "Lune vivante (sol, forêts, océans) : le seul monde habité du système, la « Terre promise » du dogme humain. Les textes du culte disent « la Promise » ou « le Jardin d'Osaon » ; le courant et l'administratif disent « Kebet ». Ce n'est pas le monde natal des Tyts mais un monde-relique : un site sacré où ils venaient en pèlerinage, et dont les humains ont fait leur capitale.",
+          "erosion": "Geb-Nan-Kaha → Gebna → Kében → Kebet",
+          "explication": "L'attaque geb- et le -na- sont gardés ; kaha (la lignée) est perdu ; le nom se durcit en Kében puis se fige en Kebet."
         },
         {
           "id": "astir",
@@ -308,9 +335,15 @@
             "tytCourant": "Ashtyr",
             "sens": "la Lumière-qui-appelle"
           },
-          "role": "Lune-observatoire et balise de navigation : le phare qui guide les vaisseaux vers Kebet."
+          "role": "Lune-observatoire et balise de navigation : le phare qui guide les vaisseaux vers Kebet.",
+          "fonction": "Lune-observatoire et balise de navigation : c'est elle qui guide les vaisseaux vers Kebet. Vestige possible d'une balise des Anciens (iceberg : on ne l'explique pas).",
+          "erosion": "Ashk-Tyr → Ashtir → Astir",
+          "explication": "« La Lumière-qui-appelle », le phare : ashk (lumière, astre-guide) + tyr (voix, ce qui appelle). Le noyau a-s-t-r est conservé, la gutturale ashk- s'adoucit en as-. « Astir » évoque aussi « astre »."
         }
-      ]
+      ],
+      "fonction": "Géante gazeuse qui porte la lune habitable Kebet. Elle enveloppe sa lune-jardin de sa présence : la lune sous sa géante. Pas de surface : on n'y vit pas, on la contemple depuis Kebet.",
+      "erosion": "Zir-Kaan → Zirkan",
+      "explication": "Nom peu érodé : on ne vit pas dessus, seuls les navigateurs le nomment. Le -aan long se raccourcit en -an."
     },
     {
       "id": "roushan",
@@ -388,7 +421,10 @@
             "tytCourant": "Nunkal",
             "sens": "l'Eau-dure"
           },
-          "role": "Lune glacée : réserve d'eau et de condensats du système, ravitaillement vital des cités de Roushan."
+          "role": "Lune glacée : réserve d'eau et de condensats du système, ravitaillement vital des cités de Roushan.",
+          "fonction": "Lune glacée, réserve d'eau et de condensats du système : on y extrait la glace. Ravitaillement vital des cités de Roushan.",
+          "erosion": "Nunn-Kal → Nunka",
+          "explication": "« L'Eau-dure », l'eau-pierre : nunn (eau, abîme) + kal (ce qui est dur, figé). Le noyau nunk- est conservé, seule la fin tombe."
         },
         {
           "id": "roukir",
@@ -411,7 +447,10 @@
             "tytCourant": "Rukhir",
             "sens": "l'Enfant-du-vent"
           },
-          "role": "Poste avancé : la dernière douane du système habité, avant-poste minier et militaire des confins (au-delà, seule la ceinture froide)."
+          "role": "Poste avancé : la dernière douane du système habité, avant-poste minier et militaire des confins (au-delà, seule la ceinture froide).",
+          "fonction": "La vraie frontière extérieure du système : avant-poste minier et militaire des confins, le point le plus éloigné d'Omraon, dernière lumière avant le vide interstellaire. Postes de guet, douane du dehors, contrebande lointaine et pirates entrant et sortant du système.",
+          "erosion": "Rukh-Kir → Roukir",
+          "explication": "« L'Enfant-du-vent » : rukh (vent, souffle) + kir (enfant, petit). Érosion minime : avant-poste lointain et peu fréquenté, le nom est resté quasi intact faute d'usage."
         },
         {
           "id": "shukal",
@@ -440,7 +479,10 @@
             "pressureBar": 0
           }
         }
-      ]
+      ],
+      "fonction": "Géante gazeuse externe, pâle et froide. Pas de surface exploitable, mais des cités flottantes dans les hautes couches : raffineries de gaz, extraction du carburant des moteurs. Stratégique : qui tient Roushan tient les vaisseaux. Monde d'origine d'Ella, ouvrière du monde qui alimente tout. C'est le monde le plus externe : au-delà, les confins et le vide.",
+      "erosion": "Rukh-Shu → Roushu → Roushan",
+      "explication": "Le r du vent et le sh du souffle survivent (r-sh), avec la désinence -an. Traçable."
     }
   ],
   "ROUSHAN_TROJANS": 300,
@@ -460,7 +502,10 @@
       "tytCourant": "Ashru",
       "sens": "la Lumière-sacrée"
     },
-    "role": "Astre-père du dogme, fondue avec le dieu unique (Osaon-Omraon). Le nom humain a perdu ashk- (le sacré)."
+    "role": "Astre-père du dogme, fondue avec le dieu unique (Osaon-Omraon). Le nom humain a perdu ashk- (le sacré).",
+    "fonction": "Étoile du système, astre-père du dogme : fondue avec le dieu unique, elle forme avec lui un nom double, Osaon-Omraon. Un seul culte solaire. Même l'étoile a été renommée : les humains lui ont pris jusqu'au nom de la lumière qui guidait les Tyts vers leurs dieux.",
+    "erosion": "Ashk-Kh'ru → Ashru → Omra → Omraon",
+    "explication": "Forte érosion : les humains perdent ashk- (le sens sacré), avalent la gutturale kh'ru, reconstruisent avec leurs sons mous (Omra), puis ajoutent la désinence -on de la famille d'Osaon."
   },
   "SYSTEM_EDGE_AU": 35
 }

@@ -26,7 +26,18 @@
         "corps": "Roushan",
         "site": "roushan-cites",
         "statut": "canon"
-      }
+      },
+      "fiche": {
+        "Âge": "35 ans",
+        "Origine": "Cités flottantes de Roushan (le Milieu)",
+        "Métier": "Transporteuse, capitaine du Mai",
+        "Physique": "Traits est-asiatiques marqués, hérités de sa grand-mère maternelle"
+      },
+      "portrait": [
+        "Citoyenne de la Confédération, née dedans comme ses parents. Elle appartient au Milieu : un monde ouvrier mais vital, ni la misère minière du Bas ni le centre de Kebet. Fille d'un ingénieur de la station.",
+        "Transporteuse officielle, elle circule dans le système légal (ports, octrois, mondes) tout en restant en marge. La contrebande est « un petit plus » : une travailleuse précaire qui triche à la marge, pas une hors-la-loi romantique. Elle opère souvent autour de la ceinture de Nunzir, sous la houlette officieuse d'Onkel.",
+        "D'ascendance solienne par sa mère, elle a reçu une croyance par transmission familiale, non par appartenance officielle : elle l'a longtemps tenue pour un folklore de vieille femme. Son vaisseau, le Mai (« ai » comme dans « ail »), porte le nom de sa grand-mère."
+      ]
     },
     {
       "id": "jax",
@@ -38,7 +49,16 @@
         "corps": "Roushan",
         "site": "roushan-cites",
         "statut": "canon"
-      }
+      },
+      "fiche": {
+        "Origine": "Cités flottantes de Roushan",
+        "Voie": "Intégration, ingénierie, station-usine",
+        "Don": "Prodige de l'informatique"
+      },
+      "portrait": [
+        "Le petit frère d'Ella suit les traces du père : l'intégration, l'ingénierie, la station-usine, la voie sûre. Il a rangé les histoires de Mai au rayon des contes.",
+        "Miroir d'Ella : même sang, même grand-mère, mêmes berceuses, deux vies opposées. Ils s'aiment malgré de profonds désaccords. Jax n'a pas « eu tort » : ses raisons (sécurité, protéger ses parents, ne pas finir précaire) sont bonnes. Petit génie technique de la station de Roushan."
+      ]
     },
     {
       "id": "parents-ella",
@@ -50,7 +70,15 @@
         "corps": "Roushan",
         "site": "roushan-cites",
         "statut": "canon"
-      }
+      },
+      "fiche": {
+        "Père": "Corren, ingénieur de la grande station-usine de Roushan",
+        "Mère": "Fille de Mai, travaille dans le soin (une sorte d'hôpital)"
+      },
+      "portrait": [
+        "Le père fait tourner la machine : un homme du système, qui a « réussi » à s'installer, en désaccord avec les choix de sa fille. La mère, fille de Mai mais mariée à l'ingénieur, entend l'héritage solien autrement que sa propre mère : du folklore attendrissant, une gêne, parfois une peur, car croire à ces choses attire l'œil de la Confédération.",
+        "Famille de réfugiés : une strate d'exil de plus, qui rime avec les deux diasporas du système, humaine et tyt."
+      ]
     },
     {
       "id": "mai",
@@ -63,7 +91,16 @@
         "corps": "Roushan",
         "site": "roushan-cites",
         "statut": "canon"
-      }
+      },
+      "fiche": {
+        "Statut": "Disparue il y a deux ou trois ans",
+        "Origine": "Arrivée dans le système de Roushan en réfugiée",
+        "Physique": "Ascendance est-asiatique marquée"
+      },
+      "portrait": [
+        "Grand-mère maternelle d'Ella. Elle a élevé Ella au quotidien : elle gardait les enfants dans la journée pendant que les parents travaillaient, et ils venaient les chercher le soir. Des milliers de fins d'après-midi ensemble : Mai est d'abord la personne qui était là tous les jours.",
+        "Porteuse des histoires (les Soliens, la Terre, la dette envers les Tyts) qu'Ella enfant aimait écouter sans les comprendre. Son nom a été donné au vaisseau d'Ella ; le deuil est encore vif."
+      ]
     },
     {
       "id": "eirik",
@@ -75,7 +112,17 @@
         "corps": "Kebet",
         "site": null,
         "statut": "canon"
-      }
+      },
+      "fiche": {
+        "Origine": "Le Haut, famille d'ascendance « nordique » (sens perdu)",
+        "Rôle": "Le visage et la voix du Mai",
+        "Croyance": "Croyant sincère en Osaon",
+        "Lien": "Neveu d'Onkel"
+      },
+      "portrait": [
+        "La vitrine du groupe : il négocie, charme, ouvre les portes et parle au nom de l'équipage pendant qu'Ella pilote et décide. À l'aise, beau parleur, il a les codes.",
+        "Il a grandi dans le dogme du Haut et y croit. Sa faille : un penchant marqué pour l'argent qui le pousse vers la contrebande et le réseau de son oncle. Il vit une petite hypocrisie confortable : bon croyant et trafiquant."
+      ]
     },
     {
       "id": "thea",
@@ -87,7 +134,17 @@
         "corps": "Sethis",
         "site": "sethis-cite-a",
         "statut": "provisoire"
-      }
+      },
+      "fiche": {
+        "Origine": "Le Bas, mondes telluriques miniers (ascendance « afrique centrale », sens perdu)",
+        "Rôle": "Mécanicienne et infirmière",
+        "Croyance": "Sceptique, peu portée sur la religion",
+        "Nom": "Mbayo : « celle qui se bat » (sens connu de l'auteur seule)"
+      },
+      "portrait": [
+        "Elle répare les machines et les corps : indispensable, elle tient l'équipage en vie dans tous les sens. Sa polyvalence est une compétence de survie (dans le Bas, faute de spécialistes, on apprend à tout faire soi-même), pas un diplôme.",
+        "Le Bas n'a pas le luxe de la métaphysique : on y compte ses crédits, pas ses dieux. Son moteur est concret, matériel : faire monter ses deux sœurs, restées dans le Bas. Elle a côtoyé les Tyts de près, sans mépris ni idéalisation."
+      ]
     },
     {
       "id": "onkel",
@@ -99,7 +156,17 @@
         "corps": "Nunzir",
         "site": "nunzir-repaire",
         "statut": "provisoire"
-      }
+      },
+      "fiche": {
+        "Façade": "Gros marchand respecté, entrepôts légaux, relations",
+        "Réalité": "Patron officieux d'un réseau de contrebande",
+        "Lien": "Oncle d'Eirik (un Kelsen par le sang)",
+        "Physique": "Bedonnant, chauve, paternel et un peu inquiétant"
+      },
+      "portrait": [
+        "Un gros marchand respecté, pignon sur rue : sa meilleure couverture, il fait passer l'illégal dans le légal, ce qui lui donne accès aux ports et aux puissants.",
+        "« Onkel » n'est qu'un surnom : tout le monde l'appelle ainsi, personne n'emploie ni ne connaît plus son vrai nom. L'homme a disparu derrière la fonction. Le « tonton » du milieu."
+      ]
     },
     {
       "id": "heru",
@@ -112,7 +179,16 @@
         "corps": "Kebet",
         "site": "kebet-orbite",
         "statut": "provisoire"
-      }
+      },
+      "fiche": {
+        "Espèce": "Chat, mâle, poil long tricolore (blanc, marron, noir)",
+        "Âge": "2 ans",
+        "Découverte": "Recueilli chaton sur une station de Kebet, dans un container déplacé"
+      },
+      "portrait": [
+        "Le chat du Mai. Ella l'a recueilli, pas « pris », peu après la mort de Mai. Pour elle c'est juste un joli nom de chat.",
+        "Il apporte de la douceur dans le huis clos du vaisseau : une présence dans les silences, quelqu'un à qui la taciturne Ella peut parler sans se justifier. Une bribe de Kebet à bord du Mai."
+      ]
     },
     {
       "id": "mira",
@@ -125,7 +201,18 @@
         "corps": "Sethis",
         "site": "sethis-cite-a",
         "statut": "provisoire"
-      }
+      },
+      "fiche": {
+        "Espèce": "Tyt : humanoïde légèrement reptilienne, peau de reptile, « cheveux » tentaculaires, canines imposées par la manipulation génétique confédérale",
+        "Âge": "28 ans",
+        "Origine": "Née sur Sethis, esclave d'une corporation d'extraction",
+        "Condition": "Rachetée par le père Tarnel « au service du Clergé »",
+        "Nom": "Mira-Sum Kaha : Mira, de la lignée Kaha"
+      },
+      "portrait": [
+        "Le feu, face à l'eau : là où Ella est simple, calme et éteinte, Mira est en colère, combattante, intense. Sa haine des humains est justifiée, pas décorative : un trauma précis, vécu. Elle sait que certains humains du Bas sont bons ; elle le sait sans pouvoir le sentir.",
+        "Elle subit une mémoire transmise par le sang : rêves, fragments à l'éveil, maux de tête. Le tyt, ancien comme courant, est interdit sous peine de sanction : elle doit l'étouffer. Elle déteste les uniformes, ceux des milices."
+      ]
     },
     {
       "id": "tarnel",
@@ -137,7 +224,16 @@
         "corps": "Sethis",
         "site": "sethis-cite-a",
         "statut": "provisoire"
-      }
+      },
+      "fiche": {
+        "Fonction": "Vieux missionnaire humain, historien du clergé",
+        "Lieu": "Sethis, le Bas (quartier et temple à préciser)",
+        "Nom": "Tarnel : de tarn, « le lien de sang » ; surnom donné par les Tyts"
+      },
+      "portrait": [
+        "Toute sa vie au contact de la religion et des Tyts : l'archétype du prêtre qui « convertissait les sauvages », ambigu, car il les aime sincèrement et il est l'instrument de leur effacement. Passionné d'Histoire.",
+        "Fondamentalement bon, mais au service d'un système qui broie : ni monstre ni héros. Il aide et nourrit les Tyts du quartier."
+      ]
     },
     {
       "id": "agents",
@@ -149,7 +245,16 @@
         "corps": "Kebet",
         "site": "kebet-consortium",
         "statut": "provisoire"
-      }
+      },
+      "fiche": {
+        "Nombre": "Deux",
+        "Nature": "Des émanations du système plus que des individus",
+        "Nuance": "L'un croyant sincère, l'autre cynique"
+      },
+      "portrait": [
+        "Le Consortium n'a pas de chef unique : on ne peut pas le décapiter. Mais un roman a besoin d'un visage à affronter : deux agents, façon Mr Smith, des fonctions du système plus que des personnes.",
+        "Ils traquent, récupèrent et contiennent la fuite de vérité. Interchangeables : en écarter un, un autre peut apparaître. Ils incarnent sans résumer."
+      ]
     }
   ],
   "VESTIGES": [
