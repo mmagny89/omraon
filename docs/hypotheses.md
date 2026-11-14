@@ -22,7 +22,7 @@
 | Orbites | Kalpra 0,32 UA, Sethis 0,52, Naksun 0,75, ceinture 1,05–1,55, Zirkan 1,9 (zone habitable), Roushan **12** (essai du 2026-11-13, était 30 puis 20 ; fourchette crédible 10–15 UA, voir `modifications-lore.md` n° 29) ; ceinture froide 17–34 UA ; troyens de Roushan ; comètes (n° 30–33) | `donnees/canon/systeme.json` |
 | Kebet | 345 000 km de Zirkan (jour 1,28 j), 1,1 bar, **+90 K d'effet de serre** (relevé de +56 K quand l'étoile est passée de F6V à G0V : Zirkan, à 1,9 UA, est au bord extérieur de la zone habitable), e ≈ 10⁻⁴ | `donnees/canon/systeme.json` |
 | Zirkan, Roushan | champ magnétique 0,0005 et 0,03 × Jupiter ; Roushan T(1 bar) = 1,63 × T équilibre | `donnees/canon/systeme.json` |
-| Sethis | atmosphère ténue 0,05 bar (vent, poussière) | `donnees/canon/systeme.json` |
+| Sethis | atmosphère très ténue, 0,01 bar (vent, poussière) ; albédo 0,6 (plaines de poussière et de sel clairs) pour que les nuits soient glaciales (≈ −11 °C) malgré 0,52 UA, le jour restant brûlant (≈ 177 °C) | `donnees/canon/systeme.json` |
 | Shukal | planète-colonie des confins : nom provisoire, 0,06 M⊕, orbite de 9,5 M km autour de Roushan | `donnees/canon/systeme.json` |
 | Sites | 41 emplacements (cinq siècles d'implantation : cités, quartiers, stations, forges), populations et Tyts alignés sur le modèle de population (`invented: true`) ; un site à `marche` partage le marché du site d'origine | `donnees/canon/sites.json` |
 | Accélération des vaisseaux | 8 g (≈ 35 UA en 6 jours), repos moteur d'un jour | `physics/transfers.js`, `physics/flight.js` |
@@ -44,7 +44,7 @@
 
 ## Rendu (conception, sans effet sur la physique)
 
-- Halos atmosphériques : Zirkan et Roushan (épaisseur 7 % du rayon), Sethis (voile de poussière ténu, cohérent avec 0,05 bar), Kebet. Couleurs et intensités : `donnees/canon/systeme.json`, champ `atmosphere`.
+- Halos atmosphériques : Zirkan et Roushan (épaisseur 7 % du rayon), Sethis (voile de poussière ténu, cohérent avec 0,01 bar), Kebet. Couleurs et intensités : `donnees/canon/systeme.json`, champ `atmosphere`.
 - Relief : carte de relief générée par le même bruit que la texture, sans lien avec une topographie canonique ; terminateur adouci par un éclairage enveloppant (`render/world.js`).
 - Lumière de la planète sur ses lunes (face nuit) : albédo × phase × (R/d)², **exagérée ×6** pour être visible (`PLANETSHINE_BOOST`, `render/world.js`). L'ombre d'éclipse (la planète masque l'étoile) n'a aucun facteur d'exagération : elle reprend le calcul des éphémérides.
 - Infobulles : repères de comparaison (Mars, Terre, Jupiter, Soleil) et bande « eau liquide » à 1 bar, purement indicatifs (`ui/tooltips.js`).

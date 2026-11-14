@@ -78,7 +78,7 @@
       "color": "#c98a52",
       "massEarth": 0.95,
       "radiusKm": 6243.58,
-      "albedo": 0.3,
+      "albedo": 0.6,
       "orbit": {
         "a": 0.52,
         "e": 0.04,
@@ -98,8 +98,8 @@
         "height": 0.03
       },
       "habitat": {
-        "pressureBar": 0.05,
-        "greenhouseK": 5
+        "pressureBar": 0.01,
+        "greenhouseK": 1
       },
       "names": {
         "tyt": "SET-KAL-DURUK",
