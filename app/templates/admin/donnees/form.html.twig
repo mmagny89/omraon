@@ -1,14 +1,19 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}{{ section }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre"><h1>{{ section }} <small style="color:var(--doux);font-size:.9rem">({{ jeu }})</small></h1><a class="btn sec" href="{{ path('admin_donnees') }}">Retour</a></div>
-<div class="carte">
-  {% if erreur %}<p class="erreur" role="alert">{{ erreur }}</p>{% endif %}
-  <form method="post">
-    <label for="valeur">Valeur (JSON)</label>
-    <textarea id="valeur" name="valeur" rows="28" spellcheck="false" style="width:100%;background:var(--fond);color:var(--texte);border:1px solid var(--bord);border-radius:.5rem;padding:.75rem;font:.85rem/1.4 ui-monospace,Menlo,monospace">{{ texte }}</textarea>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Valeurs par défaut', url: path('admin_donnees')}, {texte: section}]) }}
+{{ c.entete(section, 'Jeu « ' ~ jeu ~ ' ». L\'enregistrement remplace le canon pour tous les comptes.') }}
+<div class="rounded-xl border border-ligne bg-carte p-5 sm:p-6">
+  {% if erreur %}<p role="alert" class="mb-4 rounded-lg border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger">{{ erreur }}</p>{% endif %}
+  <form method="post" class="space-y-4">
+    <label for="valeur" class="block text-sm font-medium text-doux">Valeur (JSON)</label>
+    <textarea id="valeur" name="valeur" rows="26" spellcheck="false" class="w-full rounded-lg border border-ligne bg-fond p-3 font-mono text-sm leading-relaxed focus:border-accent">{{ texte }}</textarea>
     <input type="hidden" name="_token" value="{{ csrf_token('donnees' ~ jeu ~ section) }}">
-    <p><button type="submit">Enregistrer</button></p>
+    <div class="flex gap-3">
+      <button type="submit" class="min-h-11 rounded-lg bg-accent px-5 font-semibold text-fond hover:brightness-110">Enregistrer</button>
+      <a href="{{ path('admin_donnees') }}" class="inline-flex min-h-11 items-center rounded-lg border border-ligne px-5 hover:border-accent hover:text-accent">Annuler</a>
+    </div>
   </form>
 </div>
 {% endblock %}

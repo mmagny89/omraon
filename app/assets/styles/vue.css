@@ -1,0 +1,18 @@
+/* Tailwind v4 pour les panneaux de la vue (front/index.html et les modules JavaScript de front/src). Pas de preflight, pas de couches :
+   les utilitaires s'ajoutent à front/src/style.css sans rien réinitialiser. Jetons = ceux de style.css. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
+@source "../../front/index.html";
+@source "../../front/src";
+
+@theme {
+  --color-panel: rgba(10, 14, 26, .82);
+  --color-ligne: rgba(160, 185, 230, .16);
+  --color-texte: #e6ecf8;
+  --color-doux: #8d9bb8;
+  --color-accent: #ffbf6b;
+  --color-ok: #6fd3a0;
+  --color-alerte: #ff9a6b;
+  --color-danger: #ff6b7a;
+}

@@ -1,9 +1,27 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Scènes — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<h1>Scènes</h1>
-<p style="color:var(--doux)">Banque d'images sensorielles par lieu pour écrire une scène. Les ambiances « non canon » sont déduites de la fonction et de la physique du lieu.</p>
-<div class="carte"><ul class="liste">
-{% for s in sites %}<li><a href="{{ path('fiches_scene', {id: s.id}) }}">{{ s.name }}</a> <span class="badge">{{ s.body }}</span></li>{% endfor %}
-</ul></div>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Scènes'}]) }}
+{{ c.entete('Scènes', 'Une banque d\'images sensorielles par lieu pour écrire une scène. Les ambiances « non canon » sont déduites de la fonction et de la physique du lieu.') }}
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start">
+  <div class="flex-1">{{ c.filtre('liste-scenes', 'Filtrer les lieux', 'Rechercher un lieu…') }}</div>
+  <div>
+    <label for="filtre-corps" class="sr-only">Filtrer par astre</label>
+    <select id="filtre-corps" data-filtre="#liste-scenes" data-filtre-attr="data-corps" class="min-h-11 w-full rounded-lg border border-ligne bg-carte px-3 sm:w-56">
+      <option value="">Tous les astres</option>
+      {% for b in corps %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+    </select>
+  </div>
+</div>
+<ul id="liste-scenes" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  {% for s in sites %}
+  <li data-filtrable data-corps="{{ s.body }}">
+    <a href="{{ path('fiches_scene', {id: s.id}) }}" class="flex h-full min-h-11 flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 motion-reduce:transition-none">
+      <span class="font-semibold">{{ s.name }}</span>
+      <span>{{ c.badge(s.body, 'accent') }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
 {% endblock %}

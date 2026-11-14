@@ -1,13 +1,22 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% set p = f.perso %}
 {% block title %}{{ p.nom }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre"><h1>{{ p.nom }}{% if p.vivant is defined and not p.vivant %} <span class="badge">disparu</span>{% endif %}</h1><a class="btn sec" href="{{ path('fiches_personnages') }}">Tous les personnages</a></div>
-<p>{{ p.role }}</p>
-<div class="carte"><dl class="fiche">
-  <dt>Espèce</dt><dd>{{ p.espece }}</dd>
-  {% if p.age is defined %}<dt>Âge</dt><dd>{{ p.age }} ans</dd>{% endif %}
-  <dt>Origine</dt><dd>{% if f.corps %}<a href="{{ path('fiches_astre', {id: f.corps}) }}">{{ p.origine.corps }}</a>{% else %}{{ p.origine.corps }}{% endif %}{% if f.site %} — <a href="{{ path('fiches_site', {id: f.site.id}) }}">{{ f.site.name }}</a>{% endif %} <span class="badge">{{ p.origine.statut }}</span></dd>
-</dl></div>
-<h2>Résumé</h2><p>{{ p.resume }}</p>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Personnages', url: path('fiches_personnages')}, {texte: p.nom}]) }}
+{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}] ~ (p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : [])) }}
+<div class="max-w-3xl space-y-6">
+  <section aria-labelledby="resume" class="rounded-xl border border-ligne bg-carte p-5">
+    <h2 id="resume" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Résumé</h2>
+    <p>{{ p.resume }}</p>
+  </section>
+  <section aria-labelledby="orig" class="rounded-xl border border-ligne bg-carte p-5">
+    <h2 id="orig" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Fiche</h2>
+    <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+      {% if p.age is defined %}<dt class="text-doux">Âge</dt><dd>{{ p.age }} ans</dd>{% endif %}
+      <dt class="text-doux">Origine</dt>
+      <dd>{% if f.corps %}<a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: f.corps}) }}">{{ p.origine.corps }}</a>{% else %}{{ p.origine.corps }}{% endif %}{% if f.site %} — <a class="text-accent hover:underline" href="{{ path('fiches_site', {id: f.site.id}) }}">{{ f.site.name }}</a>{% endif %} {{ c.badge(p.origine.statut, p.origine.statut == 'canon' ? 'ok' : 'alerte') }}</dd>
+    </dl>
+  </section>
+</div>
 {% endblock %}

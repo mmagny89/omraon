@@ -1,0 +1,47 @@
+{# Thème de formulaire Tailwind : labels, champs, cases à cocher et erreurs. #}
+{% extends 'form_div_layout.html.twig' %}
+
+{% block form_row -%}
+  <div class="space-y-1.5">
+    {{- form_label(form) -}}
+    {{- form_widget(form) -}}
+    {{- form_help(form) -}}
+    {{- form_errors(form) -}}
+  </div>
+{%- endblock form_row %}
+
+{% block form_label -%}
+  {%- set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' block text-sm font-medium text-doux')|trim}) -%}
+  {{- parent() -}}
+{%- endblock form_label %}
+
+{% block form_widget_simple -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 text-texte placeholder:text-doux focus:border-accent')|trim}) -%}
+  {{- parent() -}}
+{%- endblock form_widget_simple %}
+
+{% block checkbox_row -%}
+  <div class="space-y-1.5">
+    <div class="flex min-h-11 items-center gap-3">
+      {{- form_widget(form) -}}
+      {{- form_label(form, null, {label_attr: {class: 'text-texte'}}) -}}
+    </div>
+    {{- form_help(form) -}}
+    {{- form_errors(form) -}}
+  </div>
+{%- endblock checkbox_row %}
+
+{% block checkbox_widget -%}
+  {%- set attr = attr|merge({class: (attr.class|default('') ~ ' size-5 shrink-0 accent-accent')|trim}) -%}
+  {{- parent() -}}
+{%- endblock checkbox_widget %}
+
+{% block form_help -%}
+  {%- if help is not empty -%}<p id="{{ id }}_help" class="text-xs text-doux">{{ help }}</p>{%- endif -%}
+{%- endblock form_help %}
+
+{% block form_errors -%}
+  {%- if errors|length > 0 -%}
+    <ul role="alert" class="space-y-0.5 text-sm text-danger">{% for error in errors %}<li>{{ error.message }}</li>{% endfor %}</ul>
+  {%- endif -%}
+{%- endblock form_errors %}

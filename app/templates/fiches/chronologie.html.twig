@@ -1,8 +1,33 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Chronologie — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<h1>Chronologie</h1>
-<p style="color:var(--doux)">Ordres de grandeur d'auteur, pas des dates à citer. An 0 : début de l'Ère confédérale ; le présent du roman est l'An 300.</p>
-<h2>Ères</h2><div class="carte"><ul class="liste">{% for e in eres %}<li><b>{{ e.de }}{% if e.a %} → {{ e.a }}{% else %} →{% endif %}</b> — {{ e.label }}{% if e.hors %} <span class="badge">hors système</span>{% endif %}</li>{% endfor %}</ul></div>
-<h2>Événements</h2><div class="carte"><ul class="liste">{% for e in evenements %}<li><b>{{ e.an }}</b> — {{ e.label }}{% if e.hors %} <span class="badge">hors système</span>{% endif %}<br><span style="color:var(--doux)">{{ e.note }}</span></li>{% endfor %}</ul></div>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Chronologie'}]) }}
+{{ c.entete('Chronologie', 'Ordres de grandeur d\'auteur, pas des dates à citer. An 0 : début de l\'Ère confédérale ; le présent du roman est l\'An 300.') }}
+<div class="grid gap-8 lg:grid-cols-2">
+  <section aria-labelledby="eres">
+    <h2 id="eres" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Ères</h2>
+    <ol class="space-y-3">
+      {% for e in eres %}
+      <li class="rounded-xl border border-ligne bg-carte p-4">
+        <p class="text-sm tabular-nums text-accent">{{ e.de }}{% if e.a %} → {{ e.a }}{% else %} →{% endif %}</p>
+        <p class="mt-1">{{ e.label }} {% if e.hors %}{{ c.badge('hors système') }}{% endif %}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+  <section aria-labelledby="evts">
+    <h2 id="evts" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Événements</h2>
+    <ol class="relative space-y-6 border-l border-ligne pl-6">
+      {% for e in evenements %}
+      <li class="relative">
+        <span aria-hidden="true" class="absolute -left-[1.85rem] top-1.5 size-3 rounded-full border-2 border-fond bg-accent"></span>
+        <p class="text-sm font-semibold tabular-nums text-accent">{{ e.an }}</p>
+        <p class="font-semibold">{{ e.label }} {% if e.hors %}{{ c.badge('hors système') }}{% endif %}</p>
+        <p class="text-sm text-doux">{{ e.note }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+</div>
 {% endblock %}

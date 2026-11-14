@@ -58,7 +58,8 @@ bootstrap_dev_dependencies() {
 		fi
 		if [ ! -d /app/var/tailwind ] && [ -f /app/bin/console ] && grep -qs 'symfonycasts/tailwind-bundle' /app/composer.json; then
 			echo "docker-entrypoint: CSS non compilee, tailwind:build"
-			php /app/bin/console tailwind:build
+			# Le projet a deux feuilles d'entree (pages, vue) : app:tailwind:build les compile toutes (voir src/Command/TailwindToutCommand.php).
+			php /app/bin/console app:tailwind:build || php /app/bin/console tailwind:build
 		fi
 	else
 		waited=0

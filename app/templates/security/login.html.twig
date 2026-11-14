@@ -1,17 +1,26 @@
 {% extends 'base.html.twig' %}
 {% block title %}Connexion — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="carte" style="max-width:26rem;margin:10vh auto 0">
-  <h1>À l'ombre d'Omraon</h1>
-  <p style="color:var(--doux)">Accès réservé. Les comptes sont créés par l'administrateur.</p>
-  <form method="post">
-    {% if erreur %}<p class="erreur" role="alert">{{ erreur.messageKey|trans(erreur.messageData, 'security') }}</p>{% endif %}
-    <label for="email">Email</label>
-    <input type="email" id="email" name="_username" value="{{ dernier_email }}" autocomplete="username" autofocus required>
-    <label for="mdp">Mot de passe</label>
-    <input type="password" id="mdp" name="_password" autocomplete="current-password" required>
-    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-    <p><button type="submit">Se connecter</button></p>
-  </form>
+<div class="mx-auto mt-[8vh] w-full max-w-md">
+  <div class="rounded-2xl border border-ligne bg-carte p-6 shadow-2xl shadow-black/40 sm:p-8">
+    <p aria-hidden="true" class="text-3xl text-accent">✦</p>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">À l'ombre d'Omraon</h1>
+    <p class="mt-2 text-sm text-doux">Accès réservé. Les comptes sont créés par l'administrateur.</p>
+    <form method="post" class="mt-6 space-y-4">
+      {% if erreur %}<p role="alert" class="rounded-lg border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger">{{ erreur.messageKey|trans(erreur.messageData, 'security') }}</p>{% endif %}
+      <div class="space-y-1.5">
+        <label for="email" class="block text-sm font-medium text-doux">Email</label>
+        <input type="email" id="email" name="_username" value="{{ dernier_email }}" autocomplete="username" autofocus required
+               class="min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 focus:border-accent">
+      </div>
+      <div class="space-y-1.5">
+        <label for="mdp" class="block text-sm font-medium text-doux">Mot de passe</label>
+        <input type="password" id="mdp" name="_password" autocomplete="current-password" required
+               class="min-h-11 w-full rounded-lg border border-ligne bg-fond px-3 focus:border-accent">
+      </div>
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+      <button type="submit" class="min-h-11 w-full rounded-lg bg-accent px-4 font-semibold text-fond hover:brightness-110">Se connecter</button>
+    </form>
+  </div>
 </div>
 {% endblock %}

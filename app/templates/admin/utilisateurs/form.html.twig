@@ -1,14 +1,20 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}{{ titre }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre"><h1>{{ titre }}</h1><a class="btn sec" href="{{ path('admin_utilisateurs') }}">Retour</a></div>
-<div class="carte">
-  {{ form_start(form) }}
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Comptes', url: path('admin_utilisateurs')}, {texte: titre}]) }}
+{{ c.entete(titre) }}
+<div class="max-w-xl rounded-xl border border-ligne bg-carte p-5 sm:p-6">
+  {{ form_start(form, {attr: {class: 'space-y-4'}}) }}
     {{ form_row(form.nom) }}
     {{ form_row(form.email) }}
-    <div class="check">{{ form_row(form.admin) }}{{ form_row(form.actif) }}</div>
+    {{ form_row(form.admin) }}
+    {{ form_row(form.actif) }}
     {{ form_row(form.motDePasse) }}
-    <p><button type="submit">Enregistrer</button></p>
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="min-h-11 rounded-lg bg-accent px-5 font-semibold text-fond hover:brightness-110">Enregistrer</button>
+      <a href="{{ path('admin_utilisateurs') }}" class="inline-flex min-h-11 items-center rounded-lg border border-ligne px-5 hover:border-accent hover:text-accent">Annuler</a>
+    </div>
   {{ form_end(form, {render_rest: true}) }}
 </div>
 {% endblock %}

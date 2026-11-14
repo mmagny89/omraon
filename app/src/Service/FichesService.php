@@ -21,25 +21,48 @@ final readonly class FichesService
     {
     }
 
-    /** @return list<array{id: string, nom: string, type: string, parent: ?string}> */
+    /** @return list<array{id: string, nom: string, type: string, parent: ?string, role: string, couleur: ?string}> */
     public function astres(): array
     {
         $sys = $this->donnees->jeu('systeme');
-        $out = [['id' => $sys->STAR->id, 'nom' => $sys->STAR->name, 'type' => 'Étoile', 'parent' => null]];
+        $out = [['id' => $sys->STAR->id, 'nom' => $sys->STAR->name, 'type' => 'Étoile', 'parent' => null, 'role' => $sys->STAR->role ?? '', 'couleur' => $sys->STAR->color ?? null]];
         foreach ($sys->PLANETS as $p) {
-            $out[] = ['id' => $p->id, 'nom' => $p->name, 'type' => ($p->kind ?? '') === 'gas' ? 'Planète gazeuse' : 'Planète tellurique', 'parent' => null];
+            $out[] = ['id' => $p->id, 'nom' => $p->name, 'type' => ($p->kind ?? '') === 'gas' ? 'Planète gazeuse' : 'Planète tellurique', 'parent' => null, 'role' => $p->role ?? '', 'couleur' => $p->color ?? null];
             foreach ($p->moons ?? [] as $m) {
-                $out[] = ['id' => $m->id, 'nom' => $m->name, 'type' => 'Lune', 'parent' => $p->name];
+                $out[] = ['id' => $m->id, 'nom' => $m->name, 'type' => 'Lune', 'parent' => $p->name, 'role' => $m->role ?? '', 'couleur' => $m->color ?? null];
             }
         }
-        $out[] = ['id' => 'ceinture-principale', 'nom' => $sys->BELT->name, 'type' => 'Ceinture d\'astéroïdes', 'parent' => null];
-        $out[] = ['id' => 'ceinture-froide', 'nom' => $sys->COLD_BELT->name, 'type' => 'Ceinture froide', 'parent' => null];
+        $out[] = ['id' => 'ceinture-principale', 'nom' => $sys->BELT->name, 'type' => 'Ceinture d\'astéroïdes', 'parent' => null, 'role' => $sys->BELT->role ?? '', 'couleur' => null];
+        $out[] = ['id' => 'ceinture-froide', 'nom' => $sys->COLD_BELT->name, 'type' => 'Ceinture froide', 'parent' => null, 'role' => $sys->COLD_BELT->role ?? '', 'couleur' => null];
 
         return $out;
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Fiche d'un astre, avec ses voisins de liste et la position des températures sur une échelle de −250 à 750 °C.
+     *
+     * @return array<string, mixed>|null
+     */
     public function astre(string $id): ?array
+    {
+        $a = $this->astreBrut($id);
+        if ($a === null) {
+            return null;
+        }
+        $liste = $this->astres();
+        $i = (int) array_search($id, array_column($liste, 'id'), true);
+        $a['precedent'] = $liste[$i - 1] ?? null;
+        $a['suivant'] = $liste[$i + 1] ?? null;
+        if (isset($a['temperatures']) && $a['temperatures']['mode'] === 'solide') {
+            $pct = static fn (float $k): float => round(max(0.0, min(100.0, ($k - 273.15 + 250) / 10)), 1);
+            $a['barre'] = ['nuit' => $pct($a['temperatures']['nuit']), 'jour' => $pct($a['temperatures']['jour']), 'moyenne' => $pct($a['temperatures']['moyenne']), 'zero' => $pct(273.15)];
+        }
+
+        return $a;
+    }
+
+    /** @return array<string, mixed>|null */
+    private function astreBrut(string $id): ?array
     {
         $sys = $this->donnees->jeu('systeme');
         $lien = fn (string $nom): array => $this->lieesAuCorps($nom);

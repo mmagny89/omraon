@@ -53,6 +53,21 @@
             "bin/phpunit"
         ]
     },
+    "symfony/asset-mapper": {
+        "version": "8.1",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "6.4",
+            "ref": "c01c47af2ec66a74ec046eccb919cfe27d3464ec"
+        },
+        "files": [
+            "assets/app.js",
+            "assets/styles/app.css",
+            "config/packages/asset_mapper.yaml",
+            "importmap.php"
+        ]
+    },
     "symfony/console": {
         "version": "8.1",
         "recipe": {
@@ -203,5 +218,14 @@
         "files": [
             "config/packages/validator.yaml"
         ]
+    },
+    "symfonycasts/tailwind-bundle": {
+        "version": "1.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "0.14",
+            "ref": "b8af60cec7149fd0cde0ec9d89ccb32335c4d9bd"
+        }
     }
 }

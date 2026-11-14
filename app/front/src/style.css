@@ -261,32 +261,6 @@ body.ground #bar { z-index: 6; position: fixed; }
 /* Fiches : en-tête, pastilles de chiffres clés, sections repliables */
 #info-head:empty { display: none; }
 #info-head { margin-bottom: 10px; }
-#info .hero { display: flex; align-items: center; gap: 10px; }
-#info .hero > div { flex: 1; min-width: 0; }
-#info .hero h2 { margin: 0; }
-#info .hero .sub { margin: 0; }
-#info .swatch { width: 14px; height: 14px; border-radius: 50%; flex: none; box-shadow: 0 0 10px currentColor; }
-#info .swatch.site { border-radius: 3px; background: var(--accent); transform: rotate(45deg); width: 11px; height: 11px; }
-#info .chip { flex: none; max-width: 48%; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); font-size: 11.5px; font-weight: 600; text-align: center; line-height: 1.25; }
-#info .chip.ok { border-color: var(--ok); color: var(--ok); } #info .chip.warn { border-color: var(--warn); color: var(--warn); } #info .chip.bad { border-color: #ff6b7a; color: #ff6b7a; }
-#info .lead { margin: 8px 0 10px; color: #cfd8ec; }
-#info .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 10px; }
-#info .tile { display: flex; flex-direction: column; padding: 7px 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(160, 185, 230, .05); min-width: 0; }
-#info .tile b { font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
-#info .tile span { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--mute); }
-#info .tile small { font-size: 11px; color: var(--mute); }
-#info details.sec { margin: 8px 0; border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .035); overflow: hidden; }
-#info details.sec > summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; padding: 0 12px; font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
-#info details.sec > summary:hover { background: rgba(255, 191, 107, .1); }
-#info details.sec > summary::-webkit-details-marker { display: none; }
-#info details.sec > summary::after { content: ""; flex: none; width: 24px; height: 24px; border-radius: 50%; background: rgba(255, 191, 107, .16) center / 10px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M1 3l4 4 4-4' fill='none' stroke='%23ffbf6b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); transition: transform .15s; }
-#info details.sec:not([open]) > summary::after { transform: rotate(-90deg); }
-#info details.sec:not([open]) > summary > span::after { content: " · déplier"; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--mute); }
-#info details.sec[open] > summary { border-bottom: 1px solid var(--line); }
-#info details.sec[open] { padding-bottom: 8px; }
-#info details.sec > :not(summary) { margin-inline: 12px; }
-#info .divider { margin: 14px 0 6px; padding-top: 10px; border-top: 2px solid var(--line); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mute); }
-@media (prefers-reduced-motion: reduce) { #info details.sec > summary::after { transition: none; } }
 
 /* Liste des corps : recherche, repli par planète, population des sites */
 #list-q { position: sticky; top: 0; z-index: 1; width: calc(100% - 28px); margin: 0 0 8px; min-height: 40px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .95); border: 1px solid var(--line); border-radius: 8px; }
@@ -368,12 +342,10 @@ body.ui-hidden #tour { display: none; }
 #carnet-nom { width: 100%; min-height: 44px; padding: 6px 10px; font: inherit; color: var(--text); background: rgba(10, 14, 26, .6); border: 1px solid var(--line); border-radius: 8px; }
 
 /* Statut des informations (canon / conception / calculé / provisoire) */
-#info details.sec > summary > span { flex: 1; }
 .pill { font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; margin-right: 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); }
 .pill.canon { color: #8fd0ff; border-color: rgba(143, 208, 255, .5); }
 .pill.conception { color: var(--accent); border-color: rgba(255, 191, 107, .5); }
 .pill.provisoire { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
-#info details.sec > summary[data-tip] { cursor: pointer; }
 
 /* Comparateur de lieux */
 #cmp-out { overflow-x: auto; }
@@ -477,21 +449,5 @@ body.options-open #options { display: grid; grid-template-columns: 92px minmax(0
   #options details { grid-column: 1; grid-row: 4; padding-right: 0; }
 }
 
-/* Liens vers les fiches détaillées (pages Symfony) */
+/* Lien « Fiches » de l'en-tête (le reste des panneaux : Tailwind, voir ui/composants.js et assets/styles/vue.css) */
 a.tb { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
-.fiche-liens { margin: .4rem 0 .6rem; font-size: .9rem; }
-
-/* Outils d'un site (ciel, fiche de scène, trajet) : des rubriques bien visibles, pas du texte discret. */
-#sky-box > summary, #scene-box > summary, #transfer > summary {
-  gap: 10px; padding: 8px 12px; margin: 8px 0; color: var(--text); font-weight: 600;
-  background: rgba(255,191,107,.08); border: 1px solid rgba(255,191,107,.35); border-radius: 10px;
-  list-style: none;
-}
-#sky-box > summary::-webkit-details-marker, #scene-box > summary::-webkit-details-marker, #transfer > summary::-webkit-details-marker { display: none; }
-#sky-box > summary::before { content: "🌌"; }
-#scene-box > summary::before { content: "🎬"; }
-#transfer > summary::before { content: "🚀"; }
-#sky-box > summary::after, #scene-box > summary::after, #transfer > summary::after { content: "▸"; margin-left: auto; color: var(--accent); transition: transform .15s; }
-#sky-box[open] > summary::after, #scene-box[open] > summary::after, #transfer[open] > summary::after { transform: rotate(90deg); }
-#sky-box > summary:hover, #scene-box > summary:hover, #transfer > summary:hover { background: rgba(255,191,107,.16); border-color: var(--accent); }
-@media (prefers-reduced-motion: reduce) { #sky-box > summary::after, #scene-box > summary::after, #transfer > summary::after { transition: none; } }

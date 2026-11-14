@@ -8,6 +8,7 @@
   <meta name="author" content="Magny">
   <meta name="copyright" content="© 2026 Magny. Tous droits réservés.">
   <link rel="stylesheet" href="./src/style.css">
+  <!--VUE_CSS-->
 </head>
 <body>
   <a class="skip" href="#info">Aller à la fiche du corps</a><a class="skip" href="#view">Aller à la vue 3D</a>
@@ -54,13 +55,13 @@
   <div id="info-head"></div>
   <div id="site-tools" hidden>
     <button type="button" id="ground-btn" class="wide-btn">👁 Vue à hauteur d'yeux (horizon)</button>
-    <details id="sky-box"><summary>Ciel vu d'ici</summary>
+    <details id="sky-box" class="group"><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🌌</span>Ciel vu d'ici<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
       <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option><option value="free">Libre (glisser)</option></select></label>
       <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option><option value="custom" hidden>—</option></select></label></div>
       <canvas id="sky" role="img" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div><div class="note" style="font-size:11px;color:var(--mute)">Glisser : tourner et incliner · molette ou pincement : champ · double-clic : recentrer sur l'étoile</div>
     </details>
-    <details id="scene-box"><summary>Fiche de scène</summary><div id="scene-out"></div><div class="actions"><button type="button" id="scene-copy">Copier le texte</button></div></details>
-  </div><details id="transfer" hidden><summary>Trajet vers un autre site</summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><button type="button" id="tr-launch">▶ Lancer le voyage du Mai</button><div id="tr-out"></div></details><div id="info-live"></div></aside>
+    <details id="scene-box" class="group"><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🎬</span>Fiche de scène<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div id="scene-out"></div><div class="actions"><button type="button" id="scene-copy">Copier le texte</button></div></details>
+  </div><details id="transfer" class="group" hidden><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🚀</span>Trajet vers un autre site<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><button type="button" id="tr-launch">▶ Lancer le voyage du Mai</button><div id="tr-out"></div></details><div id="info-live"></div></aside>
 
   <footer id="bar">
     <div class="row">

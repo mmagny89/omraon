@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* Les gabarits Twig sont détectés automatiquement (app/templates) ; les classes y sont écrites en toutes lettres. */
+@source "../../templates";
+
+/* Mêmes jetons que la vue du système : un seul univers visuel. */
+@theme {
+  --color-fond: #04060d;
+  --color-carte: #0e1424;
+  --color-ligne: #232c45;
+  --color-texte: #e6ecf8;
+  --color-doux: #8d9bb8;
+  --color-accent: #ffbf6b;
+  --color-ok: #6fd3a0;
+  --color-alerte: #ff9a6b;
+  --color-danger: #ff6b7a;
+  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Tailwind v4 ne remet plus le curseur « main » sur les boutons. */
+@layer base {
+  button:not(:disabled), [role="button"]:not(:disabled), summary { cursor: pointer; }
+  html { color-scheme: dark; scroll-padding-top: 5rem; }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  body { background: var(--color-fond); color: var(--color-texte); }
+}

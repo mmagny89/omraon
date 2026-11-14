@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Asset\Packages;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,14 +29,21 @@ final class FrontController extends AbstractController
         'woff2' => 'font/woff2',
     ];
 
-    public function __construct(#[Autowire('%kernel.project_dir%/front')] private readonly string $racine)
+    public function __construct(#[Autowire('%kernel.project_dir%/front')] private readonly string $racine, private readonly Packages $assets)
     {
     }
 
     #[Route('/', name: 'app_accueil', methods: ['GET'])]
     public function accueil(): Response
     {
-        return $this->servir($this->racine.'/index.html', 'text/html; charset=UTF-8');
+        $fichier = $this->racine.'/index.html';
+        if (!is_file($fichier)) {
+            throw new NotFoundHttpException();
+        }
+        // La feuille Tailwind de la vue porte un nom empreinté (AssetMapper) : la page l'y référence au service.
+        $html = str_replace('<!--VUE_CSS-->', '<link rel="stylesheet" href="'.$this->assets->getUrl('styles/vue.css').'">', (string) file_get_contents($fichier));
+
+        return new Response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'private, no-cache', 'X-Content-Type-Options' => 'nosniff']);
     }
 
     #[Route('/{dossier}/{chemin}', name: 'app_front', requirements: ['dossier' => 'src|vendor', 'chemin' => '.+'], methods: ['GET'], priority: -10)]

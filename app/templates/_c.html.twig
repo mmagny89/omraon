@@ -1,0 +1,51 @@
+{# Composants d'affichage : aucune logique métier, seulement des classes. #}
+{% macro badge(texte, ton = 'neutre') %}
+  {%- set tons = {
+    neutre: 'border-ligne text-doux',
+    accent: 'border-accent/50 bg-accent/10 text-accent',
+    ok: 'border-ok/50 bg-ok/10 text-ok',
+    alerte: 'border-alerte/50 bg-alerte/10 text-alerte',
+    danger: 'border-danger/50 bg-danger/10 text-danger',
+  } -%}
+  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium {{ tons[ton] ?? tons.neutre }}">{{ texte }}</span>
+{% endmacro %}
+
+{% macro tuile(valeur, libelle, sous = null) %}
+  <div class="rounded-xl border border-ligne bg-carte px-4 py-3">
+    <div class="text-xl font-semibold tabular-nums">{{ valeur }}</div>
+    <div class="text-xs font-medium uppercase tracking-wider text-doux">{{ libelle }}</div>
+    {% if sous %}<div class="mt-0.5 text-xs text-doux">{{ sous }}</div>{% endif %}
+  </div>
+{% endmacro %}
+
+{% macro filtre(cible, libelle = 'Filtrer la liste', placeholder = 'Rechercher…') %}
+  <div class="mb-4">
+    <label for="filtre-{{ cible }}" class="sr-only">{{ libelle }}</label>
+    <input id="filtre-{{ cible }}" type="search" data-filtre="#{{ cible }}" placeholder="{{ placeholder }}" autocomplete="off"
+           class="min-h-11 w-full rounded-lg border border-ligne bg-carte px-4 text-texte placeholder:text-doux focus:border-accent sm:max-w-md">
+    <p data-filtre-compte="#{{ cible }}" aria-live="polite" class="mt-1 text-xs text-doux"></p>
+  </div>
+{% endmacro %}
+
+{% macro fil(liens) %}
+  <nav aria-label="Fil d'Ariane" class="mb-4 text-sm text-doux">
+    <ol class="flex flex-wrap items-center gap-x-2 gap-y-1">
+      {% for l in liens %}
+        <li class="flex items-center gap-2">
+          {% if l.url is defined and l.url %}<a href="{{ l.url }}" class="rounded px-1 py-1 hover:text-accent hover:underline">{{ l.texte }}</a>{% else %}<span aria-current="page" class="text-texte">{{ l.texte }}</span>{% endif %}
+          {% if not loop.last %}<span aria-hidden="true">›</span>{% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  </nav>
+{% endmacro %}
+
+{% macro entete(titre, sousTitre = null, badges = []) %}
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ titre }}</h1>
+    {% if badges %}<div class="mt-2 flex flex-wrap gap-2">{% for b in badges %}{{ _self.badge(b.texte, b.ton ?? 'neutre') }}{% endfor %}</div>{% endif %}
+    {% if sousTitre %}<p class="mt-3 max-w-3xl text-base text-doux">{{ sousTitre }}</p>{% endif %}
+  </header>
+{% endmacro %}
+
+{% macro celsius(kelvin) %}{{ (kelvin - 273.15)|number_format(0, ',', ' ') }} °C{% endmacro %}

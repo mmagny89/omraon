@@ -1,25 +1,30 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Comptes — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre">
-  <h1>Comptes</h1>
-  <div class="actions"><a class="btn sec" href="{{ path('app_accueil') }}">Vue du système</a><a class="btn" href="{{ path('admin_utilisateur_nouveau') }}">Nouveau compte</a><a class="btn sec" href="{{ path('admin_donnees') }}">Valeurs par défaut</a><a class="btn sec" href="{{ path('app_logout') }}">Déconnexion</a></div>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Comptes'}]) }}
+<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+  <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">Comptes</h1>
+  <div class="flex gap-2">
+    <a class="inline-flex min-h-11 items-center rounded-lg border border-ligne px-4 text-sm hover:border-accent hover:text-accent" href="{{ path('admin_donnees') }}">Valeurs par défaut</a>
+    <a class="inline-flex min-h-11 items-center rounded-lg bg-accent px-4 text-sm font-semibold text-fond hover:brightness-110" href="{{ path('admin_utilisateur_nouveau') }}">Nouveau compte</a>
+  </div>
 </div>
-<div class="carte table-wrap">
-  <table>
-    <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>État</th><th>Dernière connexion</th><th></th></tr></thead>
-    <tbody>
+<div class="overflow-x-auto rounded-xl border border-ligne bg-carte">
+  <table class="w-full min-w-[40rem] text-left text-sm">
+    <thead class="border-b border-ligne text-xs uppercase tracking-wider text-doux"><tr><th scope="col" class="px-4 py-3">Nom</th><th scope="col" class="px-4 py-3">Email</th><th scope="col" class="px-4 py-3">Rôle</th><th scope="col" class="px-4 py-3">État</th><th scope="col" class="px-4 py-3">Dernière connexion</th><th scope="col" class="px-4 py-3"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody class="divide-y divide-ligne">
     {% for u in utilisateurs %}
       <tr>
-        <td>{{ u.nom }}</td><td>{{ u.email }}</td>
-        <td>{{ u.estAdmin ? 'Admin' : 'Lecteur' }}</td>
-        <td>{{ u.actif ? 'Actif' : 'Désactivé' }}</td>
-        <td>{{ u.derniereConnexion ? u.derniereConnexion|date('d/m/Y H:i') : '—' }}</td>
-        <td><div class="actions">
-          <a class="btn sec" href="{{ path('admin_utilisateur_modifier', {id: u.id}) }}">Modifier</a>
+        <td class="px-4 py-2 font-medium">{{ u.nom }}</td><td class="px-4 py-2 text-doux">{{ u.email }}</td>
+        <td class="px-4 py-2">{{ c.badge(u.estAdmin ? 'Admin' : 'Lecteur', u.estAdmin ? 'accent' : 'neutre') }}</td>
+        <td class="px-4 py-2">{{ c.badge(u.actif ? 'Actif' : 'Désactivé', u.actif ? 'ok' : 'danger') }}</td>
+        <td class="px-4 py-2 tabular-nums text-doux">{{ u.derniereConnexion ? u.derniereConnexion|date('d/m/Y H:i') : '—' }}</td>
+        <td class="px-4 py-2"><div class="flex justify-end gap-2">
+          <a class="inline-flex min-h-11 items-center rounded-lg border border-ligne px-3 hover:border-accent hover:text-accent" href="{{ path('admin_utilisateur_modifier', {id: u.id}) }}">Modifier</a>
           {% if u != app.user %}
           <form method="post" action="{{ path('admin_utilisateur_supprimer', {id: u.id}) }}" onsubmit="return confirm('Supprimer ce compte ?')">
-            <input type="hidden" name="_token" value="{{ csrf_token('supprimer' ~ u.id) }}"><button class="danger" type="submit">Supprimer</button>
+            <input type="hidden" name="_token" value="{{ csrf_token('supprimer' ~ u.id) }}"><button class="min-h-11 rounded-lg border border-danger/50 px-3 text-danger hover:bg-danger/10" type="submit">Supprimer</button>
           </form>{% endif %}
         </div></td>
       </tr>

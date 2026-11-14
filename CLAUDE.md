@@ -35,6 +35,13 @@ npm run vendor                                                # recopie Three.js
 
 Toute commande Docker passe par la **clé de service** (`php`, `database`), jamais par le `container_name`.
 
+## Tailwind CSS v4
+
+- Pages Twig : `app/assets/styles/app.css` (avec preflight, jetons `@theme`) ; panneaux de la vue : `app/assets/styles/vue.css` (sans preflight : `front/src/style.css` reste maîtresse du reste). Bundle `symfonycasts/tailwind-bundle`, binaire épinglé (`binary_version`).
+- `docker compose exec php php bin/console app:tailwind:build` compile **les deux** (le `tailwind:build` du bundle n'en compile qu'une) ; à relancer après avoir ajouté des classes, en dev. L'image, le démarrage de dev et la CI utilisent cette commande.
+- Les classes s'écrivent en toutes lettres (Tailwind lit les fichiers comme du texte) : jamais `'bg-' + couleur`. Panneaux de la vue : composants dans `front/src/ui/composants.js` ; la vue reçoit sa feuille par `<!--VUE_CSS-->` remplacé dans `FrontController`.
+- Migration des panneaux **partielle** : tuiles, en-tête de fiche, sections repliables, séparateur, rubriques d'outils de site. Le reste (`dl`, `.note`, tableaux, listes de critères) est encore dans `style.css` : on migre un composant à la fois, en retirant sa règle de `style.css`.
+
 ## Règles du projet
 
 - **Canon contre conception.** Les documents du roman (00–13) fixent les ordres de grandeur, les noms, les propulsions, la chronologie. Toute autre valeur est une proposition de

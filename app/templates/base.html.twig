@@ -4,57 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark">
   <title>{% block title %}À l'ombre d'Omraon{% endblock %}</title>
-  <style>
-    :root { color-scheme: dark; --fond:#0b0e17; --carte:#141a2a; --bord:#2a3350; --texte:#e6e9f2; --doux:#9aa4c2; --accent:#7aa2ff; --erreur:#ff7a7a; --ok:#7aff9e; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--fond); color:var(--texte); font:16px/1.5 system-ui, sans-serif; }
-    main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
-    h1 { font-size: 1.5rem; margin: 0 0 1rem; }
-    a { color: var(--accent); }
-    .carte { background:var(--carte); border:1px solid var(--bord); border-radius:.75rem; padding:1.25rem; }
-    label { display:block; margin:.75rem 0 .25rem; color:var(--doux); }
-    input[type=text], input[type=email], input[type=password] { width:100%; min-height:44px; padding:.5rem .75rem; background:var(--fond); color:var(--texte); border:1px solid var(--bord); border-radius:.5rem; font:inherit; }
-    .check label { display:flex; gap:.6rem; align-items:center; min-height:44px; color:var(--texte); }
-    .check input { width:1.25rem; height:1.25rem; }
-    button, .btn { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:.5rem 1rem; background:var(--accent); color:#0b0e17; border:0; border-radius:.5rem; font:inherit; font-weight:600; cursor:pointer; text-decoration:none; }
-    .btn.sec, button.sec { background:transparent; color:var(--texte); border:1px solid var(--bord); }
-    .btn.danger, button.danger { background:var(--erreur); }
-    .erreur { color:var(--erreur); } .succes { color:var(--ok); }
-    .flash { padding:.75rem 1rem; border:1px solid var(--bord); border-radius:.5rem; margin-bottom:1rem; }
-    .barre { display:flex; flex-wrap:wrap; gap:.5rem; justify-content:space-between; align-items:center; margin-bottom:1rem; }
-    .table-wrap { overflow-x:auto; }
-    table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:.6rem .5rem; border-bottom:1px solid var(--bord); vertical-align:middle; }
-    .actions { display:flex; gap:.5rem; flex-wrap:wrap; } .actions form { margin:0; }
-    nav.principale { display:flex; flex-wrap:wrap; gap:.25rem .5rem; margin-bottom:1.25rem; padding-bottom:.75rem; border-bottom:1px solid var(--bord); }
-    nav.principale a { display:inline-flex; align-items:center; min-height:44px; padding:0 .6rem; border-radius:.5rem; text-decoration:none; }
-    nav.principale a[aria-current] { background:var(--carte); border:1px solid var(--bord); }
-    nav.principale .droite { margin-left:auto; }
-    dl.fiche { display:grid; grid-template-columns:minmax(8rem,14rem) 1fr; gap:.4rem 1rem; margin:0; } dl.fiche dt { color:var(--doux); } dl.fiche dd { margin:0; }
-    .badge { display:inline-block; padding:.05rem .5rem; border:1px solid var(--bord); border-radius:1rem; font-size:.8rem; color:var(--doux); }
-    ul.liste { list-style:none; margin:0; padding:0; } ul.liste li { padding:.5rem 0; border-bottom:1px solid var(--bord); }
-    h2 { font-size:1.15rem; margin:1.5rem 0 .5rem; }
-    .form-error { color:var(--erreur); font-size:.9rem; }
-  </style>
+  <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+  <script src="{{ asset('app.js') }}" defer></script>
 </head>
-<body>
-  <main>
-    {% if app.user %}
-    {% set route = app.request.attributes.get('_route') %}
-    <nav class="principale" aria-label="Navigation principale">
-      <a href="{{ path('app_accueil') }}">Vue du système</a>
-      <a href="{{ path('fiches_astres') }}"{% if route starts with 'fiches_astre' %} aria-current="page"{% endif %}>Astres</a>
-      <a href="{{ path('fiches_sites') }}"{% if route starts with 'fiches_site' %} aria-current="page"{% endif %}>Sites</a>
-      <a href="{{ path('fiches_personnages') }}"{% if route starts with 'fiches_personnage' %} aria-current="page"{% endif %}>Personnages</a>
-      <a href="{{ path('fiches_scenes') }}"{% if route starts with 'fiches_scene' %} aria-current="page"{% endif %}>Scènes</a>
-      <a href="{{ path('fiches_lexique') }}"{% if route == 'fiches_lexique' %} aria-current="page"{% endif %}>Lexique</a>
-      <a href="{{ path('fiches_chronologie') }}"{% if route == 'fiches_chronologie' %} aria-current="page"{% endif %}>Chronologie</a>
-      {% if is_granted('ROLE_ADMIN') %}<a class="droite" href="{{ path('admin_donnees') }}">Valeurs</a><a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
-      <a{% if not is_granted('ROLE_ADMIN') %} class="droite"{% endif %} href="{{ path('app_logout') }}">Déconnexion</a>
-    </nav>
-    {% endif %}
-    {% for type, messages in app.flashes %}{% for m in messages %}<p class="flash {{ type }}" role="status">{{ m }}</p>{% endfor %}{% endfor %}
+<body class="flex min-h-screen flex-col bg-fond font-sans text-texte antialiased">
+  <a href="#contenu" class="sr-only z-50 rounded bg-accent px-4 py-2 font-semibold text-fond focus:not-sr-only focus:fixed focus:left-4 focus:top-4">Aller au contenu</a>
+
+  {% if app.user %}
+  {% set route = app.request.attributes.get('_route') %}
+  {% set liens = [
+    {texte: 'Astres', route: 'fiches_astres', prefixe: 'fiches_astre'},
+    {texte: 'Sites', route: 'fiches_sites', prefixe: 'fiches_site'},
+    {texte: 'Personnages', route: 'fiches_personnages', prefixe: 'fiches_personnage'},
+    {texte: 'Scènes', route: 'fiches_scenes', prefixe: 'fiches_scene'},
+    {texte: 'Lexique', route: 'fiches_lexique', prefixe: 'fiches_lexique'},
+    {texte: 'Chronologie', route: 'fiches_chronologie', prefixe: 'fiches_chronologie'},
+  ] %}
+  <header class="sticky top-0 z-40 border-b border-ligne bg-fond/90 backdrop-blur">
+    <div class="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 sm:px-6">
+      <a href="{{ path('app_accueil') }}" class="flex min-h-11 items-center gap-2 font-semibold hover:text-accent">
+        <span aria-hidden="true" class="text-accent">✦</span><span>À l'ombre d'Omraon</span>
+      </a>
+      <a href="{{ path('app_accueil') }}" class="ml-auto inline-flex min-h-11 items-center rounded-lg bg-accent px-4 text-sm font-semibold text-fond hover:brightness-110 sm:order-last sm:ml-0">Vue du système</a>
+      <nav aria-label="Navigation principale" class="-mx-4 flex w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 sm:mx-0 sm:w-auto sm:flex-1 sm:px-0">
+        {% for l in liens %}
+          <a href="{{ path(l.route) }}" {% if route starts with l.prefixe %}aria-current="page"{% endif %}
+             class="inline-flex min-h-11 shrink-0 items-center rounded-lg px-3 text-sm hover:bg-carte hover:text-accent aria-[current=page]:bg-carte aria-[current=page]:font-semibold aria-[current=page]:text-accent">{{ l.texte }}</a>
+        {% endfor %}
+      </nav>
+      <details class="relative">
+        <summary class="inline-flex min-h-11 list-none items-center gap-2 rounded-lg px-3 text-sm hover:bg-carte [&::-webkit-details-marker]:hidden">
+          <span class="max-w-32 truncate">{{ app.user.nom }}</span><span aria-hidden="true">▾</span>
+        </summary>
+        <div class="absolute right-0 z-50 mt-1 w-56 rounded-xl border border-ligne bg-carte p-2 shadow-xl">
+          <p class="px-3 py-2 text-xs text-doux">{{ app.user.userIdentifier }}<br>{{ is_granted('ROLE_ADMIN') ? 'Administrateur' : 'Lecteur' }}</p>
+          {% if is_granted('ROLE_ADMIN') %}
+            <a class="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-fond hover:text-accent" href="{{ path('admin_donnees') }}">Valeurs par défaut</a>
+            <a class="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-fond hover:text-accent" href="{{ path('admin_utilisateurs') }}">Comptes</a>
+          {% endif %}
+          <a class="flex min-h-11 items-center rounded-lg px-3 text-sm hover:bg-fond hover:text-accent" href="{{ path('app_logout') }}">Déconnexion</a>
+        </div>
+      </details>
+    </div>
+  </header>
+  {% endif %}
+
+  <main id="contenu" class="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
+    {% for type, messages in app.flashes %}{% for m in messages %}
+      <p role="status" class="mb-4 rounded-lg border px-4 py-3 text-sm {{ type == 'erreur' ? 'border-danger/50 bg-danger/10 text-danger' : 'border-ok/50 bg-ok/10 text-ok' }}">{{ m }}</p>
+    {% endfor %}{% endfor %}
     {% block body %}{% endblock %}
   </main>
+
+  <footer class="border-t border-ligne px-4 py-4 text-center text-xs text-doux">À l'ombre d'Omraon — accès réservé</footer>
 </body>
 </html>

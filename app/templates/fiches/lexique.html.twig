@@ -1,7 +1,35 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Lexique — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<h1>Lexique tyt</h1>
-{% for cat, entrees in groupes %}<h2>{{ cat }}</h2><div class="carte"><dl class="fiche">{% for e in entrees %}<dt>{{ e.mot }}</dt><dd>{{ e.sens }}{% if e.note is defined and e.note %} <span class="badge">{{ e.note }}</span>{% endif %}</dd>{% endfor %}</dl></div>{% endfor %}
-<h2>Calendrier confédéral</h2><div class="carte"><p style="margin:0">{{ mois|join(' · ') }}</p></div>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Lexique'}]) }}
+{{ c.entete('Lexique tyt', 'Les mots du roman, par thème, et le calendrier confédéral.') }}
+{{ c.filtre('liste-lexique', 'Filtrer le lexique', 'Rechercher un mot ou un sens…') }}
+<div class="grid gap-6 lg:grid-cols-[14rem_1fr]">
+  <nav aria-label="Thèmes" class="lg:sticky lg:top-20 lg:self-start">
+    <ul class="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
+      {% for cat in groupes|keys %}<li class="shrink-0"><a class="flex min-h-11 items-center rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" href="#cat-{{ loop.index }}">{{ cat }}</a></li>{% endfor %}
+      <li class="shrink-0"><a class="flex min-h-11 items-center rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" href="#calendrier">Calendrier</a></li>
+    </ul>
+  </nav>
+  <div id="liste-lexique" class="space-y-6">
+    {% for cat, entrees in groupes %}
+    <section data-groupe id="cat-{{ loop.index }}" aria-labelledby="t-{{ loop.index }}" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="t-{{ loop.index }}" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">{{ cat }}</h2>
+      <dl class="divide-y divide-ligne">
+        {% for e in entrees %}
+        <div data-filtrable class="grid gap-1 py-2 sm:grid-cols-[minmax(9rem,14rem)_1fr] sm:gap-x-6">
+          <dt class="font-semibold">{{ e.mot }}</dt>
+          <dd class="text-doux">{{ e.sens }}{% if e.note is defined and e.note %} {{ c.badge(e.note) }}{% endif %}</dd>
+        </div>
+        {% endfor %}
+      </dl>
+    </section>
+    {% endfor %}
+    <section id="calendrier" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Calendrier confédéral</h2>
+      <ol class="grid grid-cols-2 gap-2 sm:grid-cols-4">{% for m in mois %}<li class="rounded-lg border border-ligne px-3 py-2 text-sm"><span class="text-doux">{{ loop.index }}.</span> {{ m }}</li>{% endfor %}</ol>
+    </section>
+  </div>
+</div>
 {% endblock %}

@@ -1,12 +1,28 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Personnages — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<h1>Personnages</h1>
-<div class="carte"><ul class="liste">
-{% for p in personnages %}<li><a href="{{ path('fiches_personnage', {id: p.id}) }}">{{ p.nom }}</a> — {{ p.role }}{% if p.vivant is defined and not p.vivant %} <span class="badge">disparu</span>{% endif %}</li>{% endfor %}
-</ul></div>
-<h2>Vestiges des Anciens (les Iktu)</h2>
-<div class="carte"><ul class="liste">
-{% for v in vestiges %}<li><b>{{ v.titre }}</b> <span class="badge">{{ v.niveau }}</span>{% if v.horsSysteme is defined and v.horsSysteme %} <span class="badge">hors système</span>{% endif %}<br>{{ v.texte }}</li>{% endfor %}
-</ul></div>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Personnages'}]) }}
+{{ c.entete('Personnages', 'Les personnages au présent du roman et les vestiges de la Première Race.') }}
+{{ c.filtre('liste-persos', 'Filtrer les personnages', 'Rechercher un personnage, un lieu…') }}
+<ul id="liste-persos" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  {% for p in personnages %}
+  <li data-filtrable>
+    <a href="{{ path('fiches_personnage', {id: p.id}) }}" class="flex h-full flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 motion-reduce:transition-none">
+      <span class="font-semibold">{{ p.nom }}</span>
+      <span class="flex flex-wrap gap-2">{{ c.badge(p.origine.corps, 'accent') }}{{ c.badge(p.espece) }}{% if p.vivant is defined and not p.vivant %}{{ c.badge('disparu', 'alerte') }}{% endif %}</span>
+      <span class="text-sm text-doux">{{ p.role }}</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+<h2 class="mb-3 mt-10 text-sm font-semibold uppercase tracking-wider text-accent">Vestiges des Anciens (les Iktu)</h2>
+<ul class="grid gap-3 md:grid-cols-2">
+  {% for v in vestiges %}
+  <li class="rounded-xl border border-ligne bg-carte p-4">
+    <p class="flex flex-wrap items-center gap-2 font-semibold">{{ v.titre }} {{ c.badge(v.niveau, v.niveau == 'canon' ? 'ok' : (v.niveau == 'iceberg' ? 'accent' : 'neutre')) }}{% if v.horsSysteme is defined and v.horsSysteme %}{{ c.badge('hors système') }}{% endif %}</p>
+    <p class="mt-2 text-sm text-doux">{{ v.texte }}</p>
+  </li>
+  {% endfor %}
+</ul>
 {% endblock %}

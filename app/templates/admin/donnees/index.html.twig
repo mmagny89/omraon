@@ -1,32 +1,29 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Valeurs par défaut — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre">
-  <h1>Valeurs par défaut</h1>
-  <div class="actions"><a class="btn sec" href="{{ path('app_accueil') }}">Vue du système</a><a class="btn sec" href="{{ path('admin_utilisateurs') }}">Comptes</a><a class="btn sec" href="{{ path('app_logout') }}">Déconnexion</a></div>
-</div>
-<p style="color:var(--doux)">Une section modifiée remplace le canon pour tous les comptes. Les lecteurs simulent à partir de ces valeurs sans les changer.</p>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Valeurs par défaut'}]) }}
+{{ c.entete('Valeurs par défaut', 'Une section modifiée remplace le canon pour tous les comptes. Les lecteurs simulent à partir de ces valeurs sans les changer.') }}
+<div class="space-y-6">
 {% for jeu in jeux %}
-<div class="carte table-wrap" style="margin-bottom:1rem">
-  <h2 style="font-size:1.1rem;margin:0 0 .5rem">{{ jeu.libelle }}</h2>
-  <table>
-    <thead><tr><th>Section</th><th>État</th><th></th></tr></thead>
-    <tbody>
+  <section class="rounded-xl border border-ligne bg-carte p-5" aria-labelledby="j-{{ jeu.cle }}">
+    <h2 id="j-{{ jeu.cle }}" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">{{ jeu.libelle }}</h2>
+    <ul class="divide-y divide-ligne">
     {% for s in jeu.sections %}
-      <tr>
-        <td><code>{{ s.nom }}</code></td>
-        <td>{% if s.surcharge %}Modifiée par {{ s.surcharge.modifiePar }} le {{ s.surcharge.modifieLe|date('d/m/Y H:i') }}{% else %}Canon{% endif %}</td>
-        <td><div class="actions">
-          <a class="btn sec" href="{{ path('admin_donnees_modifier', {jeu: jeu.cle, section: s.nom}) }}">Modifier</a>
+      <li class="flex flex-wrap items-center justify-between gap-3 py-2">
+        <div><code class="rounded bg-fond px-1.5 py-0.5 text-sm">{{ s.nom }}</code>
+          <span class="ml-2">{% if s.surcharge %}{{ c.badge('Modifiée par ' ~ s.surcharge.modifiePar ~ ' le ' ~ s.surcharge.modifieLe|date('d/m/Y H:i'), 'accent') }}{% else %}{{ c.badge('Canon') }}{% endif %}</span></div>
+        <div class="flex gap-2">
+          <a class="inline-flex min-h-11 items-center rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" href="{{ path('admin_donnees_modifier', {jeu: jeu.cle, section: s.nom}) }}">Modifier</a>
           {% if s.surcharge %}
           <form method="post" action="{{ path('admin_donnees_reinitialiser', {jeu: jeu.cle, section: s.nom}) }}" onsubmit="return confirm('Remettre cette section au canon ?')">
-            <input type="hidden" name="_token" value="{{ csrf_token('reinit' ~ jeu.cle ~ s.nom) }}"><button class="sec" type="submit">Réinitialiser</button>
+            <input type="hidden" name="_token" value="{{ csrf_token('reinit' ~ jeu.cle ~ s.nom) }}"><button class="min-h-11 rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" type="submit">Réinitialiser</button>
           </form>{% endif %}
-        </div></td>
-      </tr>
+        </div>
+      </li>
     {% endfor %}
-    </tbody>
-  </table>
-</div>
+    </ul>
+  </section>
 {% endfor %}
+</div>
 {% endblock %}

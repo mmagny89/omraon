@@ -1,33 +1,88 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% set d = a.donnees %}
 {% block title %}{{ d.name }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre"><h1>{{ d.name }} <span class="badge">{{ a.type }}</span></h1><a class="btn sec" href="{{ path('fiches_astres') }}">Tous les astres</a></div>
-{% if d.role is defined %}<p>{{ d.role }}</p>{% endif %}
-<div class="carte"><h2 style="margin-top:0">Données</h2>
-  <dl class="fiche">
-    {% for k, v in a.calculs %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}
-    {% if a.bord is defined %}<dt>Bord du système</dt><dd>{{ a.bord }} UA (provisoire)</dd>{% endif %}
-    {% if a.parent %}<dt>Planète mère</dt><dd><a href="{{ path('fiches_astre', {id: a.parent.id}) }}">{{ a.parent.name }}</a></dd>{% endif %}
-  </dl>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Astres', url: path('fiches_astres')}, {texte: d.name}]) }}
+{{ c.entete(d.name, d.role ?? null, [{texte: a.type, ton: 'accent'}]) }}
+
+<div class="grid gap-6 lg:grid-cols-[1fr_16rem]">
+  <div class="space-y-6">
+    {% if a.temperatures is defined %}{% set t = a.temperatures %}
+    <section aria-labelledby="temp" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="temp" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Températures</h2>
+      <div class="grid gap-3 sm:grid-cols-3">
+        {{ c.tuile(c.celsius(t.jour), t.mode == 'solide' ? 'Face éclairée' : (t.mode == 'etoile' ? 'Photosphère' : 'À 1 bar'), (t.jour|number_format(0, ',', ' ')) ~ ' K') }}
+        {% if t.mode != 'etoile' %}{{ c.tuile(c.celsius(t.nuit), t.mode == 'solide' ? 'Face sombre' : 'Autre face', (t.nuit|number_format(0, ',', ' ')) ~ ' K') }}{% endif %}
+        {% if t.mode == 'solide' %}{{ c.tuile(c.celsius(t.moyenne), 'Moyenne', (t.moyenne|number_format(0, ',', ' ')) ~ ' K') }}{% endif %}
+      </div>
+      {% if a.barre is defined %}
+      <figure class="mt-5" aria-label="Position des températures entre −250 °C et 750 °C">
+        <div class="relative h-3 rounded-full bg-gradient-to-r from-sky-400 via-ok to-alerte">
+          <span class="absolute inset-y-0 w-px bg-white/70" style="left: {{ a.barre.zero }}%" title="0 °C"></span>
+          <span class="absolute -top-1 size-5 -translate-x-1/2 rounded-full border-2 border-fond bg-sky-300" style="left: {{ a.barre.nuit }}%" title="Face sombre"></span>
+          <span class="absolute -top-1 size-5 -translate-x-1/2 rounded-full border-2 border-fond bg-alerte" style="left: {{ a.barre.jour }}%" title="Face éclairée"></span>
+        </div>
+        <figcaption class="mt-2 flex justify-between text-xs text-doux"><span>−250 °C</span><span>0 °C</span><span>750 °C</span></figcaption>
+      </figure>
+      {% endif %}
+      <p class="mt-4 text-sm text-doux">
+        {% if t.mode == 'etoile' %}Photosphère : l'étoile n'a pas de face sombre.
+        {% elseif t.mode == 'geante' %}Pas de surface : température à 1 bar, identique sur les deux faces.
+        {% else %}Point subsolaire et point antisolaire{% if t.jourSolaire %} (jour solaire de {{ t.jourSolaire|number_format(1, ',', ' ') }} j){% endif %}. Estimation de conception : albédo, atmosphère, durée de la nuit.{% endif %}
+      </p>
+    </section>
+    {% endif %}
+
+    <section aria-labelledby="donnees" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="donnees" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Données</h2>
+      <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+        {% for k, v in a.calculs %}<dt class="text-doux">{{ k }}</dt><dd class="tabular-nums">{{ v }}</dd>{% endfor %}
+        {% if a.bord is defined %}<dt class="text-doux">Bord du système</dt><dd>{{ a.bord }} UA <span class="text-doux">(provisoire)</span></dd>{% endif %}
+        {% if a.parent %}<dt class="text-doux">Planète mère</dt><dd><a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: a.parent.id}) }}">{{ a.parent.name }}</a></dd>{% endif %}
+      </dl>
+    </section>
+
+    {% if d.names is defined %}
+    <section aria-labelledby="noms" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="noms" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Noms</h2>
+      <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+        <dt class="text-doux">Nom tyt sacré</dt><dd>{{ d.names.tyt }}</dd>
+        {% if d.names.tytCourant and d.names.tytCourant != d.names.tyt %}<dt class="text-doux">Courant</dt><dd>{{ d.names.tytCourant }}</dd>{% endif %}
+        {% if d.names.sens %}<dt class="text-doux">Sens</dt><dd>« {{ d.names.sens }} »</dd>{% endif %}
+      </dl>
+    </section>{% endif %}
+
+    {% if a.sites %}
+    <section aria-labelledby="sites" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="sites" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Sites ({{ a.sites|length }})</h2>
+      <ul class="divide-y divide-ligne">{% for s in a.sites %}<li><a class="flex min-h-11 items-center justify-between gap-3 py-2 hover:text-accent" href="{{ path('fiches_site', {id: s.id}) }}"><span>{{ s.name }}</span><span class="text-sm tabular-nums text-doux">{{ (s.population + s.tyts)|number_format(0, ',', ' ') }} hab.</span></a></li>{% endfor %}</ul>
+    </section>{% endif %}
+
+    {% if a.personnages %}
+    <section aria-labelledby="persos" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="persos" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Personnages</h2>
+      <ul class="divide-y divide-ligne">{% for p in a.personnages %}<li><a class="flex min-h-11 flex-col justify-center py-2 hover:text-accent" href="{{ path('fiches_personnage', {id: p.id}) }}"><span>{{ p.nom }}</span><span class="text-sm text-doux">{{ p.role }}</span></a></li>{% endfor %}</ul>
+    </section>{% endif %}
+
+    {% if a.vestiges %}
+    <section aria-labelledby="vestiges" class="rounded-xl border border-ligne bg-carte p-5">
+      <h2 id="vestiges" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Vestiges des Anciens</h2>
+      <ul class="space-y-4">{% for v in a.vestiges %}<li><p class="flex flex-wrap items-center gap-2 font-semibold">{{ v.titre }} {{ c.badge(v.niveau, v.niveau == 'canon' ? 'ok' : (v.niveau == 'iceberg' ? 'accent' : 'neutre')) }}</p><p class="mt-1 text-doux">{{ v.texte }}</p></li>{% endfor %}</ul>
+    </section>{% endif %}
+  </div>
+
+  <aside class="space-y-4 lg:sticky lg:top-20 lg:self-start" aria-label="Navigation de la fiche">
+    {% if a.lunes is defined and a.lunes %}
+    <div class="rounded-xl border border-ligne bg-carte p-4">
+      <h2 class="mb-2 text-xs font-semibold uppercase tracking-wider text-doux">Lunes</h2>
+      <ul>{% for m in a.lunes %}<li><a class="flex min-h-11 items-center rounded px-1 hover:text-accent" href="{{ path('fiches_astre', {id: m.id}) }}">{{ m.name }}</a></li>{% endfor %}</ul>
+    </div>{% endif %}
+    <div class="grid grid-cols-2 gap-2">
+      {% if a.precedent %}<a class="flex min-h-11 items-center justify-start gap-1 rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" href="{{ path('fiches_astre', {id: a.precedent.id}) }}" rel="prev"><span aria-hidden="true">‹</span><span class="truncate">{{ a.precedent.nom }}</span></a>{% else %}<span></span>{% endif %}
+      {% if a.suivant %}<a class="flex min-h-11 items-center justify-end gap-1 rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" href="{{ path('fiches_astre', {id: a.suivant.id}) }}" rel="next"><span class="truncate">{{ a.suivant.nom }}</span><span aria-hidden="true">›</span></a>{% endif %}
+    </div>
+    <a class="flex min-h-11 items-center justify-center rounded-lg bg-accent px-4 text-sm font-semibold text-fond hover:brightness-110" href="{{ path('app_accueil') }}">Retour à la vue 3D</a>
+  </aside>
 </div>
-{% if a.temperatures is defined %}{% set t = a.temperatures %}
-<div class="carte" style="margin-top:1rem"><h2 style="margin-top:0">Températures</h2><dl class="fiche">
-  <dt>Face éclairée</dt><dd>{{ (t.jour - 273.15)|number_format(0, ',', ' ') }} °C ({{ t.jour|number_format(0, ',', ' ') }} K)</dd>
-  <dt>Face sombre</dt><dd>{{ (t.nuit - 273.15)|number_format(0, ',', ' ') }} °C ({{ t.nuit|number_format(0, ',', ' ') }} K)</dd>
-  {% if t.mode == 'solide' %}<dt>Moyenne</dt><dd>{{ (t.moyenne - 273.15)|number_format(0, ',', ' ') }} °C ({{ t.moyenne|number_format(0, ',', ' ') }} K)</dd>
-  {% if t.jourSolaire %}<dt>Jour solaire</dt><dd>{{ t.jourSolaire|number_format(1, ',', ' ') }} jours terrestres</dd>{% endif %}{% endif %}
-</dl>
-<p style="color:var(--doux);margin:.75rem 0 0">{% if t.mode == 'etoile' %}Photosphère : l'étoile n'a pas de face sombre.{% elseif t.mode == 'geante' %}Pas de surface : température à 1 bar, identique sur les deux faces.{% else %}Point subsolaire et point antisolaire. Estimation de conception : albédo, atmosphère, durée de la nuit.{% endif %}</p></div>{% endif %}
-{% if d.names is defined %}
-<div class="carte" style="margin-top:1rem"><h2 style="margin-top:0">Noms</h2><dl class="fiche">
-  <dt>Nom tyt sacré</dt><dd>{{ d.names.tyt }}</dd>
-  {% if d.names.tytCourant and d.names.tytCourant != d.names.tyt %}<dt>Courant</dt><dd>{{ d.names.tytCourant }}</dd>{% endif %}
-  {% if d.names.sens %}<dt>Sens</dt><dd>« {{ d.names.sens }} »</dd>{% endif %}
-</dl></div>{% endif %}
-{% if a.lunes is defined and a.lunes %}<h2>Lunes</h2><div class="carte"><ul class="liste">{% for m in a.lunes %}<li><a href="{{ path('fiches_astre', {id: m.id}) }}">{{ m.name }}</a> — {{ m.role }}</li>{% endfor %}</ul></div>{% endif %}
-{% if a.sites %}<h2>Sites</h2><div class="carte"><ul class="liste">{% for s in a.sites %}<li><a href="{{ path('fiches_site', {id: s.id}) }}">{{ s.name }}</a> — {{ (s.population + s.tyts)|number_format(0, ',', ' ') }} habitants</li>{% endfor %}</ul></div>{% endif %}
-{% if a.personnages %}<h2>Personnages</h2><div class="carte"><ul class="liste">{% for p in a.personnages %}<li><a href="{{ path('fiches_personnage', {id: p.id}) }}">{{ p.nom }}</a> — {{ p.role }}</li>{% endfor %}</ul></div>{% endif %}
-{% if a.vestiges %}<h2>Vestiges des Anciens</h2><div class="carte"><ul class="liste">{% for v in a.vestiges %}<li><b>{{ v.titre }}</b> <span class="badge">{{ v.niveau }}</span><br>{{ v.texte }}</li>{% endfor %}</ul></div>{% endif %}
-<p style="margin-top:1.5rem"><a class="btn sec" href="{{ path('app_accueil') }}">Retour à la vue 3D</a></p>
 {% endblock %}

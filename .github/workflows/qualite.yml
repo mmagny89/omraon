@@ -210,7 +210,8 @@ jobs:
         run: |
           [ -f bin/console ] || { echo "bin/console absent — ignore."; exit 0; }
           if php bin/console list tailwind --raw 2>/dev/null | grep -q '^tailwind:build'; then
-            php bin/console tailwind:build
+            # Deux feuilles (pages et vue) : app:tailwind:build les compile toutes, tailwind:build du bundle une seule.
+            php bin/console app:tailwind:build
           else
             echo "Bundle Tailwind absent — etape ignoree."
           fi

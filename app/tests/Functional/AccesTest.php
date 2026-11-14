@@ -64,9 +64,10 @@ final class AccesTest extends WebTestCase
         $this->client->loginUser($this->creer('lecteur@example.test'));
         $this->client->request('GET', '/');
         self::assertResponseIsSuccessful();
-        $reponse = $this->client->getResponse();
-        self::assertInstanceOf(\Symfony\Component\HttpFoundation\BinaryFileResponse::class, $reponse);
-        self::assertStringContainsString('Omraon', (string) file_get_contents($reponse->getFile()->getPathname()));
+        $html = (string) $this->client->getResponse()->getContent();
+        self::assertStringContainsString('Omraon', $html);
+        self::assertMatchesRegularExpression('#<link rel="stylesheet" href="/assets/styles/vue-[^"]+\.css">#', $html, 'feuille Tailwind de la vue référencée');
+        self::assertStringNotContainsString('VUE_CSS', $html);
         $this->client->request('GET', '/src/main.js');
         self::assertResponseIsSuccessful();
         $this->client->request('GET', '/admin/utilisateurs');

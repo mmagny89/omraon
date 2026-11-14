@@ -34,7 +34,9 @@ final class FichesController extends AbstractController
     #[Route('/sites', name: 'fiches_sites', methods: ['GET'])]
     public function sites(): Response
     {
-        return $this->render('fiches/sites.html.twig', ['sites' => $this->fiches->sites()]);
+        $sites = $this->fiches->sites();
+
+        return $this->render('fiches/sites.html.twig', ['sites' => $sites, 'corps' => array_values(array_unique(array_map(static fn ($s) => $s->body, $sites)))]);
     }
 
     #[Route('/sites/{id}', name: 'fiches_site', requirements: ['id' => self::ID], methods: ['GET'])]
@@ -58,7 +60,9 @@ final class FichesController extends AbstractController
     #[Route('/scenes', name: 'fiches_scenes', methods: ['GET'])]
     public function scenes(): Response
     {
-        return $this->render('fiches/scenes.html.twig', ['sites' => $this->fiches->sites()]);
+        $sites = $this->fiches->sites();
+
+        return $this->render('fiches/scenes.html.twig', ['sites' => $sites, 'corps' => array_values(array_unique(array_map(static fn ($s) => $s->body, $sites)))]);
     }
 
     #[Route('/scenes/{id}', name: 'fiches_scene', requirements: ['id' => self::ID], methods: ['GET'])]

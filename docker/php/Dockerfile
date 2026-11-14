@@ -127,7 +127,7 @@ RUN if [ -f composer.json ]; then \
 # est un gabarit partage.
 RUN if [ -f bin/console ]; then \
         commandes="$(php bin/console list --raw 2>/dev/null || true)"; \
-        case "$commandes" in *tailwind:build*) php bin/console tailwind:build --minify ;; esac; \
+        case "$commandes" in *app:tailwind:build*) php bin/console app:tailwind:build --minify ;; *tailwind:build*) php bin/console tailwind:build --minify ;; esac; \
         case "$commandes" in *importmap:install*) php bin/console importmap:install ;; esac; \
         case "$commandes" in *asset-map:compile*) php bin/console asset-map:compile ;; esac; \
     fi

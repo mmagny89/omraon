@@ -1,9 +1,28 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% block title %}Sites — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<h1>Sites</h1>
-<div class="carte table-wrap"><table>
-<thead><tr><th>Site</th><th>Astre</th><th>Habitat</th><th>Humains</th><th>Tyts</th></tr></thead>
-<tbody>{% for s in sites %}<tr><td><a href="{{ path('fiches_site', {id: s.id}) }}">{{ s.name }}</a></td><td>{{ s.body }}</td><td>{{ s.habitat }}</td><td>{{ s.population|number_format(0, ',', ' ') }}</td><td>{{ s.tyts|number_format(0, ',', ' ') }}</td></tr>{% endfor %}</tbody>
-</table></div>
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Sites'}]) }}
+{{ c.entete('Sites', 'Cités, mines, stations et repaires : où vivent les humains et les Tyts, et combien.') }}
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start">
+  <div class="flex-1">{{ c.filtre('liste-sites', 'Filtrer les sites', 'Rechercher un site…') }}</div>
+  <div>
+    <label for="filtre-corps" class="sr-only">Filtrer par astre</label>
+    <select id="filtre-corps" data-filtre="#liste-sites" data-filtre-attr="data-corps" class="min-h-11 w-full rounded-lg border border-ligne bg-carte px-3 sm:w-56">
+      <option value="">Tous les astres</option>
+      {% for b in corps %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+    </select>
+  </div>
+</div>
+<ul id="liste-sites" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+  {% for s in sites %}
+  <li data-filtrable data-corps="{{ s.body }}">
+    <a href="{{ path('fiches_site', {id: s.id}) }}" class="flex h-full flex-col gap-2 rounded-xl border border-ligne bg-carte p-4 transition hover:border-accent/60 motion-reduce:transition-none">
+      <span class="font-semibold">{{ s.name }}</span>
+      <span class="flex flex-wrap gap-2">{{ c.badge(s.body, 'accent') }}{{ c.badge(s.habitat) }}</span>
+      <span class="mt-auto text-sm tabular-nums text-doux">{{ s.population|number_format(0, ',', ' ') }} humains · {{ s.tyts|number_format(0, ',', ' ') }} Tyts</span>
+    </a>
+  </li>
+  {% endfor %}
+</ul>
 {% endblock %}

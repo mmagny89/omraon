@@ -1,0 +1,9 @@
+# Deux feuilles Tailwind v4, compilées par `bin/console tailwind:build` (dans l'image en prod, au démarrage en dev) :
+#  - app.css : pages Twig (connexion, fiches, administration) ;
+#  - vue.css : panneaux de la vue du système (sans le « preflight » : la feuille historique front/src/style.css reste maîtresse du reste).
+symfonycasts_tailwind:
+    # Version du binaire autonome (vérifiée sur GitHub le 2026-11-14) : une montée de version se fait ici.
+    binary_version: 'v4.3.5'
+    input_css:
+        - '%kernel.project_dir%/assets/styles/app.css'
+        - '%kernel.project_dir%/assets/styles/vue.css'

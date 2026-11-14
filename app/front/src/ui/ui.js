@@ -7,6 +7,7 @@ import { SITES } from '../data/sites.js';
 import { EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
 import { siteReport } from '../physics/habitat.js';
 import { facesCorps, temperatureSite } from '../physics/thermique.js';
+import { tuiles, tuile as tuileHtml, entete, accroche, separateur, sectionDebut, liensFiches } from './composants.js';
 import { transfer, PROPULSION } from '../physics/transfers.js';
 import { computeSky } from '../physics/sky.js';
 import { drawSky } from '../render/skyView.js';
@@ -598,7 +599,7 @@ export class UI {
   /** Températures d'un site, recalculées à chaque rafraîchissement : dehors maintenant, dans l'habitat, faces de son corps. */
   temperatureSiteHtml(site, st) {
     const el = (i) => this.world.bodies[i].el, r = temperatureSite(this.sim, el, site, st), c = (k) => `${f(k - 273.15, 0)} °C`;
-    let h = `<div class="tiles">${this.tile(c(r.dehors), 'Dehors, maintenant', r.regime)}${this.tile(c(r.dedans), 'Dans l\'habitat', 'régulé')}</div>`;
+    let h = tuiles(`${this.tile(c(r.dehors), 'Dehors, maintenant', r.regime)}${this.tile(c(r.dedans), 'Dans l\'habitat', 'régulé')}`);
     return h;
   }
 
@@ -607,7 +608,7 @@ export class UI {
     const type = { surface: 'Base au sol', orbit: site.fixe ? 'Station tenue en place' : 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
     const yy = Math.floor(this.target / DAYS_PER_YEAR), pm = this.pop && yy !== 0 ? this.pop.at(yy) : null, p0 = this.pop?.at(0);
     const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
-    let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
+    let h = entete({ site: true, titre: site.name, sous: `${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}` }) + accroche(site.role) + tuiles(`${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}`);
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
     if (rec?.st) h += this.temperatureSiteHtml(site, rec.st);
     h += this.loreHtml(site.body, site.id);
@@ -622,7 +623,7 @@ export class UI {
       for (const sec of rep.sections) h += this.begin(sec.title, true, statutSection(sec.title)) + `<dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;
       h += rep.notes.map((t) => `<p class="note">${t}</p>`).join('');
     }
-    return h + '<div class="divider">Corps d\'accueil</div>';
+    return h + separateur('Corps d\'accueil');
   }
 
   markList() {
@@ -856,7 +857,7 @@ export class UI {
     const sim = this.sim, zi = sim.bodies.find((b) => b.def.id === 'zirkan'), aZ = this.world.bodies[zi.idx].el?.a ?? zi.def.orbit.a, nf = (n) => n.toLocaleString('fr-FR');
     const tile = (...a) => this.tile(...a), width = BELT.aMax - BELT.aMin;
     const tiles = tile(`${BELT.aMin}–${BELT.aMax} UA`, 'Étendue') + tile(`${f(width * AU_KM / 1e6, 0)} M km`, 'Largeur', `${f(width, 2)} UA`) + tile(nf(sim.pN), 'Traceurs simulés', 'sans masse, sans collisions entre eux') + tile(`${f(aZ, 2)} UA`, 'Zirkan voisine', `limite instable ≈ ${f(aZ - 0.33, 2)} UA (conception)`);
-    let h = `<header class="hero"><span class="swatch" style="background:#c8c8d0"></span><div><h2>${BELT.name}</h2><div class="sub">Ceinture d'astéroïdes</div></div></header><p class="lead">${BELT.role}</p><div class="tiles">${tiles}</div>`;
+    let h = entete({ couleur: '#c8c8d0', titre: BELT.name, sous: 'Ceinture d\'astéroïdes' }) + accroche(BELT.role) + tuiles(tiles);
     h += this.begin('Noms', false, 'canon') + `<dl>${row('Nom tyt sacré', BELT.names.tyt)}${row('Courant', BELT.names.tytCourant)}${row('Sens', `« ${BELT.names.sens} »`)}</dl></details>`;
     const res = [[2, 1], [5, 2], [3, 1]].map(([p, q]) => ({ p, q, a: aZ * (q / p) ** (2 / 3) }));
     h += this.begin('Résonances avec Zirkan', true, 'calcule') + `<dl>${res.map((r) => row(`${r.p}:${r.q}`, `${f(r.a, 3)} UA`, r.a >= BELT.aMin && r.a <= BELT.aMax ? 'warn' : '')).join('')}</dl><p class="note">En orange : dans la ceinture, où ces résonances creusent des lacunes (comme les lacunes de Kirkwood autour de Jupiter).</p></details>`;
@@ -1042,9 +1043,9 @@ export class UI {
   /** Ouvre une section repliable de la fiche ; l'état ouvert/fermé choisi par l'utilisateur survit aux rafraîchissements. */
   begin(titre, ouvert, statut = null) {
     const o = this.secState?.[titre] ?? ouvert, st = statut && STATUTS[statut];
-    return `<details class="sec" data-sec="${titre}"${o ? ' open' : ''}><summary${st ? ` data-tip="${esc(st.tip)}"` : ''}><span>${titre}</span>${st ? `<em class="pill ${statut}">${st.label}</em>` : ''}</summary>`;
+    return sectionDebut(titre, o, st ? `<em class="pill ${statut}">${st.label}</em>` : '', st ? ` data-tip="${esc(st.tip)}"` : '');
   }
-  tile(valeur, libelle, sous = '', info = '') { return `<div class="tile"${info ? tipAttr(info) : ''}><b>${valeur}</b><span>${libelle}</span>${sous ? `<small>${sous}</small>` : ''}</div>`; }
+  tile(valeur, libelle, sous = '', info = '') { return tuileHtml(valeur, libelle, sous, info ? tipAttr(info) : ''); }
   jourCourt(d) { const k = d / jourKebet(); return k * HEURES_PAR_JOUR < 48 ? `${f(k * HEURES_PAR_JOUR, 1)} h` : `${f(k, 2)} j`; }
 
   // Valeurs physiques dérivées en direct ; appelé ~4 fois par seconde.
@@ -1060,8 +1061,6 @@ export class UI {
     const dStar = (i) => Math.hypot(rp[3 * i] - rp[0], rp[3 * i + 1] - rp[1], rp[3 * i + 2] - rp[2]);
     const names = d.names || {};
     let h = this.selectedSite ? this.siteHtml() : '';
-    // Fiches détaillées (pages Symfony, hors de la vue) : le panneau garde l'essentiel et renvoie le reste.
-    h += `<p class="fiche-liens">${this.selectedSite ? `<a href="/sites/${this.selectedSite}" target="_blank" rel="noopener">Fiche du site ›</a> · ` : ''}<a href="/astres/${d.id}" target="_blank" rel="noopener">Fiche de ${d.name} ›</a></p>`;
     const kind = b.type === 'star' ? 'Étoile (G0V)' : b.type === 'planet' ? (d.kind === 'gas' ? 'Planète gazeuse' : 'Planète tellurique') : 'Lune de ' + sim.bodies[b.parent].def.name;
     const bk = bulk(b.mass, b.radiusKm), hab = b.type === 'star' ? null : assess(this.ctx(), b.idx);
     const sid = b.type === 'moon' ? o.el?.period : o.protDays, tile = (...a) => this.tile(...a);
@@ -1074,7 +1073,8 @@ export class UI {
         + tile(sid ? this.jourCourt(sid) : '—', 'Jour', sid ? `${fmtTerre(sid)} Terre` : '', sid ? tipJauge({ titre: 'Jour sidéral', texte: `${this.jourCourt(sid)} de Kebet · ${fmtTerre(sid)} Terre`, v: sid, min: 0.1, max: 100, log: true, marques: [{ v: jourKebet(), label: 'Kebet' }], note: 'Jours terrestres, échelle logarithmique. Un jour de Kebet vaut 24 h de Kebet.' }) : '')
         + tile(`${f(b.radiusKm, 0)} km`, 'Rayon', '', tipR)
         + tile(`${f(tEq, 0)} °C`, 'T équilibre', '', tipJauge({ titre: 'Température d\'équilibre', texte: `${f(tEq, 0)} °C · ${f(tEq + 273.15, 0)} K`, v: tEq, min: -250, max: 500, bandes: [{ de: 0, a: 100, cls: 'ok', label: 'eau liquide à 1 bar' }], marques: [{ v: 15, label: 'Terre (moy.)' }], note: 'Sans effet de serre ni chaleur interne.' }));
-    h += `<header class="hero"><span class="swatch" style="background:${d.color || '#9fb4d8'}"></span><div><h2>${d.name}</h2><div class="sub">${kind}</div></div>${hab ? `<span class="chip ${hab.level}">${hab.label}</span>` : ''}</header><p class="lead">${d.role}</p><div class="tiles">${tiles}</div>`;
+    h += entete({ couleur: d.color || '#9fb4d8', titre: d.name, sous: kind, puce: hab ? { niveau: hab.level, label: hab.label } : null }) + accroche(d.role) + tuiles(tiles);
+    h += liensFiches([...(this.selectedSite ? [{ href: `/sites/${this.selectedSite}`, texte: 'Fiche du site ›' }] : []), { href: `/astres/${d.id}`, texte: `Fiche de ${d.name} ›` }]);
     h += this.temperaturesHtml(b.idx);
     h += this.begin('Noms', false, d.provisional ? 'provisoire' : 'canon') + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
     h += this.begin('Physique', true, 'conception') + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;

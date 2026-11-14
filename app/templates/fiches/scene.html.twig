@@ -1,11 +1,30 @@
 {% extends 'base.html.twig' %}
+{% import '_c.html.twig' as c %}
 {% set a = s.donnees %}
 {% block title %}{{ s.site.name }} — scène — À l'ombre d'Omraon{% endblock %}
 {% block body %}
-<div class="barre"><h1>{{ a.titre ?? s.site.name }} {% if a.canon %}<span class="badge">canon</span>{% else %}<span class="badge">non canon</span>{% endif %}</h1><a class="btn sec" href="{{ path('fiches_site', {id: s.site.id}) }}">Fiche du site</a></div>
-{% for cle, titre in {voir: 'Voir', entendre: 'Entendre', sentir: 'Sentir', toucher: 'Toucher', corps: 'Corps'} %}
-  {% if attribute(a, cle) is defined and attribute(a, cle) %}<h2>{{ titre }}</h2><div class="carte"><ul>{% for l in attribute(a, cle) %}<li>{{ l }}</li>{% endfor %}</ul></div>{% endif %}
-{% endfor %}
-{% if s.extra %}<h2>Précisions sur ce lieu</h2><div class="carte"><ul>{% for l in s.extra %}<li>{{ l }}</li>{% endfor %}</ul></div>{% endif %}
-{% if a.faussenote is defined %}<h2>La fausse note</h2><div class="carte"><p style="margin:0">{{ a.faussenote }}</p></div>{% endif %}
+{{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Scènes', url: path('fiches_scenes')}, {texte: s.site.name}]) }}
+{{ c.entete(a.titre ?? s.site.name, null, [{texte: a.canon ? 'canon' : 'non canon', ton: a.canon ? 'ok' : 'alerte'}, {texte: s.site.body}]) }}
+<div class="grid gap-4 md:grid-cols-2">
+  {% for cle, titre in {voir: 'Voir', entendre: 'Entendre', sentir: 'Sentir', toucher: 'Toucher', corps: 'Corps'} %}
+    {% if attribute(a, cle) is defined and attribute(a, cle) %}
+    <section class="rounded-xl border border-ligne bg-carte p-5" aria-labelledby="s-{{ cle }}">
+      <h2 id="s-{{ cle }}" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">{{ titre }}</h2>
+      <ul class="list-disc space-y-2 pl-5 marker:text-accent">{% for l in attribute(a, cle) %}<li>{{ l }}</li>{% endfor %}</ul>
+    </section>
+    {% endif %}
+  {% endfor %}
+  {% if s.extra %}
+  <section class="rounded-xl border border-ligne bg-carte p-5 md:col-span-2" aria-labelledby="s-extra">
+    <h2 id="s-extra" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Précisions sur ce lieu</h2>
+    <ul class="list-disc space-y-2 pl-5 marker:text-accent">{% for l in s.extra %}<li>{{ l }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if a.faussenote is defined %}
+  <section class="rounded-xl border border-alerte/50 bg-alerte/10 p-5 md:col-span-2" aria-labelledby="s-fausse">
+    <h2 id="s-fausse" class="mb-2 text-sm font-semibold uppercase tracking-wider text-alerte">La fausse note</h2>
+    <p>{{ a.faussenote }}</p>
+  </section>
+  {% endif %}
+</div>
 {% endblock %}
