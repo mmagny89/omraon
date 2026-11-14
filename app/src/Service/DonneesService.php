@@ -77,12 +77,12 @@ final class DonneesService
      *
      * @return array<string, array<string, array{par: string, le: string}>>
      */
-    public function modifications(): array
+    public function modifications(bool $montrerAuteur = false): array
     {
         $out = [];
         foreach (array_keys(self::JEUX) as $jeu) {
             foreach ($this->repo->parJeu($jeu) as $section => $d) {
-                $out[$jeu][$section] = ['par' => $d->getModifiePar(), 'le' => $d->getModifieLe()->format('c')];
+                $out[$jeu][$section] = ['par' => $montrerAuteur ? $d->getModifiePar() : 'un administrateur', 'le' => $d->getModifieLe()->format('c')];
             }
         }
 
@@ -111,6 +111,9 @@ final class DonneesService
             $valeur = json_decode($json, false, 32, \JSON_THROW_ON_ERROR);
         } catch (\JsonException $e) {
             return 'JSON invalide : '.$e->getMessage();
+        }
+        if (($balise = $this->baliseDans($valeur)) !== null) {
+            return sprintf('Le texte « %s » contient une balise HTML : refusé (les fiches s\'affichent sans mise en forme HTML).', mb_strimwidth($balise, 0, 60, '…'));
         }
         $canon = $this->canonSection($jeu, $section);
         if (\gettype($valeur) !== \gettype($canon) && !(\is_int($valeur) && \is_float($canon)) && !(\is_float($valeur) && \is_int($canon))) {
@@ -154,6 +157,23 @@ final class DonneesService
             $this->em->remove($d);
             $this->em->flush();
         }
+    }
+
+    /** Premier texte qui ressemble à une balise HTML (`<a`, `</`, `<!`) : la vue construit des fiches en HTML, un texte saisi ne doit jamais y injecter de balise. */
+    private function baliseDans(mixed $v): ?string
+    {
+        if (\is_string($v)) {
+            return preg_match('/<[a-zA-Z\/!?]/', $v) === 1 ? $v : null;
+        }
+        if (\is_array($v) || \is_object($v)) {
+            foreach ((array) $v as $x) {
+                if (($t = $this->baliseDans($x)) !== null) {
+                    return $t;
+                }
+            }
+        }
+
+        return null;
     }
 
     private function canon(string $jeu): \stdClass

@@ -117,4 +117,24 @@ final class DonneesTest extends WebTestCase
         $this->client->request('GET', '/api/donnees/systeme');
         self::assertStringContainsString('"COMETS":{}', (string) $this->client->getResponse()->getContent());
     }
+
+    public function testRefuseLesBalisesHtmlDansLesValeurs(): void
+    {
+        $svc = static::getContainer()->get(DonneesService::class);
+        foreach (['"<img src=x onerror=alert(1)>"', '"<script>alert(1)</script>"', '"</div><b>x"'] as $texte) {
+            self::assertStringContainsString('balise HTML', (string) $svc->valider('systeme', 'BELT', '{"name":'.$texte.'}'), $texte);
+        }
+        self::assertStringContainsString('balise HTML', (string) $svc->valider('lore', 'PERSONNAGES', '[{"id":"a","resume":"ok <a href=x>lien</a>"}]'));
+        self::assertNull($svc->valider('systeme', 'COMETS', '{"count":40,"note":"a < b et 5 > 3"}'), 'un inférieur sans lettre derrière n\'est pas une balise');
+    }
+
+    public function testLeCanonEntierResteValide(): void
+    {
+        $svc = static::getContainer()->get(DonneesService::class);
+        foreach (array_keys(DonneesService::JEUX) as $jeu) {
+            foreach ($svc->sections($jeu) as $section) {
+                self::assertNull($svc->valider($jeu, $section, (string) json_encode($svc->canonSection($jeu, $section))), "$jeu.$section");
+            }
+        }
+    }
 }

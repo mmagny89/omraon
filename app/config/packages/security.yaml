@@ -26,6 +26,7 @@ security:
                 default_target_path: app_accueil
             logout:
                 path: app_logout
+                enable_csrf: true
                 target: app_login
             login_throttling:
                 max_attempts: 5

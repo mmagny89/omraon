@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Symfony\Bundle\SecurityBundle\Security;
+
 /**
  * Pages de détail : astres, sites, personnages, scènes, lexique, chronologie. Toute la logique (liaisons entre
  * jeux, calculs orbitaux, choix d'ambiance) est ici ; les gabarits Twig ne font qu'afficher.
@@ -17,7 +19,7 @@ final readonly class FichesService
     private const R_TERRE_KM = 6371.0;
     private const M_JUPITER_EN_TERRES = 317.83;
 
-    public function __construct(private DonneesService $donnees, private Thermique $thermique)
+    public function __construct(private DonneesService $donnees, private Thermique $thermique, private Security $security)
     {
     }
 
@@ -78,10 +80,11 @@ final readonly class FichesService
      */
     public function modification(string $jeu, string ...$sections): ?array
     {
+        $admin = $this->security->isGranted(\App\Entity\User::ROLE_ADMIN);
         foreach ($sections as $section) {
             $d = $this->donnees->surcharge($jeu, $section);
             if ($d !== null) {
-                return ['par' => $d->getModifiePar(), 'le' => $d->getModifieLe(), 'section' => $section];
+                return ['par' => $admin ? $d->getModifiePar() : 'un administrateur', 'le' => $d->getModifieLe(), 'section' => $section];
             }
         }
 

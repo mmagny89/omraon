@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\DonneesService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -16,7 +17,7 @@ final class DonneesApiController extends AbstractController
     #[Route('/api/donnees/modifications', name: 'api_donnees_modifications', methods: ['GET'], priority: 10)]
     public function modifications(DonneesService $donnees): JsonResponse
     {
-        $reponse = new JsonResponse($donnees->modifications() ?: new \stdClass(), 200, ['X-Content-Type-Options' => 'nosniff']);
+        $reponse = new JsonResponse($donnees->modifications($this->isGranted(User::ROLE_ADMIN)) ?: new \stdClass(), 200, ['X-Content-Type-Options' => 'nosniff']);
         $reponse->headers->set('Cache-Control', 'private, no-store');
 
         return $reponse;

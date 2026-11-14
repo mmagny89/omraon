@@ -111,4 +111,20 @@ final class AccesTest extends WebTestCase
         self::assertFileDoesNotExist(\dirname(__DIR__, 2).'/public/index.html');
         self::assertFileDoesNotExist(\dirname(__DIR__, 2).'/public/src');
     }
+
+    public function testDeconnexionExigeUnJeton(): void
+    {
+        $this->client->loginUser($this->creer('csrf@example.test'));
+        $this->client->request('GET', '/deconnexion');
+        self::assertResponseStatusCodeSame(403);
+        $this->client->request('GET', '/');
+        self::assertResponseIsSuccessful('toujours connecté : la déconnexion sans jeton est refusée');
+    }
+
+    public function testLaVueContientUnLienDeDeconnexionAvecJeton(): void
+    {
+        $this->client->loginUser($this->creer('vue@example.test'));
+        $this->client->request('GET', '/');
+        self::assertMatchesRegularExpression('#id="btn-logout" class="tb" href="/deconnexion\?_csrf_token=[^"]+"#', (string) $this->client->getResponse()->getContent());
+    }
 }

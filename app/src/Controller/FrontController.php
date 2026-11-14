@@ -10,6 +10,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Security\Http\Logout\LogoutUrlGenerator;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
@@ -29,7 +30,7 @@ final class FrontController extends AbstractController
         'woff2' => 'font/woff2',
     ];
 
-    public function __construct(#[Autowire('%kernel.project_dir%/front')] private readonly string $racine, private readonly Packages $assets)
+    public function __construct(#[Autowire('%kernel.project_dir%/front')] private readonly string $racine, private readonly Packages $assets, #[Autowire(service: 'security.logout_url_generator')] private readonly LogoutUrlGenerator $deconnexion)
     {
     }
 
@@ -41,7 +42,11 @@ final class FrontController extends AbstractController
             throw new NotFoundHttpException();
         }
         // La feuille Tailwind de la vue porte un nom empreinté (AssetMapper) : la page l'y référence au service.
-        $html = str_replace('<!--VUE_CSS-->', '<link rel="stylesheet" href="'.$this->assets->getUrl('styles/vue.css').'">', (string) file_get_contents($fichier));
+        $html = str_replace(
+            ['<!--VUE_CSS-->', '<!--LOGOUT-->'],
+            ['<link rel="stylesheet" href="'.$this->assets->getUrl('styles/vue.css').'">', htmlspecialchars($this->deconnexion->getLogoutPath(), \ENT_QUOTES)],
+            (string) file_get_contents($fichier),
+        );
 
         return new Response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8', 'Cache-Control' => 'private, no-cache', 'X-Content-Type-Options' => 'nosniff']);
     }

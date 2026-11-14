@@ -139,12 +139,13 @@ final class FichesTest extends WebTestCase
         $sys = json_decode(json_encode($svc->section('systeme', 'PLANETS')), true);
         $svc->enregistrer('systeme', 'PLANETS', json_encode($sys), 'admin@example.test');
         $this->client->request('GET', '/astres/kebet');
-        self::assertSelectorExists('[title*="PLANETS"][title*="admin@example.test"]');
+        self::assertSelectorExists('[title*="PLANETS"][title*="un administrateur"]');
+        self::assertStringNotContainsString('admin@example.test', (string) $this->client->getResponse()->getContent(), 'l\'email de l\'admin n\'est pas montré à un lecteur');
         $this->client->request('GET', '/astres/omraon');
         self::assertSelectorNotExists('[title*="PLANETS"]', 'l\'étoile n\'est pas dans PLANETS');
         $this->client->request('GET', '/api/donnees/modifications');
         $m = json_decode((string) $this->client->getResponse()->getContent(), true);
-        self::assertSame('admin@example.test', $m['systeme']['PLANETS']['par']);
+        self::assertSame('un administrateur', $m['systeme']['PLANETS']['par'], 'un lecteur ne voit pas qui a modifié');
     }
 
     public function testChronologieMontreLesPenuriesOrganisees(): void
