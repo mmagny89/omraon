@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+{% block title %}Connexion — Omraon{% endblock %}
+{% block body %}
+<div class="carte" style="max-width:26rem;margin:10vh auto 0">
+  <h1>Système d'Omraon</h1>
+  <p style="color:var(--doux)">Accès réservé. Les comptes sont créés par l'administrateur.</p>
+  <form method="post">
+    {% if erreur %}<p class="erreur" role="alert">{{ erreur.messageKey|trans(erreur.messageData, 'security') }}</p>{% endif %}
+    <label for="email">Email</label>
+    <input type="email" id="email" name="_username" value="{{ dernier_email }}" autocomplete="username" autofocus required>
+    <label for="mdp">Mot de passe</label>
+    <input type="password" id="mdp" name="_password" autocomplete="current-password" required>
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+    <p><button type="submit">Se connecter</button></p>
+  </form>
+</div>
+{% endblock %}

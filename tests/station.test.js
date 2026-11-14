@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { STAR, PLANETS } from '../app/src/data/omraon.js';
-import { buildSystem } from '../app/src/physics/system.js';
-import { Simulation } from '../app/src/physics/simulation.js';
-import { SITES } from '../app/src/data/sites.js';
-import { siteState } from '../app/src/physics/sites.js';
-import { hillRadius, stableSatelliteLimit } from '../app/src/physics/derived.js';
-import { G, AU_KM } from '../app/src/physics/constants.js';
+import { STAR, PLANETS } from '../app/front/src/data/omraon.js';
+import { buildSystem } from '../app/front/src/physics/system.js';
+import { Simulation } from '../app/front/src/physics/simulation.js';
+import { SITES } from '../app/front/src/data/sites.js';
+import { siteState } from '../app/front/src/physics/sites.js';
+import { hillRadius, stableSatelliteLimit } from '../app/front/src/physics/derived.js';
+import { G, AU_KM } from '../app/front/src/physics/constants.js';
 
 const sim = new Simulation(buildSystem(STAR, PLANETS), { particleCount: 300 }); sim.autoTier = false; sim.computeRender(0);
 const ctx = (ang) => ({ sim, ang: () => ang, protDays: () => 0, bodyIndex: (n) => sim.bodies.find((b) => b.def.name === n).idx });

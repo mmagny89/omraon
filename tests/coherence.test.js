@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SITES } from '../app/src/data/sites.js';
-import { PROFILS, MARCHANDISES } from '../app/src/data/economie.js';
-import { simulatePopulation } from '../app/src/physics/population.js';
-import { extracteurs, valeurParMineur } from '../app/src/physics/economie.js';
+import { SITES } from '../app/front/src/data/sites.js';
+import { PROFILS, MARCHANDISES } from '../app/front/src/data/economie.js';
+import { simulatePopulation } from '../app/front/src/physics/population.js';
+import { extracteurs, valeurParMineur } from '../app/front/src/physics/economie.js';
 
 const modele = simulatePopulation({}).at(0);
 const H = SITES.reduce((s, x) => s + x.population, 0), T = SITES.reduce((s, x) => s + x.tyts, 0);

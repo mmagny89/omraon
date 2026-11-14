@@ -1,20 +1,42 @@
-# Override staging. Lancement : docker compose -f compose.yml -f compose.staging.yml --env-file .env.staging.local up -d --build --wait
+# Override staging. Serveur partage : Traefik en frontal. Lancement toujours explicite :
+#   docker compose -f compose.yml -f compose.staging.yml --env-file .env.staging.local up -d --wait
+# --env-file REMPLACE le .env racine (conventions, section env/trois-niveaux).
 services:
-  web:
+  php:
     build:
       target: staging
-    image: omraon-web:staging
-    # Seule NET_BIND_SERVICE est conservee : la capability posee sur le
-    # binaire (setcap) ne survit pas a un cap_drop qui la retire.
+    image: omraon-php:staging
+    # Capabilities reduites au strict necessaire. Le stage staging tourne
+    # deja sans privileges (USER 1000), mais le noyau lui laissait par
+    # defaut une quinzaine de capabilities qu'il n'utilise pas.
+    #
+    # NET_BIND_SERVICE est la seule indispensable : frankenphp ecoute sur
+    # le port 80, et c'est la capability posee sur son binaire au build
+    # (setcap) qui l'y autorise sans etre root. La retirer du jeu de
+    # capabilities du conteneur rend cette capability-fichier inoperante
+    # et le conteneur sort aussitot sur « exec: frankenphp: Operation not
+    # permitted » — verifie, et c'est le seul piege de ce durcissement.
     cap_drop:
       - ALL
     cap_add:
       - NET_BIND_SERVICE
     environment:
-      # Adresse d'ecoute DANS le conteneur, a ne pas confondre avec le domaine :
-      # sans elle Caddy active son propre HTTPS et repond 308 a toute requete
-      # en clair — boucle derriere Traefik, conteneur pourtant « healthy ».
+      APP_SECRET: ${APP_SECRET:?APP_SECRET est requis en staging (secret applicatif Symfony) — fournir via --env-file .env.staging.local}
+      # Adresse d'ecoute de Caddy DANS le conteneur — a ne pas confondre
+      # avec la variable ${SERVER_NAME} du fichier de secrets, qui porte
+      # le domaine et n'alimente que la regle Host de Traefik.
+      #
+      # Sans cette ligne, Caddy retombe sur le "localhost" par defaut du
+      # Caddyfile, active son propre HTTPS et repond 308 vers
+      # https://<domaine> a toute requete en clair. Traefik terminant
+      # deja le TLS et transmettant en clair sur le port 80, le
+      # navigateur boucle indefiniment. Le conteneur se declare pourtant
+      # "healthy", docker-healthcheck sondant le port 443 en l'absence
+      # de SERVER_NAME : la panne ne se voit qu'au navigateur.
       SERVER_NAME: ":80"
+    # Serveur partage : pas de port public direct, Traefik route par
+    # domaine sur le reseau partage "traefik" (a creer une fois sur
+    # l'hote : docker network create traefik).
     expose:
       - "80"
     networks:
@@ -22,13 +44,26 @@ services:
       - traefik
     labels:
       traefik.enable: "true"
-      # Deux reseaux : sans cette etiquette, Traefik peut choisir le reseau
-      # interne et repondre 502 une fois sur deux.
+      # Le service est attache a deux reseaux : sans cette etiquette, Traefik
+      # choisit l'adresse a joindre parmi les deux sans garantie, et tombe une
+      # fois sur deux sur le reseau interne, injoignable pour lui (502).
       traefik.docker.network: traefik
-      traefik.http.routers.omraon-staging.rule: Host(`${DOMAINE:?DOMAINE est requis en staging}`)
+      traefik.http.routers.omraon-staging.rule: Host(`${SERVER_NAME:?SERVER_NAME est requis en staging (domaine route par Traefik) — fournir via --env-file .env.staging.local}`)
       traefik.http.routers.omraon-staging.entrypoints: websecure
       traefik.http.routers.omraon-staging.tls.certresolver: letsencrypt
       traefik.http.services.omraon-staging.loadbalancer.server.port: "80"
+
+  database:
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
 
 networks:
   omraon:

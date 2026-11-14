@@ -14,8 +14,18 @@
 README.docker.md
 compose*.yml
 
+# Secrets et surcharges applicatives locales : jamais dans l'image.
+app/.env.local
+app/.env.*.local
+app/.env.local.php
 
+# Dependances et etat local eventuels de l'application.
+app/var/
+app/vendor/
+
+# Outillage de développement front (hors image)
 node_modules/
+package.json
 package-lock.json
 tests/
 docs/

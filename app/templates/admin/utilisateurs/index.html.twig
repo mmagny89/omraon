@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+{% block title %}Comptes — Omraon{% endblock %}
+{% block body %}
+<div class="barre">
+  <h1>Comptes</h1>
+  <div class="actions"><a class="btn sec" href="{{ path('app_accueil') }}">Vue du système</a><a class="btn" href="{{ path('admin_utilisateur_nouveau') }}">Nouveau compte</a><a class="btn sec" href="{{ path('app_logout') }}">Déconnexion</a></div>
+</div>
+<div class="carte table-wrap">
+  <table>
+    <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>État</th><th>Dernière connexion</th><th></th></tr></thead>
+    <tbody>
+    {% for u in utilisateurs %}
+      <tr>
+        <td>{{ u.nom }}</td><td>{{ u.email }}</td>
+        <td>{{ u.estAdmin ? 'Admin' : 'Lecteur' }}</td>
+        <td>{{ u.actif ? 'Actif' : 'Désactivé' }}</td>
+        <td>{{ u.derniereConnexion ? u.derniereConnexion|date('d/m/Y H:i') : '—' }}</td>
+        <td><div class="actions">
+          <a class="btn sec" href="{{ path('admin_utilisateur_modifier', {id: u.id}) }}">Modifier</a>
+          {% if u != app.user %}
+          <form method="post" action="{{ path('admin_utilisateur_supprimer', {id: u.id}) }}" onsubmit="return confirm('Supprimer ce compte ?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('supprimer' ~ u.id) }}"><button class="danger" type="submit">Supprimer</button>
+          </form>{% endif %}
+        </div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

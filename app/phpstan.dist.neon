@@ -1,0 +1,7 @@
+parameters:
+    level: 6
+    paths:
+        - src
+    ignoreErrors:
+        # L'identifiant est affecté par Doctrine, pas par le code.
+        - { identifier: property.unusedType, path: src/Entity/* }

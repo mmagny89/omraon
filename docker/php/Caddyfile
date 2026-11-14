@@ -1,0 +1,98 @@
+# Configuration nominale : chargee par docker-entrypoint des que
+# /app/public/index.php existe. Voir Caddyfile.bootstrap pour la
+# configuration de secours utilisee tant que l'application n'est pas
+# installee.
+#
+# CADDY_GLOBAL_OPTIONS et FRANKENPHP_WORKER_CONFIG sont des points
+# d'extension : les overrides d'environnement (compose.dev.yml,
+# compose.staging.yml, compose.prod.yml, proprietes de stack-env-config)
+# les alimentent sans jamais avoir a modifier ce fichier.
+#
+# Le mode worker "watch" (rechargement a chaud en developpement) est deja
+# assure par FRANKENPHP_WORKER_CONFIG=watch : ne pas ajouter hot_reload,
+# qui exige un hub Mercure configure et ferait echouer le demarrage de
+# Caddy une fois l'application installee.
+{
+	{$CADDY_GLOBAL_OPTIONS}
+
+	# Metriques Prometheus natives de Caddy (conventions, section reseau/observabilite).
+	# Sans cette option, le handler `metrics` ci-dessous ne sert que les
+	# metriques du processus Go, pas celles du trafic HTTP.
+	#
+	# Option GLOBALE, pas `servers { metrics }` : la forme imbriquee est
+	# depreciee et disparait a la prochaine version majeure de Caddy.
+	metrics
+
+	frankenphp {
+		worker {
+			file /app/public/index.php
+			{$FRANKENPHP_WORKER_CONFIG}
+		}
+	}
+
+	# API d'administration de Caddy exposee uniquement via un socket Unix
+	# partage (volume caddy-admin) — jamais via un port
+	# TCP publie.
+	admin unix//run/caddy/admin.sock
+}
+
+{$SERVER_NAME:localhost} {
+	root * /app/public
+	encode zstd br gzip
+	log
+
+	# durcissement:fichiers-sensibles — php_server sert tout le docroot ; Caddy
+	# ne lit pas les .htaccess. Dotfiles (sauf /.well-known/) et fichiers de
+	# sauvegarde, de journal, de dependances : 404, comme s'ils n'existaient pas.
+	@fichiers_caches {
+		path_regexp fichiers_caches (^|/)\.
+		not path /.well-known/*
+	}
+	@fichiers_sensibles path_regexp fichiers_sensibles (?i)(\.(sql|bak|old|orig|save|swp|log|dist|lock)|~|(^|/)(composer\.json|package(-lock)?\.json|Dockerfile|compose[^/]*\.ya?ml))$
+	handle @fichiers_caches {
+		respond 404
+	}
+	handle @fichiers_sensibles {
+		respond 404
+	}
+
+	# Seul public/index.php s'execute : c'est le point d'entree unique, et la
+	# regle du fichier de configuration nginx de la documentation Symfony.
+	@php_hors_index {
+		path_regexp php_hors_index \.php(/|$)
+		not path /index.php /index.php/*
+	}
+	handle @php_hors_index {
+		respond 404
+	}
+
+	# En-tetes de securite, sur toutes les reponses. defer : appliques aussi
+	# aux reponses d'erreur, ou Caddy remettrait Server. Pas de HSTS ici : le TLS
+	# est termine par le proxy, et un HSTS servi en developpement sur localhost
+	# s'imposerait a tous les projets locaux. La Content-Security-Policy depend
+	# des ressources du projet : a poser dans le Caddyfile du projet.
+	header {
+		defer
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+		-X-Powered-By
+	}
+
+	route {
+		respond /health 200
+		php_server
+	}
+}
+
+# Ecoute interne dediee aux metriques Prometheus (conventions,
+# sections reseau/ports et reseau/observabilite).
+# JAMAIS publiee sur l'hote : elle n'est jointe que depuis le
+# reseau du projet. Un port publie exposerait
+# publiquement la latence, les codes d'erreur et le volume de trafic du site.
+# deja agregees, qui ne se re-decomposent pas.
+:2020 {
+	metrics
+}

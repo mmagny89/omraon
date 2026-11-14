@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { STAR, PLANETS } from '../app/src/data/omraon.js';
-import { buildSystem } from '../app/src/physics/system.js';
-import { Simulation } from '../app/src/physics/simulation.js';
-import { elementsToState, stateToElements } from '../app/src/physics/kepler.js';
-import { habitableZone, hillRadius, stableSatelliteLimit, bulk } from '../app/src/physics/derived.js';
-import { G, AU_KM } from '../app/src/physics/constants.js';
+import { STAR, PLANETS } from '../app/front/src/data/omraon.js';
+import { buildSystem } from '../app/front/src/physics/system.js';
+import { Simulation } from '../app/front/src/physics/simulation.js';
+import { elementsToState, stateToElements } from '../app/front/src/physics/kepler.js';
+import { habitableZone, hillRadius, stableSatelliteLimit, bulk } from '../app/front/src/physics/derived.js';
+import { G, AU_KM } from '../app/front/src/physics/constants.js';
 
 const make = (opts = {}) => { const s = new Simulation(buildSystem(STAR, PLANETS), { particleCount: 300, ...opts }); s.autoTier = false; return s; };
 
@@ -78,8 +78,8 @@ test('planètes stables sur 1500 ans (lunes sur rails)', () => {
   }
 });
 
-import { assess, distanceForTemp, doseRemPerDay, tidalHeatingWm2 } from '../app/src/physics/habitability.js';
-import { equilibriumTemp, starLuminosity } from '../app/src/physics/derived.js';
+import { assess, distanceForTemp, doseRemPerDay, tidalHeatingWm2 } from '../app/front/src/physics/habitability.js';
+import { equilibriumTemp, starLuminosity } from '../app/front/src/physics/derived.js';
 
 const ctxOf = (sim) => ({
   star: STAR, L: starLuminosity(STAR), hz: habitableZone(STAR), bodies: sim.bodies, mEff: sim.mEff,
@@ -114,10 +114,10 @@ test('habitabilité : Kebet = surface, Kalpra = protégé difficile, Roushan = f
   assert.ok(k.criteria.some((c) => c.label === 'Température de surface'));
 });
 
-import { SITES } from '../app/src/data/sites.js';
-import { siteState } from '../app/src/physics/sites.js';
-import { hohmann, transfer } from '../app/src/physics/transfers.js';
-import { shieldingGcm2, siteReport } from '../app/src/physics/habitat.js';
+import { SITES } from '../app/front/src/data/sites.js';
+import { siteState } from '../app/front/src/physics/sites.js';
+import { hohmann, transfer } from '../app/front/src/physics/transfers.js';
+import { shieldingGcm2, siteReport } from '../app/front/src/physics/habitat.js';
 
 const siteCtx = (sim) => ({ sim, ang: () => 0, protDays: () => 0, bodyIndex: (n) => sim.bodies.find((b) => b.def.name === n).idx, el: ctxOf(sim).el });
 const find = (id) => SITES.find((s) => s.id === id);
@@ -156,7 +156,7 @@ test('population des sites : dans le canon (300 000 – 800 000 humains, Haut en
   assert.ok(hum >= 3e5 && hum <= 8e5, `${hum}`); assert.ok(kebet >= 1e4 && kebet <= 1e5, `${kebet}`);
 });
 test('hyperpropulsion : 35 UA en ~6 j vers 8 g, vitesse plafonnée à 0,95 c', async () => {
-  const { cruise } = await import('../app/src/physics/transfers.js');
+  const { cruise } = await import('../app/front/src/physics/transfers.js');
   const d = 35 * 149597870700, r = cruise(d, 8 * 9.80665, 0.95);
   assert.ok(Math.abs(r.t / 86400 - 6) < 0.6, `${r.t / 86400}`);
   const far = cruise(1e17, 8 * 9.80665, 0.95); assert.ok(far.cruised && Math.abs(far.peak - 0.95) < 1e-9);
@@ -170,7 +170,7 @@ test('rapport de site : chaque site produit des sections finies', () => {
   }
 });
 
-import { EVENTS, eraAt, systemAgeGyr, fmtAn, anInterne } from '../app/src/data/chronologie.js';
+import { EVENTS, eraAt, systemAgeGyr, fmtAn, anInterne } from '../app/front/src/data/chronologie.js';
 test('frise : An 0 = début de l\'Ère confédérale, présent = An 300', () => {
   assert.equal(fmtAn(0), 'An 300'); assert.equal(fmtAn(-300), 'An 0'); assert.equal(fmtAn(-560), 'An −260'); assert.equal(fmtAn(-960), 'An −660'); assert.equal(anInterne(0), -300);
   assert.equal(eraAt(-300).label.startsWith('Ère confédérale'), true, 'l\'ère commence à l\'An 0');
@@ -201,9 +201,9 @@ test('Kebet : rotation synchrone, jour ≈ 1,3 j (« journée proche de 1 jour �
   assert.ok(el.period > 1 && el.period < 1.5 && solar > 1 && solar < 1.5, `P=${el.period} solaire=${solar}`);
 });
 
-import { computeSky, overlapFraction } from '../app/src/physics/sky.js';
-import { runEphemeris } from '../app/src/physics/ephemeris.js';
-import { buildScene } from '../app/src/physics/scene.js';
+import { computeSky, overlapFraction } from '../app/front/src/physics/sky.js';
+import { runEphemeris } from '../app/front/src/physics/ephemeris.js';
+import { buildScene } from '../app/front/src/physics/scene.js';
 
 const simAt0 = () => { const s = make(); s.computeRender(0); return s; };
 const rotOf = (sim) => sim.bodies.map(() => ({ phase0: 0, protDays: 1 }));
@@ -245,7 +245,7 @@ test('fiche de scène : contient lumière, ciel, communications et banque d\'ima
   assert.ok(/Zirkan/.test(sc.text) && /Prochaine éclipse/.test(sc.text) && !/NaN|undefined/.test(sc.text));
 });
 
-import { habitabilityScan } from '../app/src/physics/habscan.js';
+import { habitabilityScan } from '../app/front/src/physics/habscan.js';
 test('Kebet : habitable en permanence sur 5 ans (température, chauffage de marée), copie sans effet sur la source', () => {
   const sim = simAt0(), t = sim.t, k = sim.bodies.find((b) => b.def.name === 'Kebet').idx;
   const r = habitabilityScan(sim, k, 5);
@@ -262,7 +262,7 @@ test('intégrateur d\'ordre 4 : précession parasite de Kalpra < 0,03°/an, RG �
   assert.ok(Math.abs(a) < 0.03, `${a}`); assert.ok(Math.abs(b - a) > 1e-4 && Math.abs(b - a) < 8e-4, `GR=${b - a}`);
 });
 
-import { planFlight, planVoyage, voyageAt } from '../app/src/physics/flight.js';
+import { planFlight, planVoyage, voyageAt } from '../app/front/src/physics/flight.js';
 test('vol : profil cohérent (distance parcourue = distance, vitesses nulles aux extrémités)', () => {
   const d = 3.96e11, p = planFlight(d, 8, 0.95);
   assert.ok(Math.abs(p.distAt(p.total) / d - 1) < 1e-9 && p.speedAt(0) === 0 && p.speedAt(p.total) < 1e-3);
@@ -288,7 +288,7 @@ test('voyage : intercepte une destination mobile (arrivée = position prévue)',
   assert.ok(mid.speed > 0 && mid.progress > 0.3 && mid.progress < 0.7);
 });
 
-import { simulateSpread, lightDelayDays } from '../app/src/physics/network.js';
+import { simulateSpread, lightDelayDays } from '../app/front/src/physics/network.js';
 const netPos = (sim) => { sim.computeRender(0); const ctx = siteCtx(sim); return new Map(SITES.map((s) => [s.id, siteState(ctx, s, 0).pos])); };
 test('réseau : délai lumière = distance × 8,3167 min/UA', () => {
   assert.ok(Math.abs(lightDelayDays([0, 0, 0], [1, 0, 0]) * 1440 - 8.3167) < 1e-9);
@@ -313,7 +313,7 @@ test('réseau : proportions croissantes, ≤ 1, la répression réduit la porté
   assert.ok(Number.isFinite(r.summary.finalH) && r.summary.reached >= 1);
 });
 
-import { horizonDistance, surfaceDrop, horizonDip } from '../app/src/physics/horizon.js';
+import { horizonDistance, surfaceDrop, horizonDip } from '../app/front/src/physics/horizon.js';
 test('vue à hauteur d\'yeux : horizon de la Terre ≈ 4,7 km, courbure cohérente', () => {
   assert.ok(Math.abs(horizonDistance(6371e3, 1.7) / 4650 - 1) < 0.02, `${horizonDistance(6371e3, 1.7)}`);
   assert.ok(Math.abs(surfaceDrop(6371e3, 4650) - 1.7) < 0.01);
@@ -322,7 +322,7 @@ test('vue à hauteur d\'yeux : horizon de la Terre ≈ 4,7 km, courbure cohéren
   assert.ok(horizonDip(6371e3, 400e3) > 15 && horizonDip(6371e3, 400e3) < 25); // ISS : ~19,7°
 });
 
-import { simulatePopulation } from '../app/src/physics/population.js';
+import { simulatePopulation } from '../app/front/src/physics/population.js';
 test('population : arrivée, croissance et présent dans le canon', () => {
   const m = simulatePopulation({}), a0 = m.at(-560), n = m.at(0);
   assert.equal(Math.round(a0.H), 10000); assert.equal(Math.round(a0.T), 4000);
@@ -358,7 +358,7 @@ test('confins : Shukal, petite planète-colonie stable près de Roukir, gravité
   const hab = assess(ctxOf(sim), b.idx); assert.ok(['protege', 'station'].includes(hab.mode)); // pas d'atmosphère viable
 });
 
-import { calibrerJour, decouperDate, fmtDuree, fmtSecondes, jourKebet } from '../app/src/physics/calendrier.js';
+import { calibrerJour, decouperDate, fmtDuree, fmtSecondes, jourKebet } from '../app/front/src/physics/calendrier.js';
 test('calendrier de Kebet : le jour de Kebet fait référence pour jours et heures', () => {
   const sim = make(), j = calibrerJour(sim), el = ctxOf(sim).el(sim.bodies.find((b) => b.def.name === 'Kebet').idx);
   assert.ok(Math.abs(j - el.period) / el.period < 0.01, `jour=${j} période=${el.period}`);
@@ -368,7 +368,7 @@ test('calendrier de Kebet : le jour de Kebet fait référence pour jours et heur
   assert.match(fmtDuree(j), /^24\.0 h \(30\.\d h Terre\)$/); assert.match(fmtDuree(j * 5), /^5\.00 j \(\d\.\d\d j Terre\)$/); assert.match(fmtSecondes(j * 3600), /^60 min \(.* Terre\)$/); assert.match(fmtSecondes(j * 10800), /^3\.0 h \(.* Terre\)$/);
 });
 
-import { encoderEtat, decoderEtat } from '../app/src/ui/lien.js';
+import { encoderEtat, decoderEtat } from '../app/front/src/ui/lien.js';
 test('lien partageable : aller-retour, bornes et valeurs hostiles', () => {
   const e = { t: 1234.56789, b: 'Kebet', s: 'kebet-quartiers', az: 0.6, el: 0.55, d: 14.25, v: 3, p: true };
   assert.deepEqual(decoderEtat('#' + encoderEtat(e)), { t: 1234.5679, b: 'Kebet', s: 'kebet-quartiers', az: 0.6, el: 0.55, d: 14.25, v: 3, p: true });
@@ -376,7 +376,7 @@ test('lien partageable : aller-retour, bornes et valeurs hostiles', () => {
   assert.deepEqual(decoderEtat(''), {}); assert.equal(encoderEtat({ t: NaN }), '');
 });
 
-import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug, CLE, MAX } from '../app/src/ui/carnet.js';
+import { lire as lireCarnet, ecrire as ecrireCarnet, nouvelleScene, versMarkdown, slug, CLE, MAX } from '../app/front/src/ui/carnet.js';
 test('carnet de scènes : stockage tolérant, export Markdown, noms de fichier sûrs', () => {
   const mem = new Map(), st = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
   assert.deepEqual(lireCarnet(st), [], 'carnet vide');
@@ -391,7 +391,7 @@ test('carnet de scènes : stockage tolérant, export Markdown, noms de fichier s
   assert.equal(slug('Cité-mine de Sethis — An −5 · jour 3'), 'cite-mine-de-sethis-an-5-jour-3');
 });
 
-import { fusionner, liaison } from '../app/src/ui/comparaison.js';
+import { fusionner, liaison } from '../app/front/src/ui/comparaison.js';
 test('comparateur : fusion de deux rapports et liaison entre deux sites', () => {
   const A = [{ title: 'Environnement', rows: [['Gravité', '0,93 g'], ['Soleil', 'jour']] }], B = [{ title: 'Environnement', rows: [['Gravité', '0,99 g'], ['Soleil', 'jour'], ['Pression', '0,05 bar']] }, { title: 'Énergie', rows: [['Solaire', '1 kW']] }];
   const m = fusionner(A, B);
@@ -404,9 +404,9 @@ test('comparateur : fusion de deux rapports et liaison entre deux sites', () => 
   assert.ok(L.volS > 0 && L.volS < 86400 * 6, `1 UA en hyperpropulsion : ${L.volS} s`);
 });
 
-import { etapesVisite } from '../app/src/ui/visite.js';
-import { ringProfile } from '../app/src/render/textures.js';
-import { PLANETS as PLN } from '../app/src/data/omraon.js';
+import { etapesVisite } from '../app/front/src/ui/visite.js';
+import { ringProfile } from '../app/front/src/render/textures.js';
+import { PLANETS as PLN } from '../app/front/src/data/omraon.js';
 test('garde-fous du rendu : profil d\'anneau déterministe, divisions creusées, étapes de visite valides', () => {
   const rg = PLN.find((p) => p.id === 'roushan').rings, a = ringProfile(rg, 96), b = ringProfile(rg, 96);
   assert.deepEqual(a, b, 'même graine, même profil');
@@ -420,10 +420,10 @@ test('garde-fous du rendu : profil d\'anneau déterministe, divisions creusées,
   for (const s of steps) { assert.ok(s.ceinture ? !s.etat.b : noms.has(s.etat.b), `corps inconnu : ${s.etat.b}`); assert.ok(s.titre && s.texte(ui).length > 40, `texte vide : ${s.titre}`); }
 });
 
-import { moisConfederal, glossaireComplet, filtrer, auLieu } from '../app/src/ui/lore.js';
-import { MOIS, PERSONNAGES, VESTIGES } from '../app/src/data/lore.js';
-import { GLOSSAIRE } from '../app/src/data/glossaire.js';
-import { SITES as ST } from '../app/src/data/sites.js';
+import { moisConfederal, glossaireComplet, filtrer, auLieu } from '../app/front/src/ui/lore.js';
+import { MOIS, PERSONNAGES, VESTIGES } from '../app/front/src/data/lore.js';
+import { GLOSSAIRE } from '../app/front/src/data/glossaire.js';
+import { SITES as ST } from '../app/front/src/data/sites.js';
 test('lore : calendrier de 13 mois, personnages et vestiges bien placés, aucune racine égyptienne affichée', () => {
   assert.equal(MOIS.length, 13); assert.equal(MOIS[0], 'Aset'); assert.equal(MOIS[12], 'Pamenoth');
   assert.equal(moisConfederal(0, 1.28).mois, 'Aset'); assert.equal(moisConfederal(0, 1.28).jour, 1);
@@ -444,7 +444,7 @@ test('lore : calendrier de 13 mois, personnages et vestiges bien placés, aucune
   assert.ok(!/\b(égypt\w*|Horus|Isis|Osiris|Aton|Atoum|Khépri|Nephthys|Maât|Sopdou|Tefnout)\b/i.test(tout), 'les racines égyptiennes ne s\'affichent jamais');
 });
 
-import { indexer, versFrancais, versTyt } from '../app/src/ui/traducteur.js';
+import { indexer, versFrancais, versTyt } from '../app/front/src/ui/traducteur.js';
 test('traducteur : mot à mot sur le canon, rien d\'inventé', () => {
   const idx = indexer(glossaireComplet(GLOSSAIRE, []));
   assert.equal(versFrancais('shu suna zu', idx).resultat, 'je, moi aimer toi');
@@ -474,7 +474,7 @@ test('population : génocide du monde natal, survivants en petits groupes, contr
   assert.ok(m.series.year.every((y, i) => i === 0 || m.series.cumReductions[i] >= m.series.cumReductions[i - 1]) && P.crimeYear === -500);
 });
 
-import { AMBIANCES_SITES, ambianceFor } from '../app/src/data/ambiances.js';
+import { AMBIANCES_SITES, ambianceFor } from '../app/front/src/data/ambiances.js';
 test('ambiances : chaque entrée propre à un lieu est complète, non canon, et choisie pour son site', () => {
   const ids = new Set(ST.map((s) => s.id));
   for (const [id, a] of Object.entries(AMBIANCES_SITES)) {

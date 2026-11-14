@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ titre }} — Omraon{% endblock %}
+{% block body %}
+<div class="barre"><h1>{{ titre }}</h1><a class="btn sec" href="{{ path('admin_utilisateurs') }}">Retour</a></div>
+<div class="carte">
+  {{ form_start(form) }}
+    {{ form_row(form.nom) }}
+    {{ form_row(form.email) }}
+    <div class="check">{{ form_row(form.admin) }}{{ form_row(form.actif) }}</div>
+    {{ form_row(form.motDePasse) }}
+    <p><button type="submit">Enregistrer</button></p>
+  {{ form_end(form, {render_rest: true}) }}
+</div>
+{% endblock %}

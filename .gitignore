@@ -15,9 +15,20 @@
 .env.prod.local
 .env.*.local
 
+# Surcharges locales de l'application.
+app/.env.local*
 
+# Etat local de l'application PHP.
+app/var/
+app/vendor/
+
+# Resultat compile d'asset-map:compile. Utile en production, poison en
+# developpement : Caddy le sert directement et court-circuite Symfony, donc
+# AssetMapper et le bundle Tailwind. Se supprime sans risque, se regenere au
+# deploiement.
+app/public/assets/
 # macOS
 .DS_Store
 
-# Dépendances npm (Three.js est copié dans app/vendor/ par `npm run vendor`)
+# Dépendances npm (Three.js est copié dans app/front/vendor/ par `npm run vendor`)
 node_modules/

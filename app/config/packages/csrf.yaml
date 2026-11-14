@@ -1,0 +1,8 @@
+# Jetons CSRF à session (pas « stateless ») : les gabarits n'embarquent aucun JavaScript,
+# or un jeton stateless demande le script csrf_protection pour poser son cookie.
+framework:
+    form:
+        csrf_protection:
+            token_id: submit
+
+    csrf_protection: true

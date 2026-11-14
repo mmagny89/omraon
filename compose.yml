@@ -1,29 +1,88 @@
+# Socle commun a tous les environnements (conventions, section manifeste/fichiers). Genere
+# par .claude/scripts/setup-symfony.sh.
+#
+# security_opt sur chaque service : no-new-privileges interdit a un process
+# du conteneur de gagner des droits par un binaire setuid. Aucun des stacks
+# n'en execute, le reglage ne coute donc rien — et il ferme la voie la plus
+# banale d'une evasion apres compromission d'un process applicatif.
+# Les capabilities, elles, se reduisent dans les overrides staging et prod
+# (conventions, section reseau/durcissement) : le stage dev installe et compile, il garde
+# les siennes.
 name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}
 
-# Un seul service : Caddy sert app/ tel quel. read_only + no-new-privileges :
-# le conteneur n'ecrit que dans ses deux volumes (certificats, configuration).
 services:
-  web:
-    container_name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-web
+  php:
+    container_name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-php
     build:
       context: .
-      dockerfile: docker/web/Dockerfile
+      dockerfile: docker/php/Dockerfile
       target: ${TARGET}
       args:
-        CADDY_VERSION: ${CADDY_VERSION}
+        PHP_VERSION: ${PHP_VERSION}
+        FRANKENPHP_VERSION: ${FRANKENPHP_VERSION}
+        PHP_EXTENSION_INSTALLER_VERSION: ${PHP_EXTENSION_INSTALLER_VERSION}
         USER_ID: ${USER_ID}
         GROUP_ID: ${GROUP_ID}
-    image: omraon-web:${TARGET}
+    image: omraon-php:${TARGET}
     restart: unless-stopped
-    read_only: true
     security_opt:
       - no-new-privileges:true
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=${POSTGRES_VERSION}&charset=utf8
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS}
+      # Section env/emails — la recette Flex depose MAILER_DSN=null://null, un
+      # transport qui accepte chaque message et le jette sans un mot.
+      MAILER_DSN: ${MAILER_DSN:?MAILER_DSN manquant — transport des emails, a declarer dans le fichier de secrets}
+      MAILER_FROM: ${MAILER_FROM:?MAILER_FROM manquant — adresse expeditrice des emails}
+      # Section reseau/ports — sans elle, derriere un proxy qui termine le TLS, Symfony
+      # ignore X-Forwarded-Proto et fabrique ses URL en http:// sur un site
+      # en https. Sans deux-points avant le « ? » : la valeur vide est
+      # legitime en developpement, c'est l'oubli qui doit echouer.
+      SYMFONY_TRUSTED_PROXIES: ${SYMFONY_TRUSTED_PROXIES?SYMFONY_TRUSTED_PROXIES non declaree — vide en dev, private_ranges derriere un proxy}
     volumes:
       - omraon-caddy-data:/data
       - omraon-caddy-config:/config
+      - omraon-caddy-admin:/run/caddy
+    networks:
+      - omraon
+    depends_on:
+      database:
+        condition: service_healthy
+
+  database:
+    container_name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-database
+    image: postgres:${POSTGRES_VERSION}-alpine
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      # PostgreSQL 18+ : monter le repertoire parent, pas .../data
+      # (conventions, section manifeste/base-donnees — verifier a chaque montee de version
+      # majeure, ce chemin n'est pas garanti stable).
+      - omraon-database-data:/var/lib/postgresql
+    networks:
+      - omraon
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+networks:
+  omraon:
+    name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}
 
 volumes:
   omraon-caddy-data:
     name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-caddy-data
   omraon-caddy-config:
     name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-caddy-config
+  omraon-caddy-admin:
+    name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-caddy-admin
+  omraon-database-data:
+    name: omraon-${ENV:?ENV est requis — suffixe des noms de conteneurs, reseau et volumes. Le declarer dans le fichier de secrets (ENV=prod) ou le .env racine (ENV=dev)}-database-data

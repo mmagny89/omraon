@@ -1,15 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { STAR, PLANETS } from '../app/src/data/omraon.js';
-import { buildSystem } from '../app/src/physics/system.js';
-import { Simulation } from '../app/src/physics/simulation.js';
-import { stateToElements } from '../app/src/physics/kepler.js';
-import { starLuminosity, habitableZone } from '../app/src/physics/derived.js';
-import { G } from '../app/src/physics/constants.js';
-import { SITES } from '../app/src/data/sites.js';
-import { PROFILS, TRANSPORTEURS } from '../app/src/data/economie.js';
-import { siteState } from '../app/src/physics/sites.js';
-import { releverPrix, creerEconomie, avancer, prix, prixAuStock, masseMonetaire, indicateurs, distanceDepuis, tempsVol } from '../app/src/physics/economie.js';
+import { STAR, PLANETS } from '../app/front/src/data/omraon.js';
+import { buildSystem } from '../app/front/src/physics/system.js';
+import { Simulation } from '../app/front/src/physics/simulation.js';
+import { stateToElements } from '../app/front/src/physics/kepler.js';
+import { starLuminosity, habitableZone } from '../app/front/src/physics/derived.js';
+import { G } from '../app/front/src/physics/constants.js';
+import { SITES } from '../app/front/src/data/sites.js';
+import { PROFILS, TRANSPORTEURS } from '../app/front/src/data/economie.js';
+import { siteState } from '../app/front/src/physics/sites.js';
+import { releverPrix, creerEconomie, avancer, prix, prixAuStock, masseMonetaire, indicateurs, distanceDepuis, tempsVol } from '../app/front/src/physics/economie.js';
 
 const sim = new Simulation(buildSystem(STAR, PLANETS), { particleCount: 300 }); sim.autoTier = false; sim.computeRender(0);
 const el = (i) => {
@@ -42,14 +42,14 @@ const mini = (faction) => {
 
 
 
-import { simulatePopulation } from '../app/src/physics/population.js';
-import { misereSysteme } from '../app/src/physics/economie.js';
+import { simulatePopulation } from '../app/front/src/physics/population.js';
+import { misereSysteme } from '../app/front/src/physics/economie.js';
 
 
-import { besoinJour } from '../app/src/physics/economie.js';
+import { besoinJour } from '../app/front/src/physics/economie.js';
 
 
-import { REGLAGES } from '../app/src/data/economie.js';
+import { REGLAGES } from '../app/front/src/data/economie.js';
 const sansCeinture = { ...PROFILS, 'ceinture-fonderies': { ...PROFILS['ceinture-fonderies'], prod: {} }, 'ceinture-glace': { ...PROFILS['ceinture-glace'], prod: {} } };
 
 // --- Corrections de cohérence (2026-11-13) ---

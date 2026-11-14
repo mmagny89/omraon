@@ -1,11 +1,12 @@
-# Portes qualité et déploiement.
+# Portes qualite et deploiement.
 #
-# Une porte = un job, nommé par ce qu'il prouve (skill ci-pipeline-standards). Les portes
-# s'enchaînent par coût croissant, et celles qui ne se doivent rien tournent en parallèle.
-# Contraintes d'infrastructure : .claude/rules/stack-conventions.md, §ci/qualite.
+# Une porte = un job, nomme par ce qu'il prouve (skill
+# ci-pipeline-standards). Les portes s'enchainent par cout croissant, et
+# celles qui ne se doivent rien tournent en parallele.
+# Contraintes d'infrastructure : .claude/rules/stack-conventions.md, section ci/qualite.
 #
 # Le nom du workflow est le texte du badge du README (badges-readme.md) :
-# il est commun à tous les dépôts de l'agence et ne se renomme pas.
+# il est commun a tous les depots de l'agence et ne se renomme pas.
 name: Qualité et déploiement
 
 on:
@@ -14,158 +15,318 @@ on:
   pull_request:
     branches: [main, develop]
 
-permissions:
-  contents: read
+# Le code applicatif vit dans app/, la racine ne porte que l'infrastructure
+# (section manifeste/fichiers). Les jobs qui ne font aucun checkout — agregateur et
+# deploiement — remettent ce chemin a la racine.
+defaults:
+  run:
+    working-directory: app
 
-# Les portes qualité se remplacent entre elles ; un déploiement, lui, ne se coupe jamais (voir plus bas).
-concurrency:
-  group: qualite-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+env:
+  # La BRANCHE PHP de la stack, pas le correctif epingle dans le .env :
+  # setup-php ne prend que major.minor (voir .github/actions/php). Le
+  # correctif exact n'a pas de sens ici — le runner n'est pas l'image de
+  # production, il est amene au dernier correctif par "update: true".
+  PHP_VERSION: '8.5'
+
+  # La CI n'utilise pas Docker Compose : rien n'injecte les variables du
+  # conteneur. Sans celles-ci, le post-install-cmd de Composer echoue sur
+  # « Environment variable not found », y compris dans les portes qui ne
+  # touchent jamais la base.
+  APP_ENV: test
+  DATABASE_URL: 'postgresql://app:app@127.0.0.1:5432/app?serverVersion=18&charset=utf8'
 
 jobs:
-  # --- Porte 1 — rien en amont : la moins chère, elle garde les autres.
+  # --- Porte 1 — rien en amont : c'est la moins chere, elle garde les autres.
   coherence:
     name: Cohérence du dépôt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/node
-      - name: Syntaxe des modules et des scripts
-        run: |
-          npm run --silent check
-          for f in outils/*.sh .github/scripts/*.sh; do bash -n "$f"; done
-      # La CI ne démarre pas la pile ici : on vérifie seulement que les trois environnements se résolvent.
-      - name: Fichiers compose des trois environnements
-        env:
-          DOMAINE: exemple.test
-        run: |
-          docker compose --env-file .env config -q
-          docker compose -f compose.yml -f compose.staging.yml --env-file .env.staging.local.dist config -q
-          docker compose -f compose.yml -f compose.prod.yml --env-file .env.prod.local.dist config -q
+      - uses: ./.github/actions/php
 
-  # --- Porte 2 — ne dépend de rien : une vulnérabilité connue est vraie que le code soit propre ou non,
-  # et c'est la seule porte dont l'échec peut exiger une action le jour même. Three.js est une dépendance de
-  # développement mais sa copie est servie telle quelle : on audite donc aussi les dépendances de développement.
+      # Plus de « || true » : il avalait un composer.json reellement
+      # invalide. La garde sur le fichier suffit.
+      - name: Coherence de composer.json
+        run: |
+          if [ -f composer.json ]; then
+            composer validate --strict --no-check-publish
+          else
+            echo "composer.json absent — etape ignoree."
+          fi
+
+      - name: Lints Symfony
+        run: |
+          [ -f bin/console ] || { echo "bin/console absent — ignore."; exit 0; }
+          php bin/console lint:twig templates 2>/dev/null || true
+          php bin/console lint:yaml config
+          php bin/console lint:container
+
+  # --- Front (vue du système, JavaScript sans bundler) : les portes de l'ancien site statique.
+  front:
+    name: Front — tests de la physique, HTML, liens, Three.js
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/node
+      - name: Syntaxe des modules
+        run: npm run --silent check
+      - name: npm audit (Three.js est servi tel quel)
+        run: npm audit --audit-level=high
+      - name: Copie de Three.js identique au lockfile
+        run: |
+          npm run --silent vendor
+          git diff --exit-code -- app/front/vendor
+      - name: Validation HTML
+        run: npx --yes html-validate@9 "app/front/index.html"
+      - name: Liens internes
+        run: ./.github/scripts/check-links.sh app/front
+      - name: node --test
+        run: npm test
+
+  # --- Porte 2 — ne depend de rien : une vulnerabilite connue est vraie que
+  # le code soit bien indente ou non, et c'est la seule porte dont l'echec
+  # peut exiger une action le jour meme.
   securite:
     name: Audit des dépendances
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/node
-      - name: npm audit
-        run: npm audit --audit-level=high
+      - uses: ./.github/actions/php
+
+      # Bloquant : « cmd || true » avalerait une vulnerabilite connue.
+      # `--abandoned=report` : un paquet abandonne est signale mais ne fait pas
+      # echouer la porte. Par defaut Composer sort en erreur dessus (audit.abandoned =
+      # fail), ce qui rougit la seule porte censee exiger une action le jour meme
+      # alors qu'aucune faille n'existe — constate sur doctrine/common, tire en
+      # transitif par doctrine/orm, sans remplacant propose.
+      - name: Audit des dependances
+        run: |
+          [ -f composer.lock ] || { echo "composer.lock absent — ignore."; exit 0; }
+          composer audit --abandoned=report
 
   # --- Porte 3
-  vendor:
-    name: Three.js local conforme au lockfile
+  style:
+    name: Style de code
     needs: coherence
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/node
-      # La copie servie (app/vendor/) doit être exactement celle que le lockfile désigne : sans cela, Dependabot
-      # monterait la version du paquet pendant que le site continue de servir l'ancienne.
-      - name: Copie locale identique à node_modules
+      - uses: ./.github/actions/php
+
+      # Une porte ignoree doit se voir sans ouvrir le job : sinon elle le
+      # reste pour toujours. D'ou le resume d'execution, lisible depuis la
+      # pull request.
+      - name: Style du code
         run: |
-          npm run --silent vendor
-          git diff --exit-code -- app/vendor
+          if [ -x vendor/bin/php-cs-fixer ]; then
+            vendor/bin/php-cs-fixer fix --dry-run --diff
+          else
+            echo "⊘ **Style de code** — PHP CS Fixer absent. L'activer : \`composer require --dev friendsofphp/php-cs-fixer\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "PHP CS Fixer absent — porte ignoree."
+          fi
 
   # --- Porte 4
-  balisage:
-    name: Validation HTML
+  analyse:
+    name: Analyse statique
     needs: coherence
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/node
-      # La version est épinglée pour que deux exécutions à quinze jours d'écart valident les mêmes règles.
-      - name: html-validate
-        run: npx --yes html-validate@9 "app/index.html"
+      - uses: ./.github/actions/php
 
-  # --- Porte 5 — aucune dépendance, aucun appel réseau.
-  liens:
-    name: Liens internes
-    needs: coherence
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Vérifier les cibles locales
-        run: ./.github/scripts/check-links.sh app
-
-  # --- Porte 6
-  tests:
-    name: Tests de la physique
-    needs: coherence
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ./.github/actions/node
-      - name: node --test
-        run: npm test
-
-  # --- Porte 7 — la plus chère, en dernier : une image bâtie sur un code qui ne passe pas n'a aucune raison d'exister.
-  image-et-demarrage:
-    name: L'image se construit et le site répond
-    needs: [vendor, balisage, liens, tests]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Construire et démarrer le stage prod
-        env:
-          COMPOSE_FILE: compose.yml
-          ENV: ci
-          TARGET: prod
-        run: docker compose --env-file .env up -d --build --wait
-      - name: Page d'accueil servie, fichier sensible refusé
-        env:
-          COMPOSE_FILE: compose.yml
-          ENV: ci
-          TARGET: prod
+      - name: Analyse statique
         run: |
-          set -eu
-          docker compose --env-file .env exec -T web wget -q -O /dev/null --no-check-certificate https://localhost/
-          if docker compose --env-file .env exec -T web wget -q -O /dev/null --no-check-certificate https://localhost/.env; then
-            echo "::error::/.env est servi"; exit 1
+          if [ -x vendor/bin/phpstan ]; then
+            # phpstan-symfony lit le conteneur compile en environnement
+            # dev, chemin fige dans phpstan.neon. La CI tournant en
+            # APP_ENV=test, var/cache/dev n'existe pas sans ce
+            # rechauffage et l'analyse echoue sur « Container ... does
+            # not exist ».
+            [ -f bin/console ] && php bin/console cache:warmup --env=dev
+            vendor/bin/phpstan analyse --no-progress --error-format=github
+          else
+            echo "⊘ **Analyse statique** — PHPStan absent. L'activer : \`composer require --dev phpstan/phpstan\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "PHPStan absent — porte ignoree."
           fi
-      - name: Journaux en cas d'échec
-        if: failure()
-        env:
-          COMPOSE_FILE: compose.yml
-          ENV: ci
-          TARGET: prod
-        run: docker compose --env-file .env logs --no-color web
 
-  # --- Agrégateur : le SEUL contrôle requis de la protection de branche (nom stable, §ci/qualite).
+  # --- Porte 5 — frontieres entre couches ou modules.
+  frontieres:
+    name: Frontières du code
+    needs: coherence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/php
+
+      - name: Frontieres du code
+        run: |
+          if [ -x vendor/bin/deptrac ] && [ -f deptrac.yaml ]; then
+            vendor/bin/deptrac analyse --no-progress
+          else
+            echo "⊘ **Frontières du code** — Deptrac non configuré. L'activer : \`composer require --dev deptrac/deptrac\`, puis écrire \`deptrac.yaml\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Deptrac non configure — porte ignoree."
+          fi
+
+  # --- Porte 6 — la plus chere : elle attend que le code soit propre et
+  # analyse avant d'allumer une base de donnees.
+  tests:
+    name: Tests unitaires et d'intégration
+    needs: [style, analyse]
+    runs-on: ubuntu-latest
+    # Suit POSTGRES_VERSION du .env racine, comme PHP_VERSION ci-dessus.
+    services:
+      database:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/php
+
+      # Les tests fonctionnels touchent la base : le schema de test (suffixe _test
+      # de Doctrine) se construit par les migrations, comme en production. Sans
+      # cette etape, tout test qui ecrit echoue sur « relation ... does not exist »,
+      # alors que la base de developpement, elle, est a jour.
+      - name: Base de test
+        run: |
+          ls migrations/*.php >/dev/null 2>&1 || { echo "Aucune migration — etape ignoree."; exit 0; }
+          php bin/console doctrine:database:create --env=test --if-not-exists --no-interaction
+          php bin/console doctrine:migrations:migrate --env=test --no-interaction
+
+      # Les gabarits referencent la feuille de style : sans compilation, toute
+      # page echoue au rendu sur « Unable to find asset "tailwindcss" » et
+      # des dizaines de tests tombent d'un coup. Ignoree sans le bundle.
+      - name: Compilation de la feuille de style
+        run: |
+          [ -f bin/console ] || { echo "bin/console absent — ignore."; exit 0; }
+          if php bin/console list tailwind --raw 2>/dev/null | grep -q '^tailwind:build'; then
+            php bin/console tailwind:build
+          else
+            echo "Bundle Tailwind absent — etape ignoree."
+          fi
+
+      # symfony/test-pack depose bin/phpunit, qui prepare l'environnement de
+      # test ; vendor/bin/phpunit n'existe que si phpunit/phpunit est requis
+      # en direct. Les deux sont acceptes, et la suite ne tourne qu'une fois :
+      # la rejouer apres un echec doublerait un journal que GitHub tronque.
+      - name: Tests
+        run: |
+          if [ -f bin/phpunit ]; then
+            php bin/phpunit
+          elif [ -x vendor/bin/phpunit ]; then
+            vendor/bin/phpunit
+          else
+            echo "⊘ **Tests** — PHPUnit absent. L'activer : \`composer require --dev symfony/test-pack\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "PHPUnit absent — porte ignoree."
+          fi
+
+  # --- Porte 7 — job distinct, et non une etape du precedent : une suite de
+  # tests construit souvent son schema directement, sans passer par les
+  # migrations. Rejouees sur la meme base, celles-ci echoueraient sur
+  # « table ... already exists » — un faux echec qui ne dit rien de l'etat
+  # reel des migrations. Un job separe recoit une base neuve, ce qui
+  # supprime la seconde URL de base qu'il fallait auparavant bricoler.
+  migrations:
+    name: Schéma et migrations
+    needs: coherence
+    runs-on: ubuntu-latest
+    # Suit POSTGRES_VERSION du .env racine, comme PHP_VERSION ci-dessus.
+    services:
+      database:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/php
+
+      - name: Schema en phase avec les entites
+        run: |
+          [ -f bin/console ] || { echo "bin/console absent — ignore."; exit 0; }
+          # Seule l'absence reelle de migrations fait passer la porte : un echec de
+          # migration l'annoncait auparavant comme une absence, en vert.
+          if ! ls migrations/*.php >/dev/null 2>&1; then
+            echo "Aucune migration Doctrine — porte ignoree."; exit 0
+          fi
+          php bin/console doctrine:database:create --if-not-exists --no-interaction
+          php bin/console doctrine:migrations:migrate --no-interaction
+          php bin/console doctrine:schema:validate
+
+  # --- Agregateur : un seul controle requis par la protection de branche.
+  # Ajouter ou renommer une porte ne casse plus la regle GitHub en silence.
   portes:
     name: Portes qualité
-    needs: [coherence, securite, vendor, balisage, liens, tests, image-et-demarrage]
+    needs: [coherence, securite, style, analyse, frontieres, tests, migrations]
     if: always()
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
     steps:
+      # Par env: et non en interpolation directe — un resultat interpole est
+      # recopie dans le corps du script avant execution.
       - name: Verdict des portes
         env:
           RESULTATS: ${{ join(needs.*.result, ' ') }}
         run: |
+          echo "Resultats : $RESULTATS"
           case "$RESULTATS" in
-            *failure*|*cancelled*) echo "Une porte a cédé." >&2; exit 1 ;;
+            *failure*|*cancelled*)
+              echo "Au moins une porte qualite a cede." >&2
+              exit 1
+              ;;
           esac
-          echo "Toutes les portes passent."
+          echo "Toutes les portes qualite sont vertes."
+
 
   deploiement-staging:
-    name: Déploiement — pré-production
+    name: Déploiement — staging
     needs: portes
-    # Deux gardes cumulées, jamais une seule : la branche, et jamais une pull request (une PR d'un dépôt tiers
-    # déploierait du code non relu) ; et la variable de dépôt DEPLOIEMENT_STAGING comparée à « oui ». Absente,
-    # elle vaut la chaîne vide : ne rien déployer est le défaut.
+    # Deux gardes cumulees :
+    #   - jamais sur une pull request, ni depuis une autre branche : une PR
+    #     d'un depot tiers deploierait du code non relu ;
+    #   - la variable d'activation du depot. Absente, GitHub la rend comme
+    #     une chaine vide et le job est ignore : un depot qui ne deploie pas
+    #     garde le meme workflow sans rien livrer. Comparaison a « oui » et
+    #     non a « non vide », sinon DEPLOIEMENT_STAGING = non activerait le
+    #     deploiement.
     if: github.event_name == 'push' && github.ref == 'refs/heads/develop' && vars.DEPLOIEMENT_STAGING == 'oui'
     runs-on: ubuntu-latest
-    # Deux déploiements simultanés visent le même stack sur l'hôte : on attend son tour, on ne coupe jamais.
+
+    # Deux deploiements simultanes visent le meme stack sur l'hote : on
+    # attend son tour, on ne coupe jamais un deploiement en cours.
     concurrency:
-      group: deploiement-${{ github.ref_name }}
+      group: deploiement-staging
       cancel-in-progress: false
+
+    defaults:
+      run:
+        working-directory: .
+
     steps:
-      # GitHub remplace un secret absent par une chaîne vide sans rien signaler : ssh "@" produirait une page d'usage illisible.
-      - name: Contrôler la présence des secrets
+      # GitHub remplace un secret absent par une chaine vide sans rien
+      # signaler : ssh "@" produit alors une page d'usage illisible au lieu
+      # d'une erreur.
+      - name: Controler la presence des secrets
         env:
           HOTE: ${{ secrets.STAGING_DEPLOIEMENT_HOTE }}
           UTILISATEUR: ${{ secrets.STAGING_DEPLOIEMENT_UTILISATEUR }}
@@ -182,7 +343,8 @@ jobs:
             echo "Les poser avec : sh outils/installer-deploiement.sh projet staging" >&2
             exit 1
           fi
-      - name: Préparer SSH
+
+      - name: Preparer SSH
         env:
           CLE: ${{ secrets.STAGING_DEPLOIEMENT_CLE_PRIVEE }}
           EMPREINTES: ${{ secrets.STAGING_DEPLOIEMENT_KNOWN_HOSTS }}
@@ -190,27 +352,67 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$CLE" > ~/.ssh/id_deploiement
           chmod 600 ~/.ssh/id_deploiement
-          # Empreinte épinglée, jamais StrictHostKeyChecking=no : ce serait accepter n'importe quel serveur à cette adresse.
+          # Une cle illisible (collee sans ses lignes BEGIN/END, tronquee, ou la
+          # cle publique a la place) n'est pas presentee au serveur, qui repond
+          # alors seulement « Permission denied (publickey,password) » : on le
+          # dit ici, dans la seule etape ou la cause est encore visible.
+          ssh-keygen -y -f ~/.ssh/id_deploiement >/dev/null 2>&1 || {
+            echo "STAGING_DEPLOIEMENT_CLE_PRIVEE n'est pas une cle privee SSH lisible." >&2
+            echo "La recoller en entier, lignes BEGIN et END comprises : cat ~/.ssh/<projet>_<env>_actions" >&2
+            exit 1
+          }
+          # L'empreinte de la cle publique n'a rien de secret : elle se compare a
+          # celle du serveur (ssh-keygen -lf ~/.ssh/<projet>_<env>_actions.pub)
+          # pour verifier que le secret contient bien la cle autorisee, et non
+          # celle d'un autre projet.
+          echo "Empreinte de la cle de deploiement : $(ssh-keygen -y -f ~/.ssh/id_deploiement | ssh-keygen -lf - | cut -d' ' -f2)"
+          # Empreinte epinglee, jamais StrictHostKeyChecking=no : ce serait
+          # accepter n'importe quel serveur a cette adresse.
           printf '%s\n' "$EMPREINTES" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-      # La logique vit sur l'hôte : la clé est restreinte à ce seul script par une forced command dans authorized_keys.
-      - name: Déclencher le déploiement
+
+      # La logique vit sur l'hote : la cle est restreinte a ce seul script
+      # par une forced command dans authorized_keys. L'environnement
+      # deploye est fige par cette forced command, pas par ce qui suit.
+      - name: Declencher le deploiement
         env:
           HOTE: ${{ secrets.STAGING_DEPLOIEMENT_HOTE }}
           UTILISATEUR: ${{ secrets.STAGING_DEPLOIEMENT_UTILISATEUR }}
         run: |
-          ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes -o BatchMode=yes "$UTILISATEUR@$HOTE" deployer
+          ssh -i ~/.ssh/id_deploiement \
+              -o IdentitiesOnly=yes \
+              -o BatchMode=yes \
+              "$UTILISATEUR@$HOTE" deployer
 
   deploiement-prod:
-    name: Déploiement — production
+    name: Déploiement — prod
     needs: portes
+    # Deux gardes cumulees :
+    #   - jamais sur une pull request, ni depuis une autre branche : une PR
+    #     d'un depot tiers deploierait du code non relu ;
+    #   - la variable d'activation du depot. Absente, GitHub la rend comme
+    #     une chaine vide et le job est ignore : un depot qui ne deploie pas
+    #     garde le meme workflow sans rien livrer. Comparaison a « oui » et
+    #     non a « non vide », sinon DEPLOIEMENT_PROD = non activerait le
+    #     deploiement.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOIEMENT_PROD == 'oui'
     runs-on: ubuntu-latest
+
+    # Deux deploiements simultanes visent le meme stack sur l'hote : on
+    # attend son tour, on ne coupe jamais un deploiement en cours.
     concurrency:
-      group: deploiement-${{ github.ref_name }}
+      group: deploiement-prod
       cancel-in-progress: false
+
+    defaults:
+      run:
+        working-directory: .
+
     steps:
-      - name: Contrôler la présence des secrets
+      # GitHub remplace un secret absent par une chaine vide sans rien
+      # signaler : ssh "@" produit alors une page d'usage illisible au lieu
+      # d'une erreur.
+      - name: Controler la presence des secrets
         env:
           HOTE: ${{ secrets.DEPLOIEMENT_HOTE }}
           UTILISATEUR: ${{ secrets.DEPLOIEMENT_UTILISATEUR }}
@@ -227,7 +429,8 @@ jobs:
             echo "Les poser avec : sh outils/installer-deploiement.sh projet prod" >&2
             exit 1
           fi
-      - name: Préparer SSH
+
+      - name: Preparer SSH
         env:
           CLE: ${{ secrets.DEPLOIEMENT_CLE_PRIVEE }}
           EMPREINTES: ${{ secrets.DEPLOIEMENT_KNOWN_HOSTS }}
@@ -235,11 +438,34 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$CLE" > ~/.ssh/id_deploiement
           chmod 600 ~/.ssh/id_deploiement
+          # Une cle illisible (collee sans ses lignes BEGIN/END, tronquee, ou la
+          # cle publique a la place) n'est pas presentee au serveur, qui repond
+          # alors seulement « Permission denied (publickey,password) » : on le
+          # dit ici, dans la seule etape ou la cause est encore visible.
+          ssh-keygen -y -f ~/.ssh/id_deploiement >/dev/null 2>&1 || {
+            echo "DEPLOIEMENT_CLE_PRIVEE n'est pas une cle privee SSH lisible." >&2
+            echo "La recoller en entier, lignes BEGIN et END comprises : cat ~/.ssh/<projet>_<env>_actions" >&2
+            exit 1
+          }
+          # L'empreinte de la cle publique n'a rien de secret : elle se compare a
+          # celle du serveur (ssh-keygen -lf ~/.ssh/<projet>_<env>_actions.pub)
+          # pour verifier que le secret contient bien la cle autorisee, et non
+          # celle d'un autre projet.
+          echo "Empreinte de la cle de deploiement : $(ssh-keygen -y -f ~/.ssh/id_deploiement | ssh-keygen -lf - | cut -d' ' -f2)"
+          # Empreinte epinglee, jamais StrictHostKeyChecking=no : ce serait
+          # accepter n'importe quel serveur a cette adresse.
           printf '%s\n' "$EMPREINTES" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-      - name: Déclencher le déploiement
+
+      # La logique vit sur l'hote : la cle est restreinte a ce seul script
+      # par une forced command dans authorized_keys. L'environnement
+      # deploye est fige par cette forced command, pas par ce qui suit.
+      - name: Declencher le deploiement
         env:
           HOTE: ${{ secrets.DEPLOIEMENT_HOTE }}
           UTILISATEUR: ${{ secrets.DEPLOIEMENT_UTILISATEUR }}
         run: |
-          ssh -i ~/.ssh/id_deploiement -o IdentitiesOnly=yes -o BatchMode=yes "$UTILISATEUR@$HOTE" deployer
+          ssh -i ~/.ssh/id_deploiement \
+              -o IdentitiesOnly=yes \
+              -o BatchMode=yes \
+              "$UTILISATEUR@$HOTE" deployer

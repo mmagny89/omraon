@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { STAR, PLANETS, BELT, COLD_BELT, COMETS, ROUSHAN_TROJANS } from '../app/src/data/omraon.js';
-import { buildSystem } from '../app/src/physics/system.js';
-import { Simulation } from '../app/src/physics/simulation.js';
-import { stateToElements } from '../app/src/physics/kepler.js';
-import { G } from '../app/src/physics/constants.js';
+import { STAR, PLANETS, BELT, COLD_BELT, COMETS, ROUSHAN_TROJANS } from '../app/front/src/data/omraon.js';
+import { buildSystem } from '../app/front/src/physics/system.js';
+import { Simulation } from '../app/front/src/physics/simulation.js';
+import { stateToElements } from '../app/front/src/physics/kepler.js';
+import { G } from '../app/front/src/physics/constants.js';
 
 const make = (opts = {}) => { const s = new Simulation(buildSystem(STAR, PLANETS), { particleCount: 2000, trojans: true, ...opts }); s.autoTier = false; return s; };
 const elem = (s, i) => stateToElements(G * s.bodies[0].mass, [s.px[i] - s.pos[0], s.py[i] - s.pos[1], s.pz[i] - s.pos[2]], [s.pvx[i] - s.vel[0], s.pvy[i] - s.vel[1], s.pvz[i] - s.vel[2]]);

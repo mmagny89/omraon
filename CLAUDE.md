@@ -1,35 +1,39 @@
 # omraon — système d'Omraon
 
-Simulation N-corps et vue 3D du système d'Omraon (roman). **Site statique** : HTML, CSS, JavaScript en modules ES, Three.js copié dans `app/vendor/`.
-Aucun PHP, aucun bundler, aucune étape de build. Le serveur est Caddy seul (`docker/web`).
+Simulation N-corps et vue 3D du système d'Omraon (roman). **Symfony 8 + FrankenPHP + PostgreSQL** pour les comptes, les rôles et (phases suivantes) les données et les fiches ;
+la vue du système reste du JavaScript en modules ES (Three.js dans `app/front/vendor/`), sans bundler. **Accès uniquement avec un compte** : pas d'inscription, c'est l'admin qui crée les comptes.
 
 ## Règle qui prime sur tout
 
 `.claude/rules/stack-conventions.md` fait autorité sur l'infrastructure (manifeste, nommage, ports, `.env`, CI). En cas de contradiction avec ce fichier, elle gagne et la
 contradiction se signale. `.claude/` est une **copie** de la bibliothèque `~/Desktop/www/claude/subagent/` : ne pas la modifier ici, corriger à la source.
 
-## Écart assumé, déjà arbitré — ne pas le « corriger »
+## Écarts assumés, déjà arbitrés — ne pas les « corriger »
 
-Le manifeste veut une racine sans `package.json`. Ici la racine porte `package.json`, `package-lock.json`, `.nvmrc`, `tests/`, `docs/` et `.htmlvalidate.json` : c'est de l'outillage de
-développement (tests Node, Three.js épinglé pour Dependabot et `npm audit`), pas du site. Les mettre dans `app/` les ferait **servir** par Caddy (dev : `app/` est monté tel quel) et copier
-dans l'image ; `.dockerignore` les exclut de l'image. `check-stack.sh` les signale en notes, pas en échecs.
+- Le manifeste veut une racine sans `package.json`. Ici la racine porte `package.json`, `package-lock.json`, `.nvmrc`, `tests/`, `docs/`, `.htmlvalidate.json` : outillage du **front**
+  (tests Node de la physique, Three.js épinglé pour Dependabot et `npm audit`), pas de l'application PHP. `.dockerignore` les exclut de l'image.
+- Le front vit dans `app/front/` et **jamais dans `app/public/`** : il n'est servi que par `FrontController`, derrière le pare-feu. Y mettre un fichier dans `public/` le
+  rendrait lisible sans compte (un test le vérifie).
+- Les données du système sont encore dans `app/front/src/data/*.js` (phase 1) ; elles passent en base, servies par API authentifiée, aux phases 2-3.
 
 ## Où vit quoi
 
-- `app/` — le site : `src/data/` (étoile, planètes, lunes, sites, chronologie), `src/physics/` (moteur et calculs, sans DOM), `src/render/` (Three.js, canvas), `src/ui/ui.js`.
-- `tests/physics.test.js` — `node --test`, sans dépendance. `docs/hypotheses.md` — canon et propositions de conception.
-- Racine, `docker/`, `.github/`, `outils/` — infrastructure et exploitation uniquement.
+- `app/src/`, `app/templates/`, `app/config/`, `app/migrations/`, `app/tests/` — Symfony : `User` (`ROLE_LECTEUR`, `ROLE_ADMIN` ⊃ lecteur), connexion, gestion des comptes (`/admin/utilisateurs`).
+- `app/front/` — la vue : `src/data/`, `src/physics/` (sans DOM, testé par `tests/*.test.js`), `src/render/` (Three.js), `src/ui/`.
+- `docs/hypotheses.md` — canon et propositions de conception. Racine, `docker/`, `.github/`, `outils/` — infrastructure et exploitation.
 
 ## Commandes
 
 ```sh
-docker compose up -d --wait        # https://localhost, certificat auto-signé
-npm test                           # 89 tests
-outils/ci-local.sh                 # rejoue les portes de la CI (hook pre-push)
-npm run vendor                     # recopie Three.js depuis node_modules vers app/vendor/ (après une montée de version)
+docker compose up -d --wait                                   # https://localhost, certificat auto-signé
+docker compose exec php php bin/console app:utilisateur:creer <email> <nom> --admin   # premier admin
+docker compose exec -e APP_ENV=test php php bin/phpunit tests/Functional             # tests Symfony ciblés (APP_ENV=test obligatoire)
+npm test                                                      # tests de la physique (Node)
+outils/ci-local.sh                                            # rejoue les portes de la CI (hook pre-push)
+npm run vendor                                                # recopie Three.js vers app/front/vendor/
 ```
 
-Toute commande Docker passe par la **clé de service** `web`, jamais par le `container_name`.
+Toute commande Docker passe par la **clé de service** (`php`, `database`), jamais par le `container_name`.
 
 ## Règles du projet
 
@@ -41,9 +45,9 @@ Toute commande Docker passe par la **clé de service** `web`, jamais par le `con
 - Physique : `physics/` n'importe ni Three.js ni le DOM (les tests tournent sous Node seul). L'intégrateur est symétrique donc réversible : ne pas le casser (test « saut dans le temps »).
 - Une modification de donnée se vérifie par `npm test` (stabilité des lunes, énergie, canon), une modification d'interface dans un vrai navigateur (390 px et desktop).
 - **Toute décision qui ajoute ou change du lore** (valeur inventée, canon précisé, nom provisoire) s'inscrit dans `docs/modifications-lore.md` : date, canon d'origine, choix, statut, fichier. C'est le document que l'autrice relit pour mettre le roman et la simulation à jour.
-- Ce dépôt n'a que la branche `main`. Commits Conventional Commits, sans mention d'outil ; jamais de push sans demande.
+- Branches : `main` et `develop` (chantier Symfony, mergé dans `main` à la fin). Commits Conventional Commits, sans mention d'outil ; jamais de push sans demande.
 
 ## Décisions actées
 
 Kebet à 4,7 rayons de Zirkan (jour ≈ 1,28 j) ; Sethis très chaude ; troyens de Zirkan activés par défaut ; vitesse par défaut = temps réel ; pas d'atelier de réglages ; Shukal (planète
-des confins) est un nom provisoire ; déploiement conditionné par `vars.DEPLOIEMENT_*` (éteint par défaut).
+des confins) est un nom provisoire ; déploiement conditionné par `vars.DEPLOIEMENT_*` (éteint par défaut) ; PostgreSQL ; jetons CSRF à session (pas de JS dans les gabarits Symfony).

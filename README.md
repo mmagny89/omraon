@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/github/v/tag/mmagny89/omraon?label=version&sort=semver)](CHANGELOG.md)
 [![Licence propriétaire](https://img.shields.io/badge/licence-propri%C3%A9taire-lightgrey)](LICENSE)
 [![Conventional Commits](https://img.shields.io/badge/Conventional_Commits-1.0.0-fe5196?logo=conventionalcommits&logoColor=white)](https://www.conventionalcommits.org/fr/v1.0.0/)
-[![Three.js 0.187](https://img.shields.io/badge/Three.js-0.187-000000?logo=threedotjs&logoColor=white)](app/vendor/)
+[![Three.js 0.187](https://img.shields.io/badge/Three.js-0.187-000000?logo=threedotjs&logoColor=white)](app/front/vendor/)
 [![Caddy 2.11](https://img.shields.io/badge/Caddy-2.11-1F88C0?logo=caddy&logoColor=white)](docker/web/Dockerfile)
 [![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)](README.docker.md)
 
@@ -18,7 +18,7 @@ docker compose up -d --wait   # https://localhost (certificat auto-signé de Cad
 npm test                      # 89 tests de physique, d'économie, de ciel et de cohérence avec le canon
 ```
 
-Stack statique d'agence (Caddy seul, ni PHP ni Node) : le site vit dans `app/`, sans étape de build ; Three.js est copié dans `app/vendor/` (importmap).
+Stack Symfony 8 / FrankenPHP / PostgreSQL : accès par compte uniquement (rôles Lecteur et Admin, comptes créés par l'admin). La vue vit dans `app/front/`, servie derrière connexion, sans étape de build ; Three.js est copié dans `app/front/vendor/` (importmap).
 Détails Docker : [`README.docker.md`](README.docker.md). Journal des versions : [`CHANGELOG.md`](CHANGELOG.md). Contribution : [`CONTRIBUTING.md`](CONTRIBUTING.md).
 Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICENSE`](LICENSE).
 
@@ -46,17 +46,17 @@ Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICEN
 - **Masquer toute l'interface** : bouton 🙈 ou touche **H** ; « 👁 Interface » ou H la ramène.
 - **Frise chronologique** en haut : ères colorées, événements cliquables, curseur de la date simulée ; cliquer ou glisser saute à la date (flèches ±1 an, Maj ±10 ans).
 - **Options masquées par défaut** (⚙, aussi dans la barre du bas) : paramètres et diagnostics, population et dégel, réseau, éphémérides.
-- **Comparateur de lieux** (Options ⚙) : deux sites côte à côte (population, environnement, gravité, thermique, énergie…) avec les écarts en clair, plus la distance, le délai de message et le trajet en hyperpropulsion entre eux (`app/src/ui/comparaison.js`).
-- **Lore** (Options › Lore, et dans les fiches) : le glossaire tyt (≈ 65 mots du lexique, les noms des mondes et les 13 mois du calendrier confédéral, avec recherche), les personnages placés dans leur lieu d'origine (section « Personnages d'ici », badge 👤 dans la liste), et les vestiges des Anciens (les Iktu) en niveaux canon / iceberg / fil ouvert. Données tirées des documents du roman (`app/src/data/lore.js`, `glossaire.js`) ; aucune racine égyptienne n'est affichée (un test le garantit).
+- **Comparateur de lieux** (Options ⚙) : deux sites côte à côte (population, environnement, gravité, thermique, énergie…) avec les écarts en clair, plus la distance, le délai de message et le trajet en hyperpropulsion entre eux (`app/front/src/ui/comparaison.js`).
+- **Lore** (Options › Lore, et dans les fiches) : le glossaire tyt (≈ 65 mots du lexique, les noms des mondes et les 13 mois du calendrier confédéral, avec recherche), les personnages placés dans leur lieu d'origine (section « Personnages d'ici », badge 👤 dans la liste), et les vestiges des Anciens (les Iktu) en niveaux canon / iceberg / fil ouvert. Données tirées des documents du roman (`app/front/src/data/lore.js`, `glossaire.js`) ; aucune racine égyptienne n'est affichée (un test le garantit).
 - **Temples solaires et calendrier** : la fiche des Grands temples d'Osaon ajoute la liturgie solaire (texte du lore, prochaines éclipses de Zirkan, bouton « Vivre la prochaine éclipse depuis les temples » qui ouvre la vue à hauteur d'yeux au milieu de l'éclipse) et le calendrier confédéral à 13 mois ; l'infobulle de la date indique le mois et le jour du mois.
-- **Ambiances par lieu** : onze lieux de plus ont leur banque d'images dans la fiche de scène (octroi de Naksun, tribunaux de Mahat, garnison de Sedbou, mines de Kalpra, relais d'Iasha, balise d'Astir, port orbital de Kebet, glace de Nunka, poste des confins, colonie de Shukal et piste d'arrêt). Elles sont déduites de la fonction du lieu dans les documents, donc marquées « non canon » (`app/src/data/ambiances.js`).
+- **Ambiances par lieu** : onze lieux de plus ont leur banque d'images dans la fiche de scène (octroi de Naksun, tribunaux de Mahat, garnison de Sedbou, mines de Kalpra, relais d'Iasha, balise d'Astir, port orbital de Kebet, glace de Nunka, poste des confins, colonie de Shukal et piste d'arrêt). Elles sont déduites de la fonction du lieu dans les documents, donc marquées « non canon » (`app/front/src/data/ambiances.js`).
 - **Ceinture Nunzir** : la sélectionner (liste des corps ou étape 4 de la visite) cadre la caméra sur son anneau et ouvre sa fiche : étendue, traceurs simulés, résonances avec Zirkan (lesquelles tombent dans la ceinture), sites. L'adresse partageable retient `b=Nunzir`.
-- **Statut de chaque information** : une pastille sur chaque section de fiche dit si elle est du **canon**, de **conception**, **calculée** ou **provisoire** (infobulle explicative ; le détail est dans `docs/hypotheses.md`, le code dans `app/src/ui/statut.js`).
-- **Photo et carnet de scènes** (Options ⚙, bouton 📷 ou touche **P**) : la photo PNG montre la vue sans interface, avec un bandeau lieu et date ; le carnet garde des vues (adresse, vignette, texte de la fiche de scène) dans le navigateur et s'exporte en Markdown (`app/src/ui/carnet.js`).
+- **Statut de chaque information** : une pastille sur chaque section de fiche dit si elle est du **canon**, de **conception**, **calculée** ou **provisoire** (infobulle explicative ; le détail est dans `docs/hypotheses.md`, le code dans `app/front/src/ui/statut.js`).
+- **Photo et carnet de scènes** (Options ⚙, bouton 📷 ou touche **P**) : la photo PNG montre la vue sans interface, avec un bandeau lieu et date ; le carnet garde des vues (adresse, vignette, texte de la fiche de scène) dans le navigateur et s'exporte en Markdown (`app/front/src/ui/carnet.js`).
 - **Accessibilité** : liens d'évitement (Tab au chargement), vue 3D focalisable (flèches pour tourner, + / − ou Page haut/bas pour le zoom), annonces aux lecteurs d'écran (sélection, date, étapes de la visite, lien copié), retour du focus à la fermeture de la visite, infobulles aussi au clavier (Échap pour les fermer), transitions de caméra supprimées si le système demande un mouvement réduit. Aucune conformité RGAA n'est revendiquée : seuls des contrôles automatiques et une revue partielle ont été faits.
 - **Chargement et en-tête** : une page de chargement avec barre de progression réelle, astuce et message d'échec si WebGL manque ; un en-tête en trois zones (navigation et marque, vues, outils). La mention « © 2026 Magny · Tous droits réservés » figure au chargement, en pied de page (écrans larges), dans Options › À propos, sur les photos et dans l'export du carnet, en cohérence avec `LICENSE`.
 - **Téléphone** : testé à 390 px de large (barre du haut sans débordement, cibles de 44 px). Sous 860 px, la visite guidée et la copie du lien passent dans le panneau Options (⚙ de la barre du bas) pour libérer la barre du haut.
-- **Visite guidée** (bouton 🧭, ou dans Options sur téléphone) : neuf étapes, de l'étoile à la chronologie, avec caméra et date réglées pour chacune ; flèches ← → pour naviguer, Échap pour quitter et retrouver sa vue d'avant. Les textes reprennent les descriptions du canon ; ce qui est de conception est dit entre parenthèses (`app/src/ui/visite.js`).
+- **Visite guidée** (bouton 🧭, ou dans Options sur téléphone) : neuf étapes, de l'étoile à la chronologie, avec caméra et date réglées pour chacune ; flèches ← → pour naviguer, Échap pour quitter et retrouver sa vue d'avant. Les textes reprennent les descriptions du canon ; ce qui est de conception est dit entre parenthèses (`app/front/src/ui/visite.js`).
 - **Prochains événements** dans la fiche d'un corps : les quatre prochaines éclipses d'une lune (une par jour de Kebet pour Kebet), les alignements et apsides d'une planète ; un clic saute à la date.
 - **Lien partageable** : le bouton 🔗 copie une adresse qui garde la date, le corps ou le site choisi, la caméra, la vitesse et la pause ; l'ouvrir restitue la même vue (l'adresse se met aussi à jour toute seule).
 - **Vitesses** : de « temps réel » (1 s/s, par défaut) et « 1 min/s » jusqu'à 1000 ans/s.
@@ -74,7 +74,7 @@ Sécurité : [`SECURITY.md`](SECURITY.md). Licence : propriétaire, voir [`LICEN
 
 Le document ne fixe aucune valeur physique hormis l'ordre des corps, leurs rôles, leurs noms, « ~35 UA au bord », les propulsions, les ordres de grandeur de population
 et la chronologie. Tout le reste est une **proposition de conception**, marquée `invented` / `provisional` / « supposé » et listée dans
-[`docs/hypotheses.md`](docs/hypotheses.md) avec le fichier où la changer (`app/src/data/`). Les racines égyptiennes (« jamais affichées » dans la bible) sont absentes de l'interface.
+[`docs/hypotheses.md`](docs/hypotheses.md) avec le fichier où la changer (`app/front/src/data/`). Les racines égyptiennes (« jamais affichées » dans la bible) sont absentes de l'interface.
 Hors simulation : monde natal tyt, hangar-musée, Terre.
 
 ## Intégration continue et outillage
