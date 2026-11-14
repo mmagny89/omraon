@@ -137,6 +137,28 @@ docker compose -f compose.yml -f compose.prod.yml --env-file .env.prod.local up 
 `RUN_MIGRATIONS=0` en production : mise a jour de schema jouee
 explicitement au deploiement, jamais au demarrage du conteneur.
 
+### Mise en service de `omraon.mmagny.fr` (VPS partagé, Traefik, réseau `traefik`)
+
+Le DNS (enregistrement A de `omraon.mmagny.fr` vers le VPS) doit exister avant le premier démarrage.
+
+```sh
+docker network ls | grep traefik                        # le réseau externe doit exister (sinon : docker network create traefik)
+git clone -b main git@github.com:mmagny89/omraon.git <racine>/omraon && cd <racine>/omraon
+cp .env.prod.local.dist .env.prod.local && chmod 600 .env.prod.local
+# Secrets : deux valeurs aléatoires, à coller dans .env.prod.local (POSTGRES_PASSWORD et APP_SECRET)
+openssl rand -hex 24      # POSTGRES_PASSWORD
+openssl rand -hex 32      # APP_SECRET
+COMPOSE="docker compose -f compose.yml -f compose.prod.yml --env-file .env.prod.local"
+$COMPOSE up -d --build --pull always --wait
+$COMPOSE exec php php bin/console doctrine:migrations:migrate --no-interaction      # RUN_MIGRATIONS=0 : jamais au démarrage
+$COMPOSE exec php php bin/console app:utilisateur:creer <email> <nom> --admin       # premier admin (mot de passe de 12 caractères au moins)
+curl -I https://omraon.mmagny.fr/connexion                                           # 200, certificat Let's Encrypt
+curl -I https://omraon.mmagny.fr/                                                    # 302 vers /connexion : rien n'est lisible sans compte
+```
+
+Pas de port public direct : Traefik route par le nom de domaine. Aucun compte de développement ne doit exister en production. Sauvegarde de la base :
+`BACKUP_REMOTE=<hôte:/chemin/> sh outils/sauvegarder.sh prod` (la production refuse de continuer sans destination hors du serveur), restauration prouvée par `sh outils/tester-restauration.sh`.
+
 ### Deploiement continu depuis GitHub
 
 Une fois le clone en place, poser les acces du deploiement automatique
