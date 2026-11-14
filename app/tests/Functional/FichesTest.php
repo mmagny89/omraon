@@ -95,4 +95,26 @@ final class FichesTest extends WebTestCase
         $this->client->request('GET', '/personnages');
         self::assertSelectorTextContains('body', 'Nom modifié par admin');
     }
+
+    public function testBadgesConditionnelsSansAlertePhp(): void
+    {
+        $alertes = [];
+        set_error_handler(static function (int $n, string $m) use (&$alertes): bool {
+            $alertes[] = $m;
+
+            return true;
+        });
+        try {
+            $this->client->request('GET', '/sites/kalpra-mines');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('main', 'conception');
+            $this->client->request('GET', '/personnages/mai');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('main', 'disparu');
+        } finally {
+            restore_error_handler();
+        }
+        self::assertSame([], $alertes, 'aucune alerte PHP au rendu');
+        self::assertStringNotContainsString('Array', (string) $this->client->getResponse()->getContent());
+    }
 }

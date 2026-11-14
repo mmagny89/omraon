@@ -4,7 +4,7 @@
 {% block title %}{{ s.name }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Sites', url: path('fiches_sites')}, {texte: s.name}]) }}
-{{ c.entete(s.name, s.role, [{texte: s.body, ton: 'accent'}, {texte: s.type}, {texte: s.habitat}] ~ (s.invented is defined and s.invented ? [{texte: 'conception'}] : [])) }}
+{{ c.entete(s.name, s.role, [{texte: s.body, ton: 'accent'}, {texte: s.type}, {texte: s.habitat}]|merge(s.invented is defined and s.invented ? [{texte: 'conception'}] : [])) }}
 <div class="grid gap-6 lg:grid-cols-[1fr_16rem]">
   <div class="space-y-6">
     <div class="grid gap-3 sm:grid-cols-3">

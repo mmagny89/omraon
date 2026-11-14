@@ -4,7 +4,7 @@
 {% block title %}{{ p.nom }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Personnages', url: path('fiches_personnages')}, {texte: p.nom}]) }}
-{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}] ~ (p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : [])) }}
+{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}]|merge(p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : [])) }}
 <div class="max-w-3xl space-y-6">
   <section aria-labelledby="resume" class="rounded-xl border border-ligne bg-carte p-5">
     <h2 id="resume" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Résumé</h2>
