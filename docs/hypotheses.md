@@ -24,7 +24,7 @@
 | Zirkan, Roushan | champ magnétique 0,0005 et 0,03 × Jupiter ; Roushan T(1 bar) = 1,63 × T équilibre | `donnees/canon/systeme.json` |
 | Sethis | atmosphère ténue 0,05 bar (vent, poussière) | `donnees/canon/systeme.json` |
 | Shukal | planète-colonie des confins : nom provisoire, 0,06 M⊕, orbite de 9,5 M km autour de Roushan | `donnees/canon/systeme.json` |
-| Sites | 22 emplacements, populations et Tyts alignés sur le modèle de population (`invented: true`) | `donnees/canon/sites.json` |
+| Sites | 41 emplacements (cinq siècles d'implantation : cités, quartiers, stations, forges), populations et Tyts alignés sur le modèle de population (`invented: true`) ; un site à `marche` partage le marché du site d'origine | `donnees/canon/sites.json` |
 | Accélération des vaisseaux | 8 g (≈ 35 UA en 6 jours), repos moteur d'un jour | `physics/transfers.js`, `physics/flight.js` |
 | Réseau | taux de diffusion locale, répression, graines, filtre du Consortium (~65 %) | `physics/network.js` |
 | Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 0,7 (voir `modifications-lore.md`), contrôle requis 1,04, coefficients d'éveil, hybrides humain/Tyt | `physics/population.js` |

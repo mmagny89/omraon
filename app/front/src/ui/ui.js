@@ -599,7 +599,7 @@ export class UI {
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
       h += yy < site.founded ? `<p class="note">À l'${fmtAn(yy)} : la colonie n'est pas encore fondée (${fmtAn(site.founded)}).</p>` : `<p class="note">À l'${fmtAn(yy)} (colonie fondée ${fmtAn(site.founded)}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
     } else if (pm && p0) h += pm.arrived ? `<p class="note">À l'${fmtAn(yy)} (modèle de population) : ≈ ${Math.round(site.population * pm.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * pm.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>` : `<p class="note">À l'${fmtAn(yy)} : personne n'est encore arrivé dans le système.</p>`;
-    if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (données dans app/src/data/sites.js).</p>`;
+    if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (valeurs par défaut modifiables par un administrateur).</p>`;
     if (rec?.st) {
       const rep = siteReport({ sim: this.sim, el: (i) => this.world.bodies[i].el }, site, rec.st, this.target);
       for (const sec of rep.sections) h += this.begin(sec.title, true, statutSection(sec.title)) + `<dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;

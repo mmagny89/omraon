@@ -121,9 +121,9 @@ test('couplage : une crise de misère fait perdre du contrôle et avancer le poi
 });
 
 test('station de Kebet : la poussée continue consomme du carburant, qui lui est livré', () => {
-  const port = SITES.find((s) => s.id === 'kebet-orbite');
-  assert.ok(besoinJour(port, PROFILS['kebet-orbite'], 'carburant') >= 60);
-  const e = monde(); avancer(e, 60);
+  const e = monde(), port = e.noeuds.get('kebet-orbite'); // marché commun aux deux stations de Kebet (kebet-relais s'y ajoute)
+  assert.ok(besoinJour(port.site, port.profil, 'carburant') >= 60);
+  avancer(e, 60);
   assert.ok([...e.flux].some(([k, q]) => k.split('|')[1] === 'kebet-orbite' && k.endsWith('|carburant') && q > 0), 'le carburant arrive au port');
   assert.ok((e.noeuds.get('kebet-orbite').penurie.carburant ?? 0) < 20, 'le port ne manque pas de carburant');
 });

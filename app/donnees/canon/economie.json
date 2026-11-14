@@ -4,15 +4,15 @@
       "eau": 0.0004,
       "vivres": 0.0006,
       "carburant": 0.0003,
-      "metaux": 0.00008,
-      "equipements": 0.00008
+      "metaux": 8e-05,
+      "equipements": 8e-05
     },
     "tyt": {
       "eau": 0.0003,
       "vivres": 0.0005,
-      "carburant": 0.00005,
-      "metaux": 0.00002,
-      "equipements": 0.00002
+      "carburant": 5e-05,
+      "metaux": 2e-05,
+      "equipements": 2e-05
     }
   },
   "CONSO_LUXE": {
@@ -20,7 +20,15 @@
     "kebet-consortium": 0.002,
     "kebet-temples": 0.0006,
     "kebet-orbite": 0.0006,
-    "roushan-cites": 0.00001
+    "roushan-cites": 1e-05,
+    "kebet-jardins": 0.001,
+    "kebet-colleges": 0.001,
+    "kebet-relais": 0.0006,
+    "roushan-raffineries": 1e-05,
+    "roushan-docks": 1e-05,
+    "roushan-levant": 1e-05,
+    "roushan-anneau": 1e-05,
+    "roushan-orbite": 1e-05
   },
   "MARCHANDISES": [
     {
@@ -95,10 +103,10 @@
       "productivite": 10,
       "puits": 7.9,
       "prod": {
-        "minerai": 20,
-        "metaux": 6
+        "minerai": 12.0,
+        "metaux": 3.6
       },
-      "tytsRequis": 3150,
+      "tytsRequis": 1890,
       "tytsAn": -0.06,
       "zone": "interieur"
     },
@@ -106,10 +114,10 @@
       "productivite": 5,
       "puits": 11,
       "prod": {
-        "minerai": 120,
-        "metaux": 20
+        "minerai": 84.0,
+        "metaux": 14.0
       },
-      "tytsRequis": 170000,
+      "tytsRequis": 119000,
       "tytsAn": 0.008,
       "zone": "interieur"
     },
@@ -117,10 +125,10 @@
       "productivite": 5,
       "puits": 11,
       "prod": {
-        "minerai": 80,
-        "metaux": 12
+        "minerai": 60.0,
+        "metaux": 9.0
       },
-      "tytsRequis": 110000,
+      "tytsRequis": 82500,
       "tytsAn": 0.008,
       "zone": "interieur"
     },
@@ -128,7 +136,10 @@
       "prod": {},
       "tytsRequis": 0,
       "zone": "interieur",
-      "peage": 0.06
+      "peage": 0.06,
+      "conso": {
+        "carburant": 50
+      }
     },
     "mahat-tribunaux": {
       "puits": 0.1,
@@ -145,7 +156,7 @@
     "iasha-relais": {
       "puits": 0.1,
       "prod": {
-        "equipements": 28
+        "equipements": 16.8
       },
       "tytsRequis": 0,
       "zone": "exterieur"
@@ -159,9 +170,9 @@
     "kebet-orbite": {
       "prod": {},
       "conso": {
-        "carburant": 60
+        "carburant": 36.0
       },
-      "tytsRequis": 950,
+      "tytsRequis": 570,
       "tytsAn": 0,
       "zone": "exterieur",
       "taxe": 0.1,
@@ -196,11 +207,11 @@
       "productivite": 150,
       "puits": 10.5,
       "prod": {
-        "vivres": 392,
-        "luxe": 35,
-        "eau": 35
+        "vivres": 196.0,
+        "luxe": 17.5,
+        "eau": 17.5
       },
-      "tytsRequis": 9500,
+      "tytsRequis": 4750,
       "tytsAn": 0.01,
       "zone": "exterieur",
       "taxe": 0.1,
@@ -209,12 +220,12 @@
     "roushan-cites": {
       "puits": 12,
       "prod": {
-        "carburant": 420,
-        "equipements": 28,
-        "vivres": 28
+        "carburant": 168.0,
+        "equipements": 11.2,
+        "vivres": 11.2
       },
       "conso": {
-        "minerai": 200
+        "minerai": 80.0
       },
       "tytsRequis": 0,
       "zone": "exterieur"
@@ -223,9 +234,9 @@
       "productivite": 40,
       "puits": 0.4,
       "prod": {
-        "eau": 167
+        "eau": 116.9
       },
-      "tytsRequis": 4200,
+      "tytsRequis": 2940,
       "tytsAn": -0.02,
       "zone": "exterieur"
     },
@@ -259,10 +270,10 @@
       "productivite": 100,
       "puits": 0,
       "prod": {
-        "minerai": 45,
-        "metaux": 14
+        "minerai": 27.0,
+        "metaux": 8.4
       },
-      "tytsRequis": 300,
+      "tytsRequis": 180,
       "tytsAn": 0.01,
       "zone": "ceinture"
     },
@@ -288,10 +299,210 @@
     "ceinture-glace": {
       "puits": 0,
       "prod": {
-        "eau": 49
+        "eau": 29.4
       },
       "tytsRequis": 0,
       "zone": "ceinture"
+    },
+    "kalpra-forges": {
+      "productivite": 10,
+      "puits": 7.9,
+      "prod": {
+        "minerai": 8.0,
+        "metaux": 2.4
+      },
+      "tytsRequis": 1260,
+      "tytsAn": -0.06,
+      "zone": "interieur"
+    },
+    "sethis-cite-c": {
+      "productivite": 5,
+      "puits": 11,
+      "prod": {
+        "minerai": 36.0,
+        "metaux": 6.0
+      },
+      "tytsRequis": 51000,
+      "tytsAn": 0.008,
+      "zone": "interieur"
+    },
+    "sethis-cite-d": {
+      "productivite": 5,
+      "puits": 11,
+      "prod": {
+        "minerai": 20.0,
+        "metaux": 3.0
+      },
+      "tytsRequis": 27500,
+      "tytsAn": 0.008,
+      "zone": "interieur"
+    },
+    "mahat-archives": {
+      "puits": 0.1,
+      "prod": {},
+      "tytsRequis": 0,
+      "zone": "interieur"
+    },
+    "naksun-relais": {
+      "prod": {},
+      "tytsRequis": 0,
+      "zone": "interieur",
+      "conso": {
+        "carburant": 22
+      }
+    },
+    "naksun-chantiers": {
+      "prod": {},
+      "tytsRequis": 0,
+      "zone": "interieur"
+    },
+    "iasha-faubourgs": {
+      "puits": 0.1,
+      "prod": {
+        "equipements": 11.2
+      },
+      "tytsRequis": 0,
+      "zone": "exterieur"
+    },
+    "astir-cite": {
+      "puits": 0.05,
+      "prod": {},
+      "tytsRequis": 0,
+      "zone": "exterieur"
+    },
+    "kebet-jardins": {
+      "productivite": 150,
+      "puits": 10.5,
+      "prod": {
+        "vivres": 117.6,
+        "luxe": 10.5,
+        "eau": 10.5
+      },
+      "tytsRequis": 2850,
+      "tytsAn": 0.01,
+      "zone": "exterieur",
+      "taxe": 0.1,
+      "douane": "kebet"
+    },
+    "kebet-colleges": {
+      "productivite": 150,
+      "puits": 10.5,
+      "prod": {
+        "vivres": 78.4,
+        "luxe": 7.0,
+        "eau": 7.0
+      },
+      "tytsRequis": 1900,
+      "tytsAn": 0.01,
+      "zone": "exterieur",
+      "taxe": 0.1,
+      "douane": "kebet"
+    },
+    "kebet-relais": {
+      "prod": {},
+      "conso": {
+        "carburant": 24.0
+      },
+      "tytsRequis": 380,
+      "tytsAn": 0,
+      "zone": "exterieur",
+      "taxe": 0.1,
+      "douane": "kebet"
+    },
+    "nunka-forage": {
+      "productivite": 40,
+      "puits": 0.4,
+      "prod": {
+        "eau": 50.1
+      },
+      "tytsRequis": 1260,
+      "tytsAn": -0.02,
+      "zone": "exterieur"
+    },
+    "ceinture-forges-hilda": {
+      "productivite": 100,
+      "puits": 0,
+      "prod": {
+        "minerai": 18.0,
+        "metaux": 5.6
+      },
+      "tytsRequis": 120,
+      "tytsAn": 0.01,
+      "zone": "ceinture"
+    },
+    "ceinture-glaciere": {
+      "puits": 0,
+      "prod": {
+        "eau": 19.6
+      },
+      "tytsRequis": 0,
+      "zone": "ceinture"
+    },
+    "roushan-raffineries": {
+      "puits": 12,
+      "prod": {
+        "carburant": 92.4,
+        "equipements": 6.16,
+        "vivres": 6.16
+      },
+      "conso": {
+        "minerai": 44.0
+      },
+      "tytsRequis": 0,
+      "zone": "exterieur"
+    },
+    "roushan-docks": {
+      "puits": 12,
+      "prod": {
+        "carburant": 63.0,
+        "equipements": 4.2,
+        "vivres": 4.2
+      },
+      "conso": {
+        "minerai": 30.0
+      },
+      "tytsRequis": 0,
+      "zone": "exterieur"
+    },
+    "roushan-levant": {
+      "puits": 12,
+      "prod": {
+        "carburant": 54.6,
+        "equipements": 3.64,
+        "vivres": 3.64
+      },
+      "conso": {
+        "minerai": 26.0
+      },
+      "tytsRequis": 0,
+      "zone": "exterieur"
+    },
+    "roushan-anneau": {
+      "puits": 12,
+      "prod": {
+        "carburant": 33.6,
+        "equipements": 2.24,
+        "vivres": 2.24
+      },
+      "conso": {
+        "minerai": 16.0
+      },
+      "tytsRequis": 0,
+      "zone": "exterieur"
+    },
+    "roushan-orbite": {
+      "puits": 12,
+      "prod": {
+        "carburant": 8.4,
+        "equipements": 0.56,
+        "vivres": 0.56
+      },
+      "conso": {
+        "minerai": 4.0,
+        "carburant": 18
+      },
+      "tytsRequis": 0,
+      "zone": "exterieur"
     }
   },
   "REGLAGES": {

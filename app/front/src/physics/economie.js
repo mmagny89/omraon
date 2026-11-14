@@ -50,8 +50,22 @@ export function valeurParMineur(profils = PROFILS, marchandises = MARCHANDISES) 
 export function creerEconomie({ sites, dist, profils = PROFILS, marchandises = MARCHANDISES, transporteurs = TRANSPORTEURS, reglages = REGLAGES, evenements = [], graine = null }) {
   const biens = new Map(marchandises.map((m) => [m.id, m]));
   const noeuds = new Map();
-  for (const site of sites) {
-    const profil = profils[site.id] ?? { prod: {}, tytsRequis: 0, zone: 'exterieur' };
+  // Marché local : un site qui porte `marche: <id>` partage le marché de ce site (même corps, quelques centaines de km ou de degrés plus loin) ;
+  // sa population, sa production, sa consommation et ses Tyts requis s'ajoutent au nœud du site d'origine. Sans cela, chaque quartier d'une même
+  // cité aurait son propre prix et des convois en tireraient un profit sans rapport avec la réalité. Un site sans `marche` est son propre marché.
+  const profilDe = (id) => profils[id] ?? { prod: {}, tytsRequis: 0, zone: 'exterieur' };
+  const somme = (a = {}, b = {}) => { const r = { ...a }; for (const [k, v] of Object.entries(b)) r[k] = (r[k] ?? 0) + v; return r; };
+  const marches = new Map(sites.filter((s) => !s.marche).map((s) => [s.id, { site: { ...s }, profil: { ...profilDe(s.id), prod: { ...profilDe(s.id).prod }, conso: profilDe(s.id).conso ? { ...profilDe(s.id).conso } : undefined } }]));
+  for (const s of sites.filter((x) => x.marche)) {
+    const m = marches.get(s.marche); if (!m) continue;
+    const p = profilDe(s.id);
+    m.site.population += s.population; m.site.tyts += s.tyts;
+    m.profil.prod = somme(m.profil.prod, p.prod);
+    if (p.conso) m.profil.conso = somme(m.profil.conso, p.conso);
+    m.profil.tytsRequis = (m.profil.tytsRequis ?? 0) + (p.tytsRequis ?? 0);
+  }
+  for (const { site, profil } of marches.values()) {
+    if (profil.conso === undefined) delete profil.conso;
     const cible = {}, stock = {}, besoin = {};
     for (const m of marchandises) {
       besoin[m.id] = besoinJour(site, profil, m.id);

@@ -135,7 +135,12 @@ test('sites : surface au rayon du corps, orbite à vitesse circulaire', () => {
   const s = siteState(ctx, find('sethis-cite-a'), 0), b = sim.bodies.find((x) => x.def.name === 'Sethis');
   const r = Math.hypot(...[0, 1, 2].map((k) => s.pos[k] - sim.rPos[3 * b.idx + k])) * AU_KM;
   assert.ok(Math.abs(r / b.radiusKm - 1) < 1e-9);
-  const o = siteState(ctx, find('naksun-octroi'), 0), n = sim.bodies.find((x) => x.def.name === 'Naksun');
+  // Toutes les stations du canon sont tenues en place (`fixe`) : une station en orbite libre se teste avec le même site privé de `fixe`.
+  for (const st of SITES.filter((x) => x.type === 'orbit')) assert.ok(st.fixe, `${st.id} : station tenue en place`);
+  const fixe = find('naksun-octroi'), libre = (({ fixe: _f, ...r }) => r)(fixe);
+  const sf = siteState(ctx, fixe, 0), nb = sim.bodies.find((x) => x.def.name === 'Naksun');
+  assert.ok(Math.abs(Math.hypot(...[0, 1, 2].map((k) => sf.pos[k] - sim.rPos[3 * nb.idx + k])) * AU_KM / (nb.radiusKm + fixe.altKm) - 1) < 1e-9, 'station tenue en place à R + altitude');
+  const o = siteState(ctx, libre, 0), n = nb;
   const rel = [0, 1, 2].map((k) => o.pos[k] - sim.rPos[3 * n.idx + k]), vr = [0, 1, 2].map((k) => o.vel[k] - sim.rVel[3 * n.idx + k]);
   assert.ok(Math.abs(Math.hypot(...vr) / Math.sqrt(G * sim.mass[n.idx] / Math.hypot(...rel)) - 1) < 1e-9);
 });
