@@ -2,6 +2,7 @@
 
 /* Les gabarits Twig sont détectés automatiquement (app/templates) ; les classes y sont écrites en toutes lettres. */
 @source "../../templates";
+@source "../../assets";
 
 /* Mêmes jetons que la vue du système : un seul univers visuel. */
 @theme {

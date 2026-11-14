@@ -1,14 +1,19 @@
 {% extends 'base.html.twig' %}
 {% import '_c.html.twig' as c %}
 {% block title %}{{ section }} — À l'ombre d'Omraon{% endblock %}
+{% block scripts %}<script src="{{ asset('editeur.js') }}" defer></script>{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Valeurs par défaut', url: path('admin_donnees')}, {texte: section}]) }}
-{{ c.entete(section, 'Jeu « ' ~ jeu ~ ' ». L\'enregistrement remplace le canon pour tous les comptes.') }}
+{{ c.entete(section, 'Jeu « ' ~ jeu ~ ' ». Remplis le formulaire : il est transformé en JSON à l\'enregistrement, et le serveur le valide. L\'enregistrement remplace le canon pour tous les comptes.') }}
 <div class="rounded-xl border border-ligne bg-carte p-5 sm:p-6">
   {% if erreur %}<p role="alert" class="mb-4 rounded-lg border border-danger/50 bg-danger/10 px-4 py-3 text-sm text-danger">{{ erreur }}</p>{% endif %}
   <form method="post" class="space-y-4">
-    <label for="valeur" class="block text-sm font-medium text-doux">Valeur (JSON)</label>
-    <textarea id="valeur" name="valeur" rows="26" spellcheck="false" class="w-full rounded-lg border border-ligne bg-fond p-3 font-mono text-sm leading-relaxed focus:border-accent">{{ texte }}</textarea>
+    <div data-editeur class="space-y-4">
+      <div data-json>
+        <label for="valeur" class="mb-1.5 block text-sm font-medium text-doux">Valeur (JSON)</label>
+        <textarea id="valeur" name="valeur" rows="26" spellcheck="false" class="w-full rounded-lg border border-ligne bg-fond p-3 font-mono text-sm leading-relaxed focus:border-accent">{{ texte }}</textarea>
+      </div>
+    </div>
     <input type="hidden" name="_token" value="{{ csrf_token('donnees' ~ jeu ~ section) }}">
     <div class="flex gap-3">
       <button type="submit" class="min-h-11 rounded-lg bg-accent px-5 font-semibold text-fond hover:brightness-110">Enregistrer</button>

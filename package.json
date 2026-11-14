@@ -8,7 +8,7 @@
   "engines": { "node": ">=26" },
   "scripts": {
     "test": "node --test tests/",
-    "check": "find app/front/src -name '*.js' -exec node --check {} +",
+    "check": "find app/front/src app/assets -name '*.js' -exec node --check {} +",
     "vendor": "cp node_modules/three/build/three.module.js node_modules/three/build/three.core.js app/front/vendor/ && cp node_modules/three/LICENSE app/front/vendor/three.LICENSE"
   },
   "devDependencies": {
