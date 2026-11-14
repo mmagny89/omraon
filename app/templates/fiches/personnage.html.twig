@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+{% set p = f.perso %}
+{% block title %}{{ p.nom }} — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<div class="barre"><h1>{{ p.nom }}{% if p.vivant is defined and not p.vivant %} <span class="badge">disparu</span>{% endif %}</h1><a class="btn sec" href="{{ path('fiches_personnages') }}">Tous les personnages</a></div>
+<p>{{ p.role }}</p>
+<div class="carte"><dl class="fiche">
+  <dt>Espèce</dt><dd>{{ p.espece }}</dd>
+  {% if p.age is defined %}<dt>Âge</dt><dd>{{ p.age }} ans</dd>{% endif %}
+  <dt>Origine</dt><dd>{% if f.corps %}<a href="{{ path('fiches_astre', {id: f.corps}) }}">{{ p.origine.corps }}</a>{% else %}{{ p.origine.corps }}{% endif %}{% if f.site %} — <a href="{{ path('fiches_site', {id: f.site.id}) }}">{{ f.site.name }}</a>{% endif %} <span class="badge">{{ p.origine.statut }}</span></dd>
+</dl></div>
+<h2>Résumé</h2><p>{{ p.resume }}</p>
+{% endblock %}

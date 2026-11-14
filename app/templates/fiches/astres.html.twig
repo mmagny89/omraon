@@ -1,0 +1,8 @@
+{% extends 'base.html.twig' %}
+{% block title %}Astres — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<h1>Astres</h1>
+<div class="carte"><ul class="liste">
+{% for a in astres %}<li>{% if a.parent %}<span style="margin-left:1.25rem"></span>{% endif %}<a href="{{ path('fiches_astre', {id: a.id}) }}">{{ a.nom }}</a> <span class="badge">{{ a.type }}{% if a.parent %} de {{ a.parent }}{% endif %}</span></li>{% endfor %}
+</ul></div>
+{% endblock %}

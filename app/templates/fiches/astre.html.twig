@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% set d = a.donnees %}
+{% block title %}{{ d.name }} — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<div class="barre"><h1>{{ d.name }} <span class="badge">{{ a.type }}</span></h1><a class="btn sec" href="{{ path('fiches_astres') }}">Tous les astres</a></div>
+{% if d.role is defined %}<p>{{ d.role }}</p>{% endif %}
+<div class="carte"><h2 style="margin-top:0">Données</h2>
+  <dl class="fiche">
+    {% for k, v in a.calculs %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}
+    {% if a.bord is defined %}<dt>Bord du système</dt><dd>{{ a.bord }} UA (provisoire)</dd>{% endif %}
+    {% if a.parent %}<dt>Planète mère</dt><dd><a href="{{ path('fiches_astre', {id: a.parent.id}) }}">{{ a.parent.name }}</a></dd>{% endif %}
+  </dl>
+</div>
+{% if d.names is defined %}
+<div class="carte" style="margin-top:1rem"><h2 style="margin-top:0">Noms</h2><dl class="fiche">
+  <dt>Nom tyt sacré</dt><dd>{{ d.names.tyt }}</dd>
+  {% if d.names.tytCourant and d.names.tytCourant != d.names.tyt %}<dt>Courant</dt><dd>{{ d.names.tytCourant }}</dd>{% endif %}
+  {% if d.names.sens %}<dt>Sens</dt><dd>« {{ d.names.sens }} »</dd>{% endif %}
+</dl></div>{% endif %}
+{% if a.lunes is defined and a.lunes %}<h2>Lunes</h2><div class="carte"><ul class="liste">{% for m in a.lunes %}<li><a href="{{ path('fiches_astre', {id: m.id}) }}">{{ m.name }}</a> — {{ m.role }}</li>{% endfor %}</ul></div>{% endif %}
+{% if a.sites %}<h2>Sites</h2><div class="carte"><ul class="liste">{% for s in a.sites %}<li><a href="{{ path('fiches_site', {id: s.id}) }}">{{ s.name }}</a> — {{ (s.population + s.tyts)|number_format(0, ',', ' ') }} habitants</li>{% endfor %}</ul></div>{% endif %}
+{% if a.personnages %}<h2>Personnages</h2><div class="carte"><ul class="liste">{% for p in a.personnages %}<li><a href="{{ path('fiches_personnage', {id: p.id}) }}">{{ p.nom }}</a> — {{ p.role }}</li>{% endfor %}</ul></div>{% endif %}
+{% if a.vestiges %}<h2>Vestiges des Anciens</h2><div class="carte"><ul class="liste">{% for v in a.vestiges %}<li><b>{{ v.titre }}</b> <span class="badge">{{ v.niveau }}</span><br>{{ v.texte }}</li>{% endfor %}</ul></div>{% endif %}
+<p style="margin-top:1.5rem"><a class="btn sec" href="{{ path('app_accueil') }}">Retour à la vue 3D</a></p>
+{% endblock %}

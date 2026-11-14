@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+{% set s = f.site %}
+{% block title %}{{ s.name }} — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<div class="barre"><h1>{{ s.name }}{% if s.invented is defined and s.invented %} <span class="badge">conception</span>{% endif %}</h1><a class="btn sec" href="{{ path('fiches_sites') }}">Tous les sites</a></div>
+<p>{{ s.role }}</p>
+<div class="carte"><dl class="fiche">
+  <dt>Astre</dt><dd>{% if f.corps %}<a href="{{ path('fiches_astre', {id: f.corps}) }}">{{ s.body }}</a>{% else %}{{ s.body }}{% endif %}</dd>
+  <dt>Type</dt><dd>{{ s.type }}</dd><dt>Habitat</dt><dd>{{ s.habitat }}</dd>
+  <dt>Humains</dt><dd>{{ s.population|number_format(0, ',', ' ') }}</dd><dt>Tyts</dt><dd>{{ s.tyts|number_format(0, ',', ' ') }}</dd>
+  {% if s.lat is defined %}<dt>Position</dt><dd>lat {{ s.lat }}°, lon {{ s.lon }}°</dd>{% endif %}
+  {% if s.altKm is defined %}<dt>Altitude</dt><dd>{{ s.altKm|number_format(0, ',', ' ') }} km</dd>{% endif %}
+</dl></div>
+{% if f.personnages %}<h2>Personnages</h2><div class="carte"><ul class="liste">{% for p in f.personnages %}<li><a href="{{ path('fiches_personnage', {id: p.id}) }}">{{ p.nom }}</a> — {{ p.role }}</li>{% endfor %}</ul></div>{% endif %}
+{% if f.vestiges %}<h2>Vestiges</h2><div class="carte"><ul class="liste">{% for v in f.vestiges %}<li><b>{{ v.titre }}</b> <span class="badge">{{ v.niveau }}</span><br>{{ v.texte }}</li>{% endfor %}</ul></div>{% endif %}
+{% if f.scene %}<p style="margin-top:1.5rem"><a class="btn" href="{{ path('fiches_scene', {id: s.id}) }}">Ambiance pour écrire une scène</a></p>{% endif %}
+{% endblock %}

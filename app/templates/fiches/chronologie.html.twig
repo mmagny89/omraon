@@ -1,0 +1,8 @@
+{% extends 'base.html.twig' %}
+{% block title %}Chronologie — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<h1>Chronologie</h1>
+<p style="color:var(--doux)">Ordres de grandeur d'auteur, pas des dates à citer. An 0 : début de l'Ère confédérale ; le présent du roman est l'An 300.</p>
+<h2>Ères</h2><div class="carte"><ul class="liste">{% for e in eres %}<li><b>{{ e.de }}{% if e.a %} → {{ e.a }}{% else %} →{% endif %}</b> — {{ e.label }}{% if e.hors %} <span class="badge">hors système</span>{% endif %}</li>{% endfor %}</ul></div>
+<h2>Événements</h2><div class="carte"><ul class="liste">{% for e in evenements %}<li><b>{{ e.an }}</b> — {{ e.label }}{% if e.hors %} <span class="badge">hors système</span>{% endif %}<br><span style="color:var(--doux)">{{ e.note }}</span></li>{% endfor %}</ul></div>
+{% endblock %}

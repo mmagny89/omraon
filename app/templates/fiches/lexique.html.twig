@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+{% block title %}Lexique — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<h1>Lexique tyt</h1>
+{% for cat, entrees in groupes %}<h2>{{ cat }}</h2><div class="carte"><dl class="fiche">{% for e in entrees %}<dt>{{ e.mot }}</dt><dd>{{ e.sens }}{% if e.note is defined and e.note %} <span class="badge">{{ e.note }}</span>{% endif %}</dd>{% endfor %}</dl></div>{% endfor %}
+<h2>Calendrier confédéral</h2><div class="carte"><p style="margin:0">{{ mois|join(' · ') }}</p></div>
+{% endblock %}

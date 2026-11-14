@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% set a = s.donnees %}
+{% block title %}{{ s.site.name }} — scène — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<div class="barre"><h1>{{ a.titre ?? s.site.name }} {% if a.canon %}<span class="badge">canon</span>{% else %}<span class="badge">non canon</span>{% endif %}</h1><a class="btn sec" href="{{ path('fiches_site', {id: s.site.id}) }}">Fiche du site</a></div>
+{% for cle, titre in {voir: 'Voir', entendre: 'Entendre', sentir: 'Sentir', toucher: 'Toucher', corps: 'Corps'} %}
+  {% if attribute(a, cle) is defined and attribute(a, cle) %}<h2>{{ titre }}</h2><div class="carte"><ul>{% for l in attribute(a, cle) %}<li>{{ l }}</li>{% endfor %}</ul></div>{% endif %}
+{% endfor %}
+{% if s.extra %}<h2>Précisions sur ce lieu</h2><div class="carte"><ul>{% for l in s.extra %}<li>{{ l }}</li>{% endfor %}</ul></div>{% endif %}
+{% if a.faussenote is defined %}<h2>La fausse note</h2><div class="carte"><p style="margin:0">{{ a.faussenote }}</p></div>{% endif %}
+{% endblock %}

@@ -38,7 +38,7 @@ final class DonneesController extends AbstractController
         return $this->render('admin/donnees/index.html.twig', ['jeux' => $jeux]);
     }
 
-    #[Route('/{jeu}/{section}', name: 'admin_donnees_modifier', requirements: ['jeu' => 'systeme|sites|economie', 'section' => '[A-Z_]+'], methods: ['GET', 'POST'])]
+    #[Route('/{jeu}/{section}', name: 'admin_donnees_modifier', requirements: ['jeu' => DonneesService::JEUX_REGEX, 'section' => '[A-Z_]+'], methods: ['GET', 'POST'])]
     public function modifier(string $jeu, string $section, Request $request): Response
     {
         if (!\in_array($section, $this->donnees->sections($jeu), true)) {
@@ -67,7 +67,7 @@ final class DonneesController extends AbstractController
         ]);
     }
 
-    #[Route('/{jeu}/{section}/reinitialiser', name: 'admin_donnees_reinitialiser', requirements: ['jeu' => 'systeme|sites|economie', 'section' => '[A-Z_]+'], methods: ['POST'])]
+    #[Route('/{jeu}/{section}/reinitialiser', name: 'admin_donnees_reinitialiser', requirements: ['jeu' => DonneesService::JEUX_REGEX, 'section' => '[A-Z_]+'], methods: ['POST'])]
     public function reinitialiser(string $jeu, string $section, Request $request): Response
     {
         if (!$this->isCsrfTokenValid('reinit'.$jeu.$section, (string) $request->request->get('_token'))) {

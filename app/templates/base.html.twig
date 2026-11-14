@@ -26,11 +26,33 @@
     .table-wrap { overflow-x:auto; }
     table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:.6rem .5rem; border-bottom:1px solid var(--bord); vertical-align:middle; }
     .actions { display:flex; gap:.5rem; flex-wrap:wrap; } .actions form { margin:0; }
+    nav.principale { display:flex; flex-wrap:wrap; gap:.25rem .5rem; margin-bottom:1.25rem; padding-bottom:.75rem; border-bottom:1px solid var(--bord); }
+    nav.principale a { display:inline-flex; align-items:center; min-height:44px; padding:0 .6rem; border-radius:.5rem; text-decoration:none; }
+    nav.principale a[aria-current] { background:var(--carte); border:1px solid var(--bord); }
+    nav.principale .droite { margin-left:auto; }
+    dl.fiche { display:grid; grid-template-columns:minmax(8rem,14rem) 1fr; gap:.4rem 1rem; margin:0; } dl.fiche dt { color:var(--doux); } dl.fiche dd { margin:0; }
+    .badge { display:inline-block; padding:.05rem .5rem; border:1px solid var(--bord); border-radius:1rem; font-size:.8rem; color:var(--doux); }
+    ul.liste { list-style:none; margin:0; padding:0; } ul.liste li { padding:.5rem 0; border-bottom:1px solid var(--bord); }
+    h2 { font-size:1.15rem; margin:1.5rem 0 .5rem; }
     .form-error { color:var(--erreur); font-size:.9rem; }
   </style>
 </head>
 <body>
   <main>
+    {% if app.user %}
+    {% set route = app.request.attributes.get('_route') %}
+    <nav class="principale" aria-label="Navigation principale">
+      <a href="{{ path('app_accueil') }}">Vue du système</a>
+      <a href="{{ path('fiches_astres') }}"{% if route starts with 'fiches_astre' %} aria-current="page"{% endif %}>Astres</a>
+      <a href="{{ path('fiches_sites') }}"{% if route starts with 'fiches_site' %} aria-current="page"{% endif %}>Sites</a>
+      <a href="{{ path('fiches_personnages') }}"{% if route starts with 'fiches_personnage' %} aria-current="page"{% endif %}>Personnages</a>
+      <a href="{{ path('fiches_scenes') }}"{% if route starts with 'fiches_scene' %} aria-current="page"{% endif %}>Scènes</a>
+      <a href="{{ path('fiches_lexique') }}"{% if route == 'fiches_lexique' %} aria-current="page"{% endif %}>Lexique</a>
+      <a href="{{ path('fiches_chronologie') }}"{% if route == 'fiches_chronologie' %} aria-current="page"{% endif %}>Chronologie</a>
+      {% if is_granted('ROLE_ADMIN') %}<a class="droite" href="{{ path('admin_donnees') }}">Valeurs</a><a href="{{ path('admin_utilisateurs') }}">Comptes</a>{% endif %}
+      <a{% if not is_granted('ROLE_ADMIN') %} class="droite"{% endif %} href="{{ path('app_logout') }}">Déconnexion</a>
+    </nav>
+    {% endif %}
     {% for type, messages in app.flashes %}{% for m in messages %}<p class="flash {{ type }}" role="status">{{ m }}</p>{% endfor %}{% endfor %}
     {% block body %}{% endblock %}
   </main>

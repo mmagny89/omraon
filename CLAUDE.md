@@ -14,11 +14,11 @@ contradiction se signale. `.claude/` est une **copie** de la bibliothèque `~/De
   (tests Node de la physique, Three.js épinglé pour Dependabot et `npm audit`), pas de l'application PHP. `.dockerignore` les exclut de l'image.
 - Le front vit dans `app/front/` et **jamais dans `app/public/`** : il n'est servi que par `FrontController`, derrière le pare-feu. Y mettre un fichier dans `public/` le
   rendrait lisible sans compte (un test le vérifie).
-- **Données** : le canon d'origine est `app/donnees/canon/{systeme,sites,economie}.json` (versionné, lu par les tests Node). Une section modifiée par un admin (`/admin/donnees`) est stockée en base (`Donnee`) et remplace le canon pour tous ; « réinitialiser » supprime la surcharge. Le front les lit par `GET /api/donnees/<jeu>` via `src/data/charger.js` (`await` de niveau module). Pour changer une valeur de canon : éditer le JSON, pas les modules `src/data/*.js`. Lore, glossaire, ambiances, chronologie : encore dans `src/data/*.js` (phase 3).
+- **Données** : le canon d'origine est `app/donnees/canon/{systeme,sites,economie,lore,glossaire,ambiances,chronologie}.json` (versionné, lu par les tests Node). Une section modifiée par un admin (`/admin/donnees`) est stockée en base (`Donnee`) et remplace le canon pour tous ; « réinitialiser » supprime la surcharge. Le front les lit par `GET /api/donnees/<jeu>` via `src/data/charger.js` (`await` de niveau module). Pour changer une valeur de canon : éditer le JSON, pas les modules `src/data/*.js`. Les fonctions (`ambianceFor`, `fmtAn`…) restent dans `src/data/*.js`.
 
 ## Où vit quoi
 
-- `app/src/`, `app/templates/`, `app/config/`, `app/migrations/`, `app/tests/` — Symfony : `User` (`ROLE_LECTEUR`, `ROLE_ADMIN` ⊃ lecteur), connexion, gestion des comptes (`/admin/utilisateurs`).
+- `app/src/`, `app/templates/`, `app/config/`, `app/migrations/`, `app/tests/` — Symfony : `User` (`ROLE_LECTEUR`, `ROLE_ADMIN` ⊃ lecteur), connexion, gestion des comptes (`/admin/utilisateurs`), valeurs par défaut (`/admin/donnees`), pages de détail (`FichesController`, `FichesService` : `/astres`, `/sites`, `/personnages`, `/scenes`, `/lexique`, `/chronologie`). Toute la logique des pages est dans `FichesService`, les gabarits Twig n'affichent que ; `AN_PRESENT` y double `data/chronologie.js`.
 - `app/donnees/canon/` — valeurs par défaut du canon (JSON). `app/front/` — la vue : `src/data/` (chargeurs), `src/physics/` (sans DOM, testé par `tests/*.test.js`), `src/render/` (Three.js), `src/ui/`.
 - `docs/hypotheses.md` — canon et propositions de conception. Racine, `docker/`, `.github/`, `outils/` — infrastructure et exploitation.
 

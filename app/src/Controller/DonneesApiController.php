@@ -12,7 +12,7 @@ use Symfony\Component\Routing\Attribute\Route;
 /** Données du système pour la vue : réservé aux comptes connectés (access_control, ^/ → ROLE_LECTEUR). */
 final class DonneesApiController extends AbstractController
 {
-    #[Route('/api/donnees/{jeu}', name: 'api_donnees', requirements: ['jeu' => 'systeme|sites|economie'], methods: ['GET'])]
+    #[Route('/api/donnees/{jeu}', name: 'api_donnees', requirements: ['jeu' => DonneesService::JEUX_REGEX], methods: ['GET'])]
     public function jeu(string $jeu, DonneesService $donnees): JsonResponse
     {
         $reponse = new JsonResponse(null, 200, ['X-Content-Type-Options' => 'nosniff']);

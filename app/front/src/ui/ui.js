@@ -1043,6 +1043,8 @@ export class UI {
     const dStar = (i) => Math.hypot(rp[3 * i] - rp[0], rp[3 * i + 1] - rp[1], rp[3 * i + 2] - rp[2]);
     const names = d.names || {};
     let h = this.selectedSite ? this.siteHtml() : '';
+    // Fiches détaillées (pages Symfony, hors de la vue) : le panneau garde l'essentiel et renvoie le reste.
+    h += `<p class="fiche-liens">${this.selectedSite ? `<a href="/sites/${this.selectedSite}" target="_blank" rel="noopener">Fiche du site ›</a> · ` : ''}<a href="/astres/${d.id}" target="_blank" rel="noopener">Fiche de ${d.name} ›</a></p>`;
     const kind = b.type === 'star' ? 'Étoile (G0V)' : b.type === 'planet' ? (d.kind === 'gas' ? 'Planète gazeuse' : 'Planète tellurique') : 'Lune de ' + sim.bodies[b.parent].def.name;
     const bk = bulk(b.mass, b.radiusKm), hab = b.type === 'star' ? null : assess(this.ctx(), b.idx);
     const sid = b.type === 'moon' ? o.el?.period : o.protDays, tile = (...a) => this.tile(...a);

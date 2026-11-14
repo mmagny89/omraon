@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block title %}Scènes — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<h1>Scènes</h1>
+<p style="color:var(--doux)">Banque d'images sensorielles par lieu pour écrire une scène. Les ambiances « non canon » sont déduites de la fonction et de la physique du lieu.</p>
+<div class="carte"><ul class="liste">
+{% for s in sites %}<li><a href="{{ path('fiches_scene', {id: s.id}) }}">{{ s.name }}</a> <span class="badge">{{ s.body }}</span></li>{% endfor %}
+</ul></div>
+{% endblock %}

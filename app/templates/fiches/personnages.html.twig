@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+{% block title %}Personnages — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<h1>Personnages</h1>
+<div class="carte"><ul class="liste">
+{% for p in personnages %}<li><a href="{{ path('fiches_personnage', {id: p.id}) }}">{{ p.nom }}</a> — {{ p.role }}{% if p.vivant is defined and not p.vivant %} <span class="badge">disparu</span>{% endif %}</li>{% endfor %}
+</ul></div>
+<h2>Vestiges des Anciens (les Iktu)</h2>
+<div class="carte"><ul class="liste">
+{% for v in vestiges %}<li><b>{{ v.titre }}</b> <span class="badge">{{ v.niveau }}</span>{% if v.horsSysteme is defined and v.horsSysteme %} <span class="badge">hors système</span>{% endif %}<br>{{ v.texte }}</li>{% endfor %}
+</ul></div>
+{% endblock %}

@@ -15,7 +15,17 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  */
 final class DonneesService
 {
-    public const JEUX = ['systeme' => 'Système (étoile, planètes, lunes, ceintures)', 'sites' => 'Sites (cités, stations, bases)', 'economie' => 'Économie'];
+    public const JEUX = [
+        'systeme' => 'Système (étoile, planètes, lunes, ceintures)',
+        'sites' => 'Sites (cités, stations, bases)',
+        'economie' => 'Économie',
+        'lore' => 'Lore (calendrier, personnages, vestiges)',
+        'glossaire' => 'Lexique tyt',
+        'ambiances' => 'Ambiances des scènes',
+        'chronologie' => 'Chronologie (ères, événements)',
+    ];
+    /** Valeur de `requirements` des routes : les clés de JEUX. */
+    public const JEUX_REGEX = 'systeme|sites|economie|lore|glossaire|ambiances|chronologie';
     private const TAILLE_MAX = 524288;
 
     /** @var array<string, \stdClass> */

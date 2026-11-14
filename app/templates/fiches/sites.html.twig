@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block title %}Sites — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<h1>Sites</h1>
+<div class="carte table-wrap"><table>
+<thead><tr><th>Site</th><th>Astre</th><th>Habitat</th><th>Humains</th><th>Tyts</th></tr></thead>
+<tbody>{% for s in sites %}<tr><td><a href="{{ path('fiches_site', {id: s.id}) }}">{{ s.name }}</a></td><td>{{ s.body }}</td><td>{{ s.habitat }}</td><td>{{ s.population|number_format(0, ',', ' ') }}</td><td>{{ s.tyts|number_format(0, ',', ' ') }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% endblock %}
