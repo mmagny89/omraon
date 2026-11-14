@@ -32,6 +32,7 @@ import { indexer, versFrancais, versTyt } from './traducteur.js';
 import { initOptionsNav } from './optionsNav.js';
 import { initEconomie } from './economie.js';
 import { initChronique } from './chronique.js';
+import { fondationDe } from '../physics/chronique.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -84,6 +85,30 @@ export class UI {
   }
 
   // Liste hiérarchique : chaque planète forme un groupe — ses villes et stations, puis ses lunes (avec leurs propres sites).
+  /** Année interne affichée (0 = présent). */
+  annee() { return this.target / DAYS_PER_YEAR; }
+
+  /** Dans le passé, ce qui n'existe pas encore disparaît : sites non fondés (marqueurs, liste, fiche) et personnages pas encore nés. */
+  majExistence() {
+    const y = this.annee(), cle = Math.floor(y);
+    if (this._exY === cle) return;
+    this._exY = cle;
+    const ex = new Set(SITES.filter((s) => fondationDe(s) <= y).map((s) => s.id));
+    this.world.existants = ex;
+    document.querySelectorAll('#list button[data-site]').forEach((b) => b.classList.toggle('absent', !ex.has(b.dataset.site)));
+    document.querySelectorAll('#list .grp').forEach((g) => { // un intertitre sans entrée visible disparaît aussi
+      let sub = null, visible = false;
+      for (const c of g.children) {
+        if (c.classList.contains('sub')) { if (sub) sub.classList.toggle('absent', !visible); sub = c; visible = false; }
+        else if (c.tagName === 'BUTTON' && !c.classList.contains('tgl') && !c.classList.contains('absent')) visible = true;
+      }
+      if (sub) sub.classList.toggle('absent', !visible);
+    });
+    if (this.selectedSite && !ex.has(this.selectedSite)) { this.announce('Ce lieu n\'existe pas encore à cette date'); this.select(this.selected, false); }
+    this._persosPresents = y >= -40;
+    if (this.fillLore) this.fillLore();
+  }
+
   /** Vol libre : bouton, touche F, boutons maintenus et lecture de la vitesse. */
   bindVolLibre() {
     const w = this.world, r = w.rig, btn = $('#btn-libre'), hud = $('#vol-hud');
@@ -828,7 +853,7 @@ export class UI {
   /** Sections « Personnages d'ici » et « Vestiges » d'une fiche de corps (siteId null) ou de site. */
   loreHtml(corps, siteId = null, sansSites = false) {
     // sansSites : sur la fiche d'un corps affichée sous celle d'un site, on ne répète pas ce que la fiche du site montre déjà
-    const pj = auLieu(PERSONNAGES, corps, siteId).filter((p) => !sansSites || !p.origine.site), ve = auLieu(VESTIGES, corps, siteId, 'direct').filter((v) => (this.loreIceberg !== false || v.niveau !== 'iceberg') && (!sansSites || !v.site));
+    const pj = auLieu(PERSONNAGES, corps, siteId).filter((p) => (!sansSites || !p.origine.site) && this._persosPresents !== false), ve = auLieu(VESTIGES, corps, siteId, 'direct').filter((v) => (this.loreIceberg !== false || v.niveau !== 'iceberg') && (!sansSites || !v.site));
     let h = '';
     if (pj.length) h += this.begin('Personnages d\'ici', true, 'canon') + `<ul class="lore-l">${pj.map((p) => `<li><b>${esc(p.nom)}</b>${p.vivant === false ? ' <small>(décédée)</small>' : ''}<small>${esc(p.role)}${!siteId && p.origine.site ? ' · ' + esc(this.lieuLore(p.origine)) : ''}</small>${p.origine.statut === 'provisoire' ? '<em class="pill provisoire">lieu provisoire</em>' : ''}<span>${esc(p.resume)}</span></li>`).join('')}</ul></details>`;
     if (ve.length) h += this.begin('Vestiges des Anciens', true, 'canon') + `<ul class="lore-l">${ve.map((v) => `<li><b>${esc(v.titre)}</b><em class="pill ${v.niveau}">${v.niveau === 'iceberg' ? 'iceberg' : v.niveau === 'ouvert' ? 'fil ouvert' : 'canon'}</em><span>${esc(v.texte)}</span></li>`).join('')}</ul></details>`;
@@ -847,9 +872,9 @@ export class UI {
     };
     $('#lore-q').addEventListener('input', rendreGl); $('#lore-cat').addEventListener('change', rendreGl); rendreGl();
     const lieuBtn = (o, html, cle) => `<li><button type="button" data-lieu="${cle}">${html}</button></li>`;
-    const rendrePj = () => { $('#lore-pj-l').innerHTML = PERSONNAGES.map((p, i) => lieuBtn(p.origine, `<b>${esc(p.nom)}</b>${p.vivant === false ? ' <small>(décédée)</small>' : ''}<small>${esc(p.role)} · ${esc(this.lieuLore(p.origine))}</small>${p.origine.statut === 'provisoire' ? '<em class="pill provisoire">lieu provisoire</em>' : ''}`, 'p' + i)).join(''); };
+    const rendrePj = () => { if (this._persosPresents === false) { $('#lore-pj-l').innerHTML = `<li class="${NOTE}">Aucun personnage : à cette date, ils ne sont pas encore nés.</li>`; return; } $('#lore-pj-l').innerHTML = PERSONNAGES.map((p, i) => lieuBtn(p.origine, `<b>${esc(p.nom)}</b>${p.vivant === false ? ' <small>(décédée)</small>' : ''}<small>${esc(p.role)} · ${esc(this.lieuLore(p.origine))}</small>${p.origine.statut === 'provisoire' ? '<em class="pill provisoire">lieu provisoire</em>' : ''}`, 'p' + i)).join(''); };
     const rendreVs = () => { $('#lore-vs-l').innerHTML = VESTIGES.filter((v) => this.loreIceberg !== false || v.niveau !== 'iceberg').map((v) => { const i = VESTIGES.indexOf(v); const h = `<b>${esc(v.titre)}</b><em class="pill ${v.niveau}">${v.niveau === 'iceberg' ? 'iceberg' : v.niveau === 'ouvert' ? 'fil ouvert' : 'canon'}</em><small>${v.horsSysteme ? 'hors du système' : esc(this.lieuLore(v))}</small><span>${esc(v.texte)}</span>`; return v.horsSysteme ? `<li>${h}</li>` : lieuBtn(v, h, 'v' + i); }).join(''); };
-    rendrePj(); rendreVs();
+    rendrePj(); rendreVs(); this.fillLore = () => { rendrePj(); rendreVs(); };
     $('#lore-iceberg').addEventListener('change', (e) => { this.loreIceberg = e.target.checked; rendreVs(); this.renderInfo(true); });
     $('#lore').addEventListener('click', (e) => { const b = e.target.closest('[data-lieu]'); if (!b) return; const k = b.dataset.lieu, o = k[0] === 'p' ? PERSONNAGES[+k.slice(1)].origine : VESTIGES[+k.slice(1)]; this.allerAuLieu(o); });
     const idx = indexer(this.glossaire), rendreTr = () => {
@@ -1099,6 +1124,7 @@ export class UI {
 
   // Valeurs physiques dérivées en direct ; appelé ~4 fois par seconde.
   renderInfo() {
+    this.majExistence();
     if (this.belt) { // ceinture : fiche propre (l'en-tête réservé aux sites est vidé)
       const hd = $('#info-head'); if (hd.dataset.h) { hd.innerHTML = ''; hd.dataset.h = ''; }
       const h = this.beltHtml(), el = $('#info-live'); this.info = h;

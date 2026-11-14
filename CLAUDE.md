@@ -46,6 +46,7 @@ Toute commande Docker passe par la **clé de service** (`php`, `database`), jama
 
 - **Chronique** (Options › Chronique) : on choisit une année, de l'arrivée (−560 interne, An −260) au présent, et `physics/chronique.js` donne l'état du monde : population du modèle, sites fondés (`FONDATIONS`), pénuries en cours, événements proches ; un bouton simule 60 jours de commerce à cette date, avec et sans la pénurie organisée. Toutes les dates de ce voyage (fondations, pénuries) sont des données de `chronologie.json`, suggérées et modifiables.
 - **Pénuries organisées** (`PENURIES`) : le Consortium les dose pour tenir la population, sous le seuil de la misère. Elles agissent sur trois modèles : population (`penuries` : contrôle +, éveil −), économie (événement `rationnement`), chronologie (un événement par épisode, vue et page `/chronologie`). Sans pénuries, rien ne change.
+- **Le passé masque ce qui n'existe pas** : `UI.majExistence()` retire de la vue (marqueurs, liste, fiche) les sites dont la fondation (`FONDATIONS`, `site.founded`) est postérieure à la date affichée, et les personnages avant l'An −40 ; un site sélectionné qui n'existe pas encore est désélectionné. Les astres, eux, existent toujours.
 - **Vol libre** (touche F, bouton ✈) : `CameraRig.entrerLibre()`, vitesse proportionnelle à l'altitude ; choisir un corps dans la liste ramène en orbite.
 
 ## Pastilles de provenance

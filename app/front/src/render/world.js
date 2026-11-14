@@ -331,7 +331,7 @@ export class World {
       rec.st = st;
       const o = this.bodies[st.idx];
       const rx = (st.pos[0] - fa[0]) * UNIT, ry = (st.pos[1] - fa[1]) * UNIT, rz = (st.pos[2] - fa[2]) * UNIT;
-      let show = this.opts.sites !== false && (site.type === 'heliocentric' ? true : o.truePx > (site.type === 'orbit' ? 12 : 26));
+      let show = this.opts.sites !== false && this.existants?.has(site.id) !== false && (site.type === 'heliocentric' ? true : o.truePx > (site.type === 'orbit' ? 12 : 26));
       if (show && st.normal) { // face cachée du corps
         const bx = o.rel[0], by = o.rel[1], bz = o.rel[2];
         show = (rx - bx) * (cam.position.x - rx) + (ry - by) * (cam.position.y - ry) + (rz - bz) * (cam.position.z - rz) > 0;
