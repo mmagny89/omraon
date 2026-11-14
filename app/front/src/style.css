@@ -406,3 +406,6 @@ body.options-open #options { display: grid; grid-template-columns: 92px minmax(0
 
 /* Lien « Fiches » de l'en-tête (le reste des panneaux : Tailwind, voir ui/composants.js et assets/styles/vue.css) */
 a.tb { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
+
+body.ui-hidden #vol-hud, body.ground #vol-hud { display: none !important; }
+#vol-hud kbd { margin-right: 2px; padding: 0 5px; border: 1px solid var(--line); border-radius: 4px; font: inherit; font-size: 11px; }

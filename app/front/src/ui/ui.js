@@ -76,11 +76,36 @@ export class UI {
     this.bind();
     this.chargerModifications();
     this.pastillesOptions();
+    this.bindVolLibre();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
   }
 
   // Liste hiérarchique : chaque planète forme un groupe — ses villes et stations, puis ses lunes (avec leurs propres sites).
+  /** Vol libre : bouton, touche F, boutons maintenus et lecture de la vitesse. */
+  bindVolLibre() {
+    const w = this.world, r = w.rig, btn = $('#btn-libre'), hud = $('#vol-hud');
+    const basculer = () => (r.libre ? r.sortirLibre() : r.entrerLibre());
+    let minuteur = null;
+    r.onLibre = (on) => {
+      btn.setAttribute('aria-pressed', String(on)); hud.hidden = !on;
+      this.announce(on ? 'Vol libre activé' : 'Vol libre désactivé');
+      clearInterval(minuteur);
+      if (on) minuteur = setInterval(() => { const i = w.libreInfo; if (i) $('#vol-info').textContent = `${i.corps} à ${i.distKm >= 1e6 ? `${(i.distKm / 1e6).toFixed(2)} M km` : `${Math.round(i.distKm).toLocaleString('fr-FR')} km`} · ${i.vitesse > 299792 ? `${Math.round(i.vitesse / 299792).toLocaleString('fr-FR')} c` : `${Math.round(i.vitesse).toLocaleString('fr-FR')} km/s`}`; }, 250);
+    };
+    btn.addEventListener('click', basculer);
+    $('#vol-quit').addEventListener('click', () => r.sortirLibre());
+    addEventListener('keydown', (e) => { if (e.code === 'KeyF' && !e.ctrlKey && !e.metaKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) { e.preventDefault(); basculer(); } });
+    hud.querySelectorAll('[data-vol]').forEach((b) => {
+      const on = () => r.boutons.add(b.dataset.vol), off = () => r.boutons.delete(b.dataset.vol);
+      b.addEventListener('pointerdown', (e) => { b.setPointerCapture(e.pointerId); on(); });
+      for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(t, off);
+    });
+    // en vol libre, les touches de déplacement valent même si la vue 3D n'a pas le focus
+    addEventListener('keydown', (e) => { if (r.libre && !/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(e.target.tagName)) r.key(e); });
+    addEventListener('keyup', (e) => r.touches.delete(e.code));
+  }
+
   /** Pastilles de provenance sur les panneaux d'options (le contenu de la fiche porte les siennes, voir begin()). */
   pastillesOptions() {
     for (const [id, statut] of [['pop', 'simule'], ['reseau', 'simule'], ['eco', 'simule'], ['ephem', 'calcule']]) {

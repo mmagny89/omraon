@@ -41,6 +41,9 @@
         <button type="button" id="btn-photo" class="tb" title="Photo de la vue en PNG, sans interface (touche P)"><span class="ic">📷</span><span class="t">Photo</span></button>
         <button type="button" id="btn-link" class="tb" title="Copier le lien de cette vue (date, corps, site, caméra)"><span class="ic">🔗</span><span class="t">Lien</span></button>
       </div>
+      <div class="tg" role="group" aria-label="Déplacement">
+        <button type="button" id="btn-libre" class="tb" aria-pressed="false" title="Vol libre : se déplacer où l'on veut dans le système (touche F)"><span class="ic">✈</span><span class="t">Vol libre</span></button>
+      </div>
       <div class="tg" role="group" aria-label="Affichage">
         <button type="button" id="btn-hide" class="tb" title="Masquer toute l'interface (touche H)"><span class="ic">🙈</span><span class="t">Masquer</span></button>
       </div>
@@ -48,6 +51,20 @@
   </header>
   <aside id="tour" role="dialog" aria-label="Visite guidée" hidden></aside>
   <div id="frise" role="group" aria-label="Frise chronologique"></div>
+  <div id="vol-hud" role="group" aria-label="Vol libre" hidden class="fixed bottom-[104px] left-1/2 z-[6] w-[min(94vw,36rem)] -translate-x-1/2 rounded-xl border border-ligne bg-panel p-3 text-[13px] backdrop-blur-md">
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+      <b class="text-accent">✈ Vol libre</b>
+      <span id="vol-info" class="text-doux" aria-live="off"></span>
+      <button type="button" id="vol-quit" class="min-h-9 rounded-md border border-ligne px-3 hover:border-accent max-[860px]:min-h-11">Quitter (F)</button>
+    </div>
+    <div class="mt-2 grid grid-cols-4 gap-2">
+      <button type="button" data-vol="avant" class="min-h-9 rounded-md border border-ligne px-1 hover:border-accent max-[860px]:min-h-11">▲ Avancer</button>
+      <button type="button" data-vol="arriere" class="min-h-9 rounded-md border border-ligne px-1 hover:border-accent max-[860px]:min-h-11">▼ Reculer</button>
+      <button type="button" data-vol="haut" class="min-h-9 rounded-md border border-ligne px-1 hover:border-accent max-[860px]:min-h-11">⤒ Monter</button>
+      <button type="button" data-vol="bas" class="min-h-9 rounded-md border border-ligne px-1 hover:border-accent max-[860px]:min-h-11">⤓ Descendre</button>
+    </div>
+    <p class="mt-2 text-xs leading-relaxed text-doux">Glisser : orienter · <kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> ou <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> : se déplacer · Espace / <kbd>C</kbd> : monter / descendre · Maj : accélérer · molette : vitesse. La vitesse suit l'altitude : on freine près d'un astre.</p>
+  </div>
   <button type="button" id="ui-show" title="Afficher l'interface (touche H)">👁 Interface</button>
 
   <aside id="bodies" aria-label="Corps célestes"><button type="button" class="panel-x" data-close="left" aria-label="Fermer la liste">×</button><input id="list-q" type="search" placeholder="Chercher…" aria-label="Chercher dans la liste des corps" autocomplete="off"><div id="list"></div></aside>

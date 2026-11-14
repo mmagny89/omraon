@@ -349,6 +349,13 @@ export class World {
     sim.computeRender(tr);
     if (this.ship) this.computeShip(tr);
     const fb = this.bodies[Math.max(0, rig.focusIdx)];
+    rig.unit = UNIT;
+    if (rig.libre) { // corps le plus proche de la caméra : sert à régler la vitesse et à nommer le lieu
+      const cp = rig.positionCamera(); let best = 0, bd = Infinity;
+      for (const o of this.bodies) { const q = this.absPos(o.idx), dd = Math.hypot(q[0] - cp[0], q[1] - cp[1], q[2] - cp[2]) * UNIT - o.rUnits; if (dd < bd) { bd = dd; best = o.idx; } }
+      rig.focusIdx = best; rig.vitesseRef = Math.max(bd, 1e-3) / UNIT; // UA par seconde : proportionnelle à l'altitude (min 1 km)
+      this.libreInfo = { corps: this.bodies[best].name, distKm: Math.max(0, bd) * 1000, vitesse: rig.vitesseRef * rig.vitesse * AU_KM };
+    }
     rig.update(dt, this.absPos(rig.focusIdx));
     const fa = rig.focusAbs;
     const tanF = Math.tan(cam.fov * DEG / 2), pxPerRad = this.h / (2 * tanF);
