@@ -15,7 +15,18 @@ export const fmtAn = (y) => `An ${String(Math.round(anAffiche(y))).replace('-', 
 /** Ères et événements : valeurs en base (canon : app/donnees/canon/chronologie.json), via charger.js. */
 const d = await charger('chronologie');
 export const ERAS = d.ERAS;
-export const EVENTS = d.EVENTS;
+/** Pénuries organisées par le Consortium pour tenir la population (suggéré) : début et durée en années internes, groupe visé, biens retenus, part retenue. */
+export const PENURIES = d.PENURIES;
+/** Groupes de corps visés par les pénuries (Bas = telluriques, Milieu = géantes et marges, Haut = Kebet). */
+export const PENURIE_GROUPES = d.PENURIE_GROUPES;
+/** Année interne de première installation humaine, par corps : avant, aucun site n'existe sur ce corps. */
+export const FONDATIONS = d.FONDATIONS;
+const NOM_GROUPE = { bas: 'le Bas', tyts: 'les Tyts', milieu: 'le Milieu', haut: 'le Haut' };
+/** Les pénuries figurent dans la chronologie : un événement par épisode, trié avec les événements du canon. */
+export const EVENTS = [...d.EVENTS, ...d.PENURIES.map((p) => ({
+  year: p.debut, type: 'penurie', label: `Pénurie organisée — ${NOM_GROUPE[p.cible] ?? p.cible}`,
+  note: `${p.motif} (${p.biens.join(', ')} : ${Math.round(p.intensite * 100)} % retenus pendant ${p.duree} an${p.duree > 1 ? 's' : ''}.)`,
+}))].sort((a, b) => a.year - b.year);
 export const eraAt = (year) => ERAS.find((e) => year >= e.from && year < e.to) || ERAS[ERAS.length - 1];
 // Évolution de la luminosité sur la séquence principale (estimation : +13 % par Gyr pour une étoile de 1,10 M☉, un peu plus rapide que le Soleil, ≈ +10 %).
 export const LUMINOSITY_GROWTH_PER_GYR = 0.13;

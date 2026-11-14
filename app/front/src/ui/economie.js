@@ -6,7 +6,7 @@ import { COULEURS_BIENS, COULEUR_CONTREBANDE } from '../render/flux.js';
 import { jourKebet, fmtDuree } from '../physics/calendrier.js';
 import { creerEconomie, avancer, releverPrix, distanceDepuis, indicateurs, misereSysteme } from '../physics/economie.js';
 import { simulatePopulation } from '../physics/population.js';
-import { fmtAn } from '../data/chronologie.js';
+import { fmtAn, PENURIE_GROUPES } from '../data/chronologie.js';
 import { DAYS_PER_YEAR } from '../physics/constants.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -35,6 +35,8 @@ export const EVENEMENTS = {
   ceinture: { label: 'Expédition du Consortium dans la ceinture (mines libres et repaire bloqués)', ev: () => ['ceinture-fonderies', 'ceinture-glace', 'nunzir-repaire'].map((cible) => ({ type: 'blocus', cible })) },
   pirates: { label: 'Pirates autour de Roushan (la moitié des cargaisons perdue)', ev: () => ({ type: 'piraterie', cible: 'roushan-cites', valeur: 0.5 }) },
   greve: { label: 'Grève des flottes du Consortium', ev: () => ({ type: 'greve', cible: 'consortium' }) },
+  rationnementBas: { label: 'Pénurie organisée : le Bas (vivres et eau retenus à 30 %)', ev: () => ({ type: 'rationnement', sites: SITES.filter((s) => !s.marche && PENURIE_GROUPES.bas.includes(s.body)).map((s) => s.id), biens: ['vivres', 'eau'], valeur: 0.3 }) },
+  rationnementMilieu: { label: 'Pénurie organisée : le Milieu (carburant retenu à 30 %)', ev: () => ({ type: 'rationnement', sites: SITES.filter((s) => !s.marche && PENURIE_GROUPES.milieu.includes(s.body)).map((s) => s.id), biens: ['carburant'], valeur: 0.3 }) },
   peage: { label: 'Péage de l\u2019octroi triplé', ev: () => ({ type: 'peage', valeur: 3 }) },
 };
 

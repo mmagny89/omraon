@@ -59,5 +59,144 @@
       "label": "Présent du roman",
       "note": "La mission d'Onkel ; le système est à un point de bascule."
     }
-  ]
+  ],
+  "PENURIE_GROUPES": {
+    "bas": [
+      "Kalpra",
+      "Sethis",
+      "Naksun",
+      "Mahat",
+      "Sedbou"
+    ],
+    "tyts": [
+      "Sethis",
+      "Kalpra",
+      "Nunka"
+    ],
+    "milieu": [
+      "Roushan",
+      "Iasha",
+      "Astir",
+      "Nunka",
+      "Roukir",
+      "Shukal",
+      "Nunzir",
+      "Ceinture froide"
+    ],
+    "haut": [
+      "Kebet"
+    ]
+  },
+  "PENURIES": [
+    {
+      "id": "p1",
+      "debut": -281,
+      "duree": 2,
+      "cible": "bas",
+      "biens": [
+        "vivres"
+      ],
+      "intensite": 0.15,
+      "motif": "Première « rationalisation » : le Consortium vient de se former ; une disette ciblée sur les mines casse les premières mutineries."
+    },
+    {
+      "id": "p2",
+      "debut": -236,
+      "duree": 3,
+      "cible": "bas",
+      "biens": [
+        "vivres",
+        "eau"
+      ],
+      "intensite": 0.2,
+      "motif": "Retrait de l'eau et des vivres des cités-mines de Sethis après une grève des mineurs."
+    },
+    {
+      "id": "p3",
+      "debut": -188,
+      "duree": 2,
+      "cible": "tyts",
+      "biens": [
+        "vivres"
+      ],
+      "intensite": 0.25,
+      "motif": "Rations des Tyts réduites : des Tyts affaiblis sont des Tyts dociles."
+    },
+    {
+      "id": "p4",
+      "debut": -141,
+      "duree": 4,
+      "cible": "bas",
+      "biens": [
+        "vivres",
+        "eau",
+        "equipements"
+      ],
+      "intensite": 0.2,
+      "motif": "Les machines des mines sont mises à l'arrêt et le matériel retenu : le travail manuel redevient obligatoire, et la faim fait le reste."
+    },
+    {
+      "id": "p5",
+      "debut": -96,
+      "duree": 3,
+      "cible": "milieu",
+      "biens": [
+        "carburant"
+      ],
+      "intensite": 0.2,
+      "motif": "Le carburant de Roushan est rationné : les cités du Milieu rappellent à elles-mêmes qu'elles dépendent du Consortium."
+    },
+    {
+      "id": "p6",
+      "debut": -54,
+      "duree": 3,
+      "cible": "bas",
+      "biens": [
+        "vivres",
+        "eau"
+      ],
+      "intensite": 0.3,
+      "motif": "Réponse aux premières révoltes des mines : l'eau et les vivres reviennent au compte-gouttes."
+    },
+    {
+      "id": "p7",
+      "debut": -21,
+      "duree": 2,
+      "cible": "tyts",
+      "biens": [
+        "vivres",
+        "eau"
+      ],
+      "intensite": 0.25,
+      "motif": "Pénurie ciblée avant le recensement des Tyts : on compte mieux des gens occupés à survivre."
+    },
+    {
+      "id": "p8",
+      "debut": -7,
+      "duree": 1.5,
+      "cible": "tyts",
+      "biens": [
+        "eau"
+      ],
+      "intensite": 0.3,
+      "motif": "Dernière pénurie contrôlée avant le présent : le dégel s'accélère et le Consortium serre."
+    }
+  ],
+  "FONDATIONS": {
+    "Kebet": -560,
+    "Iasha": -558,
+    "Astir": -558,
+    "Mahat": -500,
+    "Naksun": -495,
+    "Sedbou": -495,
+    "Sethis": -495,
+    "Kalpra": -470,
+    "Roushan": -420,
+    "Nunka": -410,
+    "Nunzir": -380,
+    "Roukir": -200,
+    "Ceinture froide": -120,
+    "Zirkan": -560,
+    "Shukal": -30
+  }
 }

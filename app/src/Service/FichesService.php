@@ -242,14 +242,26 @@ final readonly class FichesService
         return ['groupes' => $groupes, 'mois' => $this->donnees->jeu('lore')->MOIS];
     }
 
-    /** @return array{eres: list<array<string, mixed>>, evenements: list<array<string, mixed>>} */
+    /** @return array{eres: list<array<string, mixed>>, evenements: list<array<string, mixed>>, penuries: list<array<string, mixed>>} */
     public function chronologie(): array
     {
         $c = $this->donnees->jeu('chronologie');
+        $nom = ['bas' => 'le Bas', 'tyts' => 'les Tyts', 'milieu' => 'le Milieu', 'haut' => 'le Haut'];
         $eres = array_map(fn ($e) => ['label' => $e->label, 'de' => $this->an($e->from), 'a' => $e->to >= 1e9 ? null : $this->an($e->to), 'hors' => $e->outside ?? false], $c->ERAS);
-        $evt = array_map(fn ($e) => ['an' => $this->an($e->year), 'label' => $e->label, 'note' => $e->note, 'hors' => $e->outside ?? false], $c->EVENTS);
+        $evt = array_map(fn ($e) => ['annee' => $e->year, 'an' => $this->an($e->year), 'label' => $e->label, 'note' => $e->note, 'hors' => $e->outside ?? false, 'penurie' => false], $c->EVENTS);
+        $pen = [];
+        foreach ($c->PENURIES as $p) {
+            $cible = $nom[$p->cible] ?? $p->cible;
+            $pen[] = [
+                'de' => $this->an($p->debut), 'a' => $this->an($p->debut + $p->duree), 'cible' => $cible, 'biens' => implode(', ', $p->biens),
+                'intensite' => (int) round($p->intensite * 100), 'duree' => $p->duree, 'motif' => $p->motif,
+            ];
+            // Les pénuries figurent aussi dans la frise, parmi les événements, comme dans la vue.
+            $evt[] = ['annee' => $p->debut, 'an' => $this->an($p->debut), 'label' => 'Pénurie organisée — '.$cible, 'note' => $p->motif, 'hors' => false, 'penurie' => true];
+        }
+        usort($evt, static fn ($a, $b) => $a['annee'] <=> $b['annee']);
 
-        return ['eres' => $eres, 'evenements' => $evt];
+        return ['eres' => $eres, 'evenements' => $evt, 'penuries' => $pen];
     }
 
     public function an(float|int $anneeInterne): string

@@ -23,11 +23,24 @@
       <li class="relative">
         <span aria-hidden="true" class="absolute -left-[1.85rem] top-1.5 size-3 rounded-full border-2 border-fond bg-accent"></span>
         <p class="text-sm font-semibold tabular-nums text-accent">{{ e.an }}</p>
-        <p class="font-semibold">{{ e.label }} {% if e.hors %}{{ c.badge('hors système') }}{% endif %}</p>
+        <p class="font-semibold">{{ e.label }} {% if e.hors %}{{ c.badge('hors système') }}{% endif %}{% if e.penurie %}{{ c.statut('suggere') }}{% endif %}</p>
         <p class="text-sm text-doux">{{ e.note }}</p>
       </li>
       {% endfor %}
     </ol>
   </section>
 </div>
+<section aria-labelledby="penuries" class="mt-10">
+  {{ c.titre('penuries', 'Pénuries organisées par le Consortium', ['suggere']) }}
+  <p class="mb-5 max-w-3xl leading-relaxed text-doux">Le Bas vit en « pénurie organisée » (document Économie). Le Consortium la dose : assez pour rendre la population dépendante, jamais assez pour déclencher la révolte. Chaque épisode retient une part des biens visés ; il freine l'éveil des Tyts et retarde le dégel du contrôle.</p>
+  <ol class="grid gap-4 md:grid-cols-2">
+    {% for p in penuries %}
+    <li class="rounded-xl border border-ligne bg-carte p-5">
+      <p class="font-semibold tabular-nums text-accent">{{ p.de }} → {{ p.a }}</p>
+      <p class="mt-1 flex flex-wrap items-center gap-2"><b>{{ p.cible|capitalize }}</b>{{ c.badge(p.biens) }}{{ c.badge(p.intensite ~ ' % retenus', 'alerte') }}</p>
+      <p class="mt-2 text-sm leading-relaxed text-doux">{{ p.motif }}</p>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
 {% endblock %}

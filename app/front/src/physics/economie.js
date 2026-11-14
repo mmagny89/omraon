@@ -34,7 +34,8 @@ export function besoinJour(site, profil, g) {
  *  'blocus'    cible = id de site : aucun convoi n'y arrive ni n'en part ;
  *  'piraterie' cible = id de site, valeur = part de la cargaison perdue (0–1) sur tout voyage qui en part ou y arrive ;
  *  'greve'     cible = faction ('consortium', 'libre', 'contrebande') : ses convois restent à quai ;
- *  'peage'     valeur = multiplicateur du péage de l'octroi.
+ *  'peage'     valeur = multiplicateur du péage de l'octroi ;
+ *  'rationnement' sites = ids des marchés visés, biens = marchandises retenues, valeur = part retenue à l'arrivée (0–1) : pénurie organisée.
  */
 /** Nombre de personnes (Tyts ou humains) qui extraient réellement sur un site (production ÷ productivité) ; 0 si le site n'en emploie pas à l'extraction. */
 export const extracteurs = (profil) => (profil.productivite ? Math.round((Object.values(profil.prod).reduce((a, b) => a + b, 0) * 1000) / profil.productivite) : 0);
@@ -142,6 +143,8 @@ function meilleur(etat, c, lieu) {
   for (const [idD, nd] of etat.noeuds) {
     if (idD === lieu || ev.some((e) => e.type === 'blocus' && e.cible === idD)) continue;
     const pirates = 1 - ev.filter((e) => e.type === 'piraterie' && (e.cible === lieu || e.cible === idD)).reduce((m, e) => m * (1 - (e.valeur ?? 0.2)), 1);
+    // Rationnement organisé (Consortium) : une part des marchandises visées est retenue à l'arrivée sur les sites ciblés, et ne parvient pas aux habitants.
+    const retenue = (g) => 1 - ev.filter((x) => x.type === 'rationnement' && x.sites.includes(idD) && x.biens.includes(g)).reduce((m, x) => m * (1 - x.valeur), 1);
     const pD = {}, cand = goods.filter((g) => { if (!(nd.cible[g] > 0)) return false; pD[g] = prixAuStock(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0)); return pD[g] > pSrc[g]; }); // élagage : jamais rentable sinon
     if (!cand.length) continue;
     cand.sort((x, y) => (pD[y] - pSrc[y]) / etat.biens.get(y).volume - (pD[x] - pSrc[x]) / etat.biens.get(x).volume);
@@ -153,7 +156,7 @@ function meilleur(etat, c, lieu) {
         if (reste <= 1e-9) break;
         const bien = etat.biens.get(g), q = Math.min(reste / bien.volume, dispo[g]);
         if (!(q > 0)) continue;
-        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1) * (1 + r.frais), qLivree = (contrebande ? q * (1 - (def.risque ?? 0)) : q) * (1 - pirates);
+        const achat = valeurEchange(etat, src, g, src.stock[g], q, -1) * (1 + r.frais), qLivree = (contrebande ? q * (1 - (def.risque ?? 0)) : q) * (1 - pirates) * (1 - retenue(g));
         const net = valeurEchange(etat, nd, g, nd.stock[g] + (nd.enRoute[g] ?? 0), qLivree, +1) * (1 - r.frais) * (1 - taxeD);
         if (net <= achat * (1 + tauxPeage)) continue;
         cargo.push({ g, q, qLivree, achat }); reste -= q * bien.volume; utilise += q * bien.volume; achatT += achat; netT += net;

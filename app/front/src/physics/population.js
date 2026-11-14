@@ -24,6 +24,10 @@ export const DEFAULTS = {
   // `misereYears` ans, puis qui s'estompe (demi-vie `misereHalfLife`). Elle accélère l'éveil (× 1 + misereAwake·m) et fait perdre du contrôle
   // (gardes détournées vers le ravitaillement : − misereControl·m). Conception : le roman ne chiffre pas. Niveau 0 = aucun effet.
   misereYear: 1e9, misereYears: 1, misereLevel: 0, misereHalfLife: 3, misereAwake: 2, misereControl: 0.25,
+  // Pénuries organisées par le Consortium (data/chronologie.js, `PENURIES`) : une disette ciblée, maintenue sous le seuil de la misère, rend la
+  // population dépendante : + penurieControl × intensité de contrôle pendant l'épisode, et l'éveil est freiné de penurieEveil × intensité. Une fois
+  // l'épisode fini, l'effet s'estompe (demi-vie penurieQueue ans). Conception : le roman ne chiffre pas. `penuries: []` = aucune.
+  penuries: [], penurieControl: 0.6, penurieEveil: 0.8, penurieQueue: 6,
 };
 
 const LN2 = Math.LN2;
@@ -54,7 +58,9 @@ export function simulatePopulation(p = {}) {
     return d;
   };
   const misere = (y) => (P.misereLevel <= 0 || y < P.misereYear ? 0 : P.misereLevel * (y <= P.misereYear + P.misereYears ? 1 : Math.exp(-(y - P.misereYear - P.misereYears) * LN2 / P.misereHalfLife)));
-  const control = (y, H_, T_) => (y < P.crimeYear ? 1 : Math.min(1, (know(y) * H_ / Math.max(T_, 1)) / P.controlNeeded) * (1 - P.misereControl * misere(y)));
+  /** Intensité cumulée des pénuries organisées à l'année `y` (0 à 1) : pleine pendant l'épisode, puis qui s'estompe. */
+  const penurie = (y) => Math.min(1, P.penuries.reduce((s, e) => s + (y < e.debut ? 0 : e.intensite * (y <= e.debut + e.duree ? 1 : Math.exp(-(y - e.debut - e.duree) * LN2 / P.penurieQueue))), 0));
+  const control = (y, H_, T_) => (y < P.crimeYear ? 1 : Math.min(1, Math.min(1, (know(y) * H_ / Math.max(T_, 1)) / P.controlNeeded) * (1 - P.misereControl * misere(y)) + P.penurieControl * penurie(y)));
   let seeded = false;
   const record = () => {
     const Kk = know(t), C = control(t, H, T), D = despair(t), guards = Kk * H * P.guardShare, fighters = A * T * P.fighterShare;
@@ -74,7 +80,7 @@ export function simulatePopulation(p = {}) {
       else if (P.tytMode === 'nature') T += T * P.tytGrowth * dt;
       else T += (P.tytAdjust * (P.tytRatio * H - T) - P.cull * A * T) * dt; // gestion : on « produit » vers le ratio visé, on « réduit » si l'éveil inquiète
       // éveil : logistique freinée par le contrôle et le désespoir, avec une graine (rumeurs, cristaux, contacts)
-      const M = 1 + P.misereAwake * misere(t);
+      const M = (1 + P.misereAwake * misere(t)) * Math.max(0, 1 - P.penurieEveil * penurie(t));
       A += (M * P.awakeRate * (1 - C) * (1 - 0.8 * D) * A * (1 - A) + M * P.awakeSeed * (1 - C) * (1 - A)) * dt;
       if (t >= P.truthYear && !seeded) { A = Math.min(1, A + 0.05 * P.truthStrength); seeded = true; }
       t += dt;

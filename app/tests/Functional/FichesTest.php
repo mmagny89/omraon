@@ -146,4 +146,13 @@ final class FichesTest extends WebTestCase
         $m = json_decode((string) $this->client->getResponse()->getContent(), true);
         self::assertSame('admin@example.test', $m['systeme']['PLANETS']['par']);
     }
+
+    public function testChronologieMontreLesPenuriesOrganisees(): void
+    {
+        $crawler = $this->client->request('GET', '/chronologie');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('main', 'Pénurie organisée — le Bas');
+        self::assertSelectorTextContains('main', 'Pénuries organisées par le Consortium');
+        self::assertGreaterThanOrEqual(8, $crawler->filter('section[aria-labelledby=penuries] li')->count());
+    }
 }

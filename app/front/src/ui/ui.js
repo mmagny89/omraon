@@ -4,7 +4,7 @@ import { equilibriumTemp, insolation, starLuminosity, habitableZone, hillRadius,
 import { BELT, COLD_BELT, STAR } from '../data/omraon.js';
 import { assess, distanceForTemp } from '../physics/habitability.js';
 import { SITES } from '../data/sites.js';
-import { EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
+import { PENURIES, EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
 import { siteReport } from '../physics/habitat.js';
 import { facesCorps, temperatureSite } from '../physics/thermique.js';
 import { tuiles, tuile as tuileHtml, entete, accroche, separateur, sectionDebut, liensFiches, DL, DT, DD, H3, NOTE, SOMMAIRE, SUGGESTIONS, verdict, criteres } from './composants.js';
@@ -31,6 +31,7 @@ import { glossaireComplet, filtrer, auLieu, moisConfederal } from './lore.js';
 import { indexer, versFrancais, versTyt } from './traducteur.js';
 import { initOptionsNav } from './optionsNav.js';
 import { initEconomie } from './economie.js';
+import { initChronique } from './chronique.js';
 import { esc, tipAttr, tipTexte, tipJauge, tipRepartition, initTooltips } from './tooltips.js';
 import { jourKebet, decouperDate, fmtDuree, fmtSecondes, fmtTerre, enSecondesKebet, HEURES_PAR_JOUR } from '../physics/calendrier.js';
 
@@ -72,6 +73,7 @@ export class UI {
     this.bindGround();
     this.buildNet();
     initEconomie({ root: $('#options'), getPos: () => this.sitePositions(), getTime: () => this.target, getPopParams: () => this.readPop(), appliquerMisere: (y, niveau, duree) => { $('#pop-my').value = Math.round((y + AN_PRESENT) * 100) / 100; $('#pop-ml').value = Math.round(niveau * 1000) / 1000; $('#pop-md').value = Math.round(duree * 100) / 100; $('#pop-ml').dispatchEvent(new Event('input', { bubbles: true })); }, setFlux: (d, m) => this.world.setFlux(d, m), rejouer: (t0, j) => this.rejouerEco(t0, j), setMarkers: (m) => this.world.siteEls?.forEach((r, id) => (m?.has(id) ? r.el.style.setProperty('--c', m.get(id)) : r.el.style.removeProperty('--c'))) });
+    initChronique({ root: $('#options'), getPos: () => this.sitePositions(), getPop: () => this.pop, getTime: () => this.target, allerA: (y) => this.goTo(y) });
     this.buildPop();
     this.bind();
     this.chargerModifications();
@@ -242,7 +244,7 @@ export class UI {
   // ---------- Population et dégel ----------
   buildPop() {
     const ids = { hc: 'hybridContact', nat: 'nativeN0', pow: 'warPrisoners', earth: 'earthTyts', n0: 'N0', h: 'humansNow', t0: 'T0', ratio: 'tytRatio', know: 'knowledgeHalfLife', ctl: 'controlNeeded', dh: 'despairHalfLife', ts: 'truthStrength' };
-    const setInputs = () => { for (const [k, p] of Object.entries(ids)) $('#pop-' + k).value = POP_DEFAULTS[p]; $('#pop-growth').value = POP_DEFAULTS.tytGrowth * 100; $('#pop-hm').value = POP_DEFAULTS.maternalDeath * 100; $('#pop-mode').value = POP_DEFAULTS.tytMode; $('#pop-ty').value = ''; $('#pop-my').value = ''; $('#pop-ml').value = 0; $('#pop-md').value = 1; };
+    const setInputs = () => { for (const [k, p] of Object.entries(ids)) $('#pop-' + k).value = POP_DEFAULTS[p]; $('#pop-growth').value = POP_DEFAULTS.tytGrowth * 100; $('#pop-hm').value = POP_DEFAULTS.maternalDeath * 100; $('#pop-pen').checked = true; $('#pop-mode').value = POP_DEFAULTS.tytMode; $('#pop-ty').value = ''; $('#pop-my').value = ''; $('#pop-ml').value = 0; $('#pop-md').value = 1; };
     let t = null; const again = () => { clearTimeout(t); t = setTimeout(() => this.recomputePop(), 120); };
     document.querySelectorAll('#pop input, #pop select').forEach((el) => el.addEventListener('input', again));
     $('#pop-reset').addEventListener('click', () => { setInputs(); this.recomputePop(); });
@@ -252,7 +254,7 @@ export class UI {
   readPop() {
     const g = (id) => parseFloat($(id).value), ty = g('#pop-ty'), v = (x, d) => (Number.isFinite(x) ? x : d);
     return { hybridContact: Math.max(0, v(g('#pop-hc'), 30)), maternalDeath: Math.min(1, Math.max(0, v(g('#pop-hm'), 15) / 100)), nativeN0: v(g('#pop-nat'), 30e6), warPrisoners: Math.max(0, v(g('#pop-pow'), 2000)), earthTyts: Math.max(0, v(g('#pop-earth'), 1500)), N0: v(g('#pop-n0'), 10000), humansNow: v(g('#pop-h'), 500000), T0: v(g('#pop-t0'), 4000), tytMode: $('#pop-mode').value, tytRatio: v(g('#pop-ratio'), 1.2), tytGrowth: v(g('#pop-growth'), 0.8) / 100,
-      knowledgeHalfLife: v(g('#pop-know'), 220), controlNeeded: v(g('#pop-ctl'), 0.6), despairHalfLife: v(g('#pop-dh'), 460), truthYear: Number.isFinite(ty) ? ty - AN_PRESENT : 1e9, truthStrength: v(g('#pop-ts'), 0.6), misereYear: Number.isFinite(g('#pop-my')) ? g('#pop-my') - AN_PRESENT : 1e9, misereLevel: Math.min(1, Math.max(0, v(g('#pop-ml'), 0))), misereYears: Math.max(0.1, v(g('#pop-md'), 1)) };
+      knowledgeHalfLife: v(g('#pop-know'), 220), controlNeeded: v(g('#pop-ctl'), 0.6), despairHalfLife: v(g('#pop-dh'), 460), truthYear: Number.isFinite(ty) ? ty - AN_PRESENT : 1e9, truthStrength: v(g('#pop-ts'), 0.6), misereYear: Number.isFinite(g('#pop-my')) ? g('#pop-my') - AN_PRESENT : 1e9, misereLevel: Math.min(1, Math.max(0, v(g('#pop-ml'), 0))), misereYears: Math.max(0.1, v(g('#pop-md'), 1)) , penuries: $('#pop-pen')?.checked ? PENURIES : [] };
   }
 
   recomputePop() {

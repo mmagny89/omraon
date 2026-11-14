@@ -154,6 +154,23 @@
         <button type="button" id="reset" class="col-span-full">Réinitialiser la simulation</button>
       </div>
     </details>
+    <details id="chronique"><summary>Chronique : l'état du monde à une date</summary>
+      <p class="mb-3 text-xs leading-relaxed text-doux">Choisis une année, de l'arrivée des humains (An −260) au présent (An 300) : population, sites fondés, pénuries organisées par le Consortium et événements de l'époque.</p>
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <button type="button" data-chr-pas="-50" class="max-[860px]:min-h-11" aria-label="Reculer de 50 ans">−50</button>
+        <button type="button" data-chr-pas="-10" class="max-[860px]:min-h-11" aria-label="Reculer de 10 ans">−10</button>
+        <label class="flex items-center gap-2 text-doux" for="chr-an">An</label>
+        <input id="chr-an" type="number" step="1" inputmode="numeric" class="min-h-9 w-24 min-w-0 rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11">
+        <button type="button" data-chr-pas="10" class="max-[860px]:min-h-11" aria-label="Avancer de 10 ans">+10</button>
+        <button type="button" data-chr-pas="50" class="max-[860px]:min-h-11" aria-label="Avancer de 50 ans">+50</button>
+        <button type="button" id="chr-aller" class="max-[860px]:min-h-11">Voir le système à cette date</button>
+      </div>
+      <label class="mb-3 flex min-h-9 items-center gap-2 text-doux max-[860px]:min-h-11"><input type="checkbox" id="chr-suivre" class="size-5 shrink-0 accent-accent" checked> Suivre la date affichée dans la vue</label>
+      <div id="chr-out" aria-live="polite"></div>
+      <div class="mt-5"><button type="button" id="chr-commerce" class="w-full max-[860px]:min-h-11">💱 Simuler le commerce à cette date (60 jours)</button></div>
+      <p id="chr-prog" class="mt-2 text-xs text-doux" aria-live="polite"></p>
+      <div id="chr-com"></div>
+    </details>
     <details id="pop"><summary>Population et dégel</summary>
       <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
         <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Passagers de l'arche <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-n0" type="number" min="1000" step="500" value="10000" inputmode="numeric"></label>
@@ -175,6 +192,7 @@
         <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Tyts partis sur Terre <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-earth" type="number" min="0" step="100" value="1500" inputmode="numeric"></label>
         <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Hybrides : conceptions par an (1 M d'humains × 1 M de Tyts) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-hc" type="number" min="0" step="5" value="30" inputmode="numeric"></label>
         <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Hybrides : mères mortes en couche (%) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-hm" type="number" min="0" max="100" step="1" value="15" inputmode="numeric"></label>
+        <label class="col-span-full flex min-h-9 items-center gap-2 text-doux max-[860px]:min-h-11"><input type="checkbox" id="pop-pen" class="size-5 shrink-0 accent-accent" checked> Pénuries organisées du Consortium (elles figurent dans la chronologie)</label>
         <button type="button" id="pop-reset" class="col-span-full">Valeurs calées sur les documents</button>
       </div>
       <p id="pop-hv" class="note" aria-live="off">Survolez une courbe pour lire les chiffres d'une année.</p>
