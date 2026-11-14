@@ -42,15 +42,7 @@ aside { position: fixed; top: 116px; bottom: 120px; background: var(--panel); ba
 .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; box-shadow: 0 0 6px currentColor; }
 #list small { margin-left: auto; color: var(--mute); }
 
-#info h2 { margin: 0 0 2px; font-size: 20px; }
-#info .sub { color: var(--mute); margin-bottom: 8px; }
-#info h3 { margin: 14px 0 4px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
-#info p { margin: 4px 0; }
-#info dl { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 2px 12px; margin: 0; }
-#info dt { color: var(--mute); }
-#info dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 #info .ok { color: var(--ok); } #info .warn { color: var(--warn); }
-#info .note { color: var(--mute); font-size: 12px; }
 
 #bar { position: fixed; left: 12px; right: 12px; bottom: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); max-width: 760px; margin: 0 auto; background: var(--panel); backdrop-filter: blur(10px); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 12px; }
 #bar .row { display: flex; align-items: center; gap: 10px; }
@@ -80,17 +72,6 @@ summary { cursor: pointer; color: var(--mute); padding: 8px 0; min-height: 44px;
 }
 @media (min-width: 861px) { #info { max-height: calc(100% - 190px); } }
 
-#info .hab { margin: 10px 0 2px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); font-weight: 600; }
-#info .hab.ok { border-color: var(--ok); color: var(--ok); } #info .hab.warn { border-color: var(--warn); color: var(--warn); } #info .hab.bad { border-color: #ff6b7a; color: #ff6b7a; }
-#info .crit { display: grid; grid-template-columns: 10px 1fr auto; gap: 2px 8px; align-items: baseline; margin: 0; padding: 0; list-style: none; }
-#info .crit li { display: contents; }
-#info .crit .s { width: 8px; height: 8px; border-radius: 50%; background: var(--mute); align-self: center; }
-#info .crit .s.ok { background: var(--ok); } #info .crit .s.warn { background: var(--warn); } #info .crit .s.bad { background: #ff6b7a; }
-#info .crit .v { text-align: right; font-variant-numeric: tabular-nums; }
-#info .crit small { grid-column: 2 / -1; color: var(--mute); margin-bottom: 3px; }
-#info .sugg { margin: 6px 0; padding-left: 18px; color: #cfd8ec; } #info .sugg li { margin: 4px 0; }
-#info table.sum { width: 100%; border-collapse: collapse; font-size: 13px; }
-#info table.sum td { padding: 3px 4px; border-top: 1px solid var(--line); } #info table.sum td:last-child { text-align: right; }
 
 
 .site-marker { position: absolute; left: 0; top: 0; width: 20px; height: 20px; margin: -10px 0 0 -10px; padding: 0; min-height: 0; border-radius: 50%; border: 0; background: transparent; pointer-events: auto; will-change: transform; display: none; }

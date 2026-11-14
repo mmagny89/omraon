@@ -7,7 +7,7 @@ import { SITES } from '../data/sites.js';
 import { EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
 import { siteReport } from '../physics/habitat.js';
 import { facesCorps, temperatureSite } from '../physics/thermique.js';
-import { tuiles, tuile as tuileHtml, entete, accroche, separateur, sectionDebut, liensFiches } from './composants.js';
+import { tuiles, tuile as tuileHtml, entete, accroche, separateur, sectionDebut, liensFiches, DL, DT, DD, H3, NOTE, SOMMAIRE, SUGGESTIONS, verdict, criteres } from './composants.js';
 import { transfer, PROPULSION } from '../physics/transfers.js';
 import { computeSky } from '../physics/sky.js';
 import { drawSky } from '../render/skyView.js';
@@ -53,7 +53,7 @@ const $ = (s) => document.querySelector(s);
 const mixHex = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return `rgb(${x.map((v, i) => Math.round(v + (y[i] - v) * t)).join(',')})`; };
 const f = (x, d = 3) => (d === 0 ? Math.round(x).toLocaleString('fr-FR') : Math.abs(x) >= 1e5 || (Math.abs(x) < 1e-2 && x !== 0) ? x.toExponential(2) : x.toFixed(d));
 const fmtDur = (d) => fmtDuree(d);
-const row = (k, v, cls = '') => `<dt>${k}</dt><dd class="${cls}">${v}</dd>`;
+const row = (k, v, cls = '') => `<dt class="${DT}">${k}</dt><dd class="${DD} ${cls}">${v}</dd>`;
 
 export class UI {
   constructor(sim, world) {
@@ -437,13 +437,13 @@ export class UI {
     const dur = fmtSecondes;
     const maxB = (vy.prop.maxDays || 6) * 86400, burnPct = Math.min(100, st.burn / maxB * 100);
     const min = (mt) => { const m = enSecondesKebet(mt * 60) / 60; return (m < 1 ? `${(m * 60).toFixed(0)} s` : m < 120 ? `${m.toFixed(1)} min` : `${(m / 60).toFixed(1)} h`) + ` (${fmtTerre(mt / 1440)} Terre)`; };
-    $('#voy-body').innerHTML = `<p><b>${vy.site.name}</b> → <b>${vy.dest.name}</b></p><div class="bar"><i style="width:${(st.progress * 100).toFixed(1)}%"></i></div><dl>` +
+    $('#voy-body').innerHTML = `<p><b>${vy.site.name}</b> → <b>${vy.dest.name}</b></p><div class="bar"><i style="width:${(st.progress * 100).toFixed(1)}%"></i></div><dl class="${DL}">` +
       row('Phase', phases[st.phase] || st.phase, st.phase === 'rest' ? 'warn' : '') + row('Écoulé / total', `${dur(st.elapsed)} / ${dur(v.plan.total)}`) +
       row('Vitesse', `${(st.speed / 1000).toFixed(0)} km/s (${(st.speed / 299792458 * 100).toFixed(2)} % de c)`) + row('Accélération', `${vy.accG} g`) +
       row('Distance restante', `${((1 - st.progress) * d / 1e6).toFixed(1)} M km`) +
       row('Poussée continue', `${dur(st.burn)} / ${dur(maxB)} max`, burnPct > 85 ? 'warn' : '') +
       (o ? row('Délai de message → ' + vy.site.name, min(dist(sh.pos, o))) : '') + (de ? row('Délai de message → ' + vy.dest.name, min(dist(sh.pos, de))) : '') + '</dl>' +
-      (v.plan.hasRest ? `<p class="note">Plus de ${dur(maxB)} de poussée : le moteur est coupé au milieu du trajet (repos supposé de ${dur(86400)}) pour éviter la surchauffe.</p>` : '');
+      (v.plan.hasRest ? `<p class="${NOTE}">Plus de ${dur(maxB)} de poussée : le moteur est coupé au milieu du trajet (repos supposé de ${dur(86400)}) pour éviter la surchauffe.</p>` : '');
   }
 
   // ---------- Ciel, fiche de scène, éphémérides ----------
@@ -575,16 +575,16 @@ export class UI {
     const accIn = parseFloat($('#tr-acc').value);
     const r = transfer({ sim: this.sim }, site, a, dest, b, key, PROPULSION[key].mode === 'cruise' ? accIn : undefined), nf = (x, d = 1) => (Math.abs(x) >= 1e5 ? x.toExponential(2) : x.toFixed(d));
     const au = r.distKm / AU_KM;
-    let h = `<dl>${row('Distance actuelle', au >= 0.01 ? `${nf(au, 3)} UA (${nf(r.distKm / 1e6, 1)} M km)` : `${nf(r.distKm, 0)} km`)}${row('Délai lumière (communications)', r.lightMin < 1 ? `${nf(r.lightMin * 60, 1)} s` : r.lightMin < 120 ? `${nf(r.lightMin, 1)} min` : `${nf(r.lightMin / 60, 1)} h`)}${row('Parcours', r.scope)}</dl>`;
+    let h = `<dl class="${DL}">${row('Distance actuelle', au >= 0.01 ? `${nf(au, 3)} UA (${nf(r.distKm / 1e6, 1)} M km)` : `${nf(r.distKm, 0)} km`)}${row('Délai lumière (communications)', r.lightMin < 1 ? `${nf(r.lightMin * 60, 1)} s` : r.lightMin < 120 ? `${nf(r.lightMin, 1)} min` : `${nf(r.lightMin / 60, 1)} h`)}${row('Parcours', r.scope)}</dl>`;
     if (r.cruise) {
       const c = r.cruise;
-      h += `<h3>${r.prop.label}</h3><dl>${row('Durée (retournement à mi-course)', fmtDur(c.days))}${row('Vitesse de pointe', `${nf(c.peakBeta, c.peakBeta < 0.01 ? 4 : 3)} c${c.cruised ? ' (croisière atteinte)' : ''}`)}${row('Accélération', `${nf(c.accG, 1)} g`)}`;
+      h += `<h3 class="${H3}">${r.prop.label}</h3><dl class="${DL}">${row('Durée (retournement à mi-course)', fmtDur(c.days))}${row('Vitesse de pointe', `${nf(c.peakBeta, c.peakBeta < 0.01 ? 4 : 3)} c${c.cruised ? ' (croisière atteinte)' : ''}`)}${row('Accélération', `${nf(c.accG, 1)} g`)}`;
       if (r.prop.maxDays) h += row('Limite moteur (6 j continus)', c.overLimit ? `dépassée : ${c.restStops} arrêt(s) de refroidissement` : 'respectée', c.overLimit ? 'warn' : 'ok');
-      h += `</dl><p class="note">Distance actuelle, sans courbure ni puits de gravité. Accélération supposée (le document fixe seulement les vitesses 0,1 c / 0,95 c et la limite de 6 jours). Navettes de montée/descente : ${nf(r.shuttle.dv, 2)} km/s, chimiques.</p>`;
+      h += `</dl><p class="${NOTE}">Distance actuelle, sans courbure ni puits de gravité. Accélération supposée (le document fixe seulement les vitesses 0,1 c / 0,95 c et la limite de 6 jours). Navettes de montée/descente : ${nf(r.shuttle.dv, 2)} km/s, chimiques.</p>`;
     }
     const hh = r.hohmann;
-    h += `<h3>${r.prop.mode === 'hohmann' ? r.prop.label : 'Référence chimique (Hohmann)'}</h3><dl>${row('Δv total', `${nf(hh.dv, 2)} km/s`)}${row('Durée', fmtDur(hh.days))}${row('Rapport de masse (Isp 450 s)', nf(hh.ratio, hh.ratio > 1e3 ? 0 : 1))}${r.windowDays != null ? row('Prochaine fenêtre', `dans ${fmtDur(r.windowDays)}`) + row('Période synodique', fmtDur(r.synodicDays)) : ''}</dl>`;
-    h += `<ul class="sugg">${r.parts.map(([n, v]) => `<li>${n} : ${nf(v, 2)} km/s</li>`).join('')}</ul>`;
+    h += `<h3 class="${H3}">${r.prop.mode === 'hohmann' ? r.prop.label : 'Référence chimique (Hohmann)'}</h3><dl class="${DL}">${row('Δv total', `${nf(hh.dv, 2)} km/s`)}${row('Durée', fmtDur(hh.days))}${row('Rapport de masse (Isp 450 s)', nf(hh.ratio, hh.ratio > 1e3 ? 0 : 1))}${r.windowDays != null ? row('Prochaine fenêtre', `dans ${fmtDur(r.windowDays)}`) + row('Période synodique', fmtDur(r.synodicDays)) : ''}</dl>`;
+    h += `<ul class="${SUGGESTIONS}">${r.parts.map(([n, v]) => `<li>${n} : ${nf(v, 2)} km/s</li>`).join('')}</ul>`;
     const out = $('#tr-out'); if (out.dataset.h !== h) { out.innerHTML = h; out.dataset.h = h; }
   }
 
@@ -593,7 +593,7 @@ export class UI {
     const t = facesCorps(this.sim, (i) => this.world.bodies[i].el, idx), c = (k) => `${f(k - 273.15, 0)} °C (${f(k, 0)} K)`;
     const note = { etoile: 'Température de la photosphère : l\'étoile n\'a pas de face sombre.', geante: 'Pas de surface : température à 1 bar, identique sur les deux faces.', solide: '' }[t.mode];
     const jour = t.mode === 'solide' && Number.isFinite(t.jourSolaireJ) ? `jour solaire de ${f(t.jourSolaireJ, 1)} j` : '';
-    return this.begin('Températures', true, 'calcule') + `<dl>${row('Face éclairée', c(t.jour))}${row('Face sombre', c(t.nuit))}${t.mode === 'solide' ? row('Moyenne', c(t.moyenne)) : ''}</dl>${note ? `<p class="note">${note}</p>` : `<p class="note">Point subsolaire et point antisolaire${jour ? ` (${jour})` : ''}. Estimation de conception : albédo, atmosphère et durée de la nuit.</p>`}</details>`;
+    return this.begin('Températures', true, 'calcule') + `<dl class="${DL}">${row('Face éclairée', c(t.jour))}${row('Face sombre', c(t.nuit))}${t.mode === 'solide' ? row('Moyenne', c(t.moyenne)) : ''}</dl>${note ? `<p class="${NOTE}">${note}</p>` : `<p class="${NOTE}">Point subsolaire et point antisolaire${jour ? ` (${jour})` : ''}. Estimation de conception : albédo, atmosphère et durée de la nuit.</p>`}</details>`;
   }
 
   /** Températures d'un site, recalculées à chaque rafraîchissement : dehors maintenant, dans l'habitat, faces de son corps. */
@@ -615,13 +615,13 @@ export class UI {
     if (site.id === 'kebet-temples') h += this.liturgieHtml();
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
       const g = Math.max(0, Math.min(1, (yy - site.founded) / (0 - site.founded))), m = this.pop.at(yy);
-      h += yy < site.founded ? `<p class="note">À l'${fmtAn(yy)} : la colonie n'est pas encore fondée (${fmtAn(site.founded)}).</p>` : `<p class="note">À l'${fmtAn(yy)} (colonie fondée ${fmtAn(site.founded)}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
-    } else if (pm && p0) h += pm.arrived ? `<p class="note">À l'${fmtAn(yy)} (modèle de population) : ≈ ${Math.round(site.population * pm.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * pm.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>` : `<p class="note">À l'${fmtAn(yy)} : personne n'est encore arrivé dans le système.</p>`;
-    if (site.invented) h += `<p class="note">Emplacement et population proposés (le document ne les fixe pas) : à valider (valeurs par défaut modifiables par un administrateur).</p>`;
+      h += yy < site.founded ? `<p class="${NOTE}">À l'${fmtAn(yy)} : la colonie n'est pas encore fondée (${fmtAn(site.founded)}).</p>` : `<p class="${NOTE}">À l'${fmtAn(yy)} (colonie fondée ${fmtAn(site.founded)}) : ≈ ${Math.round(site.population * g * m.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * g * m.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>`;
+    } else if (pm && p0) h += pm.arrived ? `<p class="${NOTE}">À l'${fmtAn(yy)} (modèle de population) : ≈ ${Math.round(site.population * pm.H / p0.H).toLocaleString('fr-FR')} humains${site.tyts ? ' et ' + Math.round(site.tyts * pm.T / p0.T).toLocaleString('fr-FR') + ' Tyts' : ''}.</p>` : `<p class="${NOTE}">À l'${fmtAn(yy)} : personne n'est encore arrivé dans le système.</p>`;
+    if (site.invented) h += `<p class="${NOTE}">Emplacement et population proposés (le document ne les fixe pas) : à valider (valeurs par défaut modifiables par un administrateur).</p>`;
     if (rec?.st) {
       const rep = siteReport({ sim: this.sim, el: (i) => this.world.bodies[i].el }, site, rec.st, this.target);
-      for (const sec of rep.sections) h += this.begin(sec.title, true, statutSection(sec.title)) + `<dl>${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;
-      h += rep.notes.map((t) => `<p class="note">${t}</p>`).join('');
+      for (const sec of rep.sections) h += this.begin(sec.title, true, statutSection(sec.title)) + `<dl class="${DL}">${sec.rows.map(([k, v]) => row(k, v)).join('')}</dl></details>`;
+      h += rep.notes.map((t) => `<p class="${NOTE}">${t}</p>`).join('');
     }
     return h + separateur('Corps d\'accueil');
   }
@@ -724,23 +724,21 @@ export class UI {
       const life = 10 * STAR.massMsun ** -2.5, zi = this.sim.bodies.find((x) => x.def.id === 'zirkan'), aZ = this.world.bodies[zi.idx].el?.a ?? zi.def.orbit.a;
       const exitGyr = (this.hz.seff.runaway * aZ * aZ / this.L - 1) / LUMINOSITY_GROWTH_PER_GYR, remain = life - (STAR.ageGyr ?? 3);
       const hum = SITES.reduce((t, x) => t + x.population, 0), tyt = SITES.reduce((t, x) => t + (x.tyts || 0), 0), kebet = SITES.filter((x) => x.body === 'Kebet').reduce((t, x) => t + x.population, 0);
-      const demo = `<h3>Démographie des sites</h3><dl>${row('Humains', `${hum.toLocaleString('fr-FR')} (canon : 300 000 – 800 000)`, hum >= 3e5 && hum <= 8e5 ? 'ok' : 'warn')}${row('Tyts', tyt.toLocaleString('fr-FR'), tyt > hum * 0.3 ? 'ok' : 'warn')}${row('Haut (Kebet)', `${kebet.toLocaleString('fr-FR')} (canon : dizaines de milliers)`, kebet >= 1e4 && kebet <= 1e5 ? 'ok' : 'warn')}</dl><p class="note">Voyage des arches : 0,35 c × ~400 ans ≈ 140 années-lumière depuis la Terre.</p><h3>Âge du système</h3><dl>${row('Âge de l\'étoile', `${(STAR.ageGyr ?? 3).toFixed(2)} Gyr (An 0)`)}${row('Comparaison', `Soleil ≈ 4,6 Gyr : ${(STAR.ageGyr ?? 3) > 4.6 ? 'système plus vieux de ' + ((STAR.ageGyr ?? 3) - 4.6).toFixed(1) + ' Gyr (canon)' : 'système plus jeune'}`, (STAR.ageGyr ?? 3) > 4.6 ? 'ok' : 'warn')}${row('Fin de séquence principale', `dans ${remain.toFixed(1)} Gyr`)}${row('Zirkan quitte la zone habitable', exitGyr > remain ? 'jamais avant la fin de l\'étoile' : `dans ${exitGyr.toFixed(1)} Gyr`, exitGyr > remain ? 'ok' : 'warn')}</dl><p class="note">L'étoile s'éclaircit avec l'âge (estimation +${(LUMINOSITY_GROWTH_PER_GYR * 100).toFixed(0)} % par Gyr). Sur le temps du roman (quelques siècles), l'effet est nul.</p>`;
-      return demo + `<h3>Habitabilité — synthèse</h3><table class="sum">${rows}</table><p class="note">Durée de vie de l'étoile ≈ ${life.toFixed(1)} Gyr, âge ${(STAR.ageGyr ?? 3).toFixed(1)} Gyr. Choisis un corps pour le détail et les ajustements.</p>`;
+      const demo = `<h3 class="${H3}">Démographie des sites</h3><dl class="${DL}">${row('Humains', `${hum.toLocaleString('fr-FR')} (canon : 300 000 – 800 000)`, hum >= 3e5 && hum <= 8e5 ? 'ok' : 'warn')}${row('Tyts', tyt.toLocaleString('fr-FR'), tyt > hum * 0.3 ? 'ok' : 'warn')}${row('Haut (Kebet)', `${kebet.toLocaleString('fr-FR')} (canon : dizaines de milliers)`, kebet >= 1e4 && kebet <= 1e5 ? 'ok' : 'warn')}</dl><p class="${NOTE}">Voyage des arches : 0,35 c × ~400 ans ≈ 140 années-lumière depuis la Terre.</p><h3 class="${H3}">Âge du système</h3><dl class="${DL}">${row('Âge de l\'étoile', `${(STAR.ageGyr ?? 3).toFixed(2)} Gyr (An 0)`)}${row('Comparaison', `Soleil ≈ 4,6 Gyr : ${(STAR.ageGyr ?? 3) > 4.6 ? 'système plus vieux de ' + ((STAR.ageGyr ?? 3) - 4.6).toFixed(1) + ' Gyr (canon)' : 'système plus jeune'}`, (STAR.ageGyr ?? 3) > 4.6 ? 'ok' : 'warn')}${row('Fin de séquence principale', `dans ${remain.toFixed(1)} Gyr`)}${row('Zirkan quitte la zone habitable', exitGyr > remain ? 'jamais avant la fin de l\'étoile' : `dans ${exitGyr.toFixed(1)} Gyr`, exitGyr > remain ? 'ok' : 'warn')}</dl><p class="${NOTE}">L'étoile s'éclaircit avec l'âge (estimation +${(LUMINOSITY_GROWTH_PER_GYR * 100).toFixed(0)} % par Gyr). Sur le temps du roman (quelques siècles), l'effet est nul.</p>`;
+      return demo + `<h3 class="${H3}">Habitabilité — synthèse</h3><table class="${SOMMAIRE}">${rows}</table><p class="${NOTE}">Durée de vie de l'étoile ≈ ${life.toFixed(1)} Gyr, âge ${(STAR.ageGyr ?? 3).toFixed(1)} Gyr. Choisis un corps pour le détail et les ajustements.</p>`;
     }
     const a = assess(ctx, b.idx);
-    let h = `<h3>Habitabilité humaine</h3><div class="hab ${a.level}">${a.label}</div><ul class="crit">`;
-    for (const c of a.criteria) h += `<li><span class="s ${c.status}"></span><span>${c.label}</span><span class="v">${c.value}</span>${c.note ? `<small>${c.note}</small>` : ''}</li>`;
-    h += '</ul>';
+    let h = `<h3 class="${H3}">Habitabilité humaine</h3>${verdict(a.level, a.label)}${criteres(a.criteria)}`;
     if (a.mode === 'surface') {
       const key = `${b.idx}:${Math.round(this.sim.t / 365.25)}`;
       if (!this._scan || this._scan.key !== key || this._scan.sim !== this.sim) this._scan = { key, sim: this.sim, res: habitabilityScan(this.sim, b.idx, 5) };
       const r = this._scan.res, cl = { ok: 'ok', warn: 'warn', bad: 'bad' };
-      h += `<h3>Habitable en permanence ? (${r.years} ans simulés)</h3><dl>${row('Température', `${r.T[0].toFixed(0)} – ${r.T[1].toFixed(0)} K`, cl[r.status.T])}${row('Flux stellaire', `${r.S[0].toFixed(2)} – ${r.S[1].toFixed(2)} × Terre`)}${row('Excentricité', `${r.e[0].toExponential(1)} – ${r.e[1].toExponential(1)}`)}${row('Chauffage de marée', `${r.heat[0].toFixed(2)} – ${r.heat[1].toFixed(2)} W/m²`, cl[r.status.heat])}${row('Verdict', r.always ? 'habitable en permanence' : 'pas toujours habitable', r.always ? 'ok' : 'warn')}</dl>`;
-      h += `<p class="note">Le chauffage de marée varie comme e² : à e = 5·10⁻⁴ il atteindrait ~4 W/m² (volcanisme intense), à 3·10⁻³ ~150 W/m² (Io ≈ 2,4). Les marées amortissent e en ~16 000 ans ; sans résonance avec les autres lunes, e reste bas.${r.greenhouseNeeded > 0 ? ` Il manque ${r.greenhouseNeeded.toFixed(1)} K d'effet de serre pour que le minimum reste ≥ 278 K.` : r.T[0] < 280 ? ` Marge faible côté froid : minimum ${r.T[0].toFixed(1)} K pour un seuil de 278 K.` : ''}</p>`;
+      h += `<h3 class="${H3}">Habitable en permanence ? (${r.years} ans simulés)</h3><dl class="${DL}">${row('Température', `${r.T[0].toFixed(0)} – ${r.T[1].toFixed(0)} K`, cl[r.status.T])}${row('Flux stellaire', `${r.S[0].toFixed(2)} – ${r.S[1].toFixed(2)} × Terre`)}${row('Excentricité', `${r.e[0].toExponential(1)} – ${r.e[1].toExponential(1)}`)}${row('Chauffage de marée', `${r.heat[0].toFixed(2)} – ${r.heat[1].toFixed(2)} W/m²`, cl[r.status.heat])}${row('Verdict', r.always ? 'habitable en permanence' : 'pas toujours habitable', r.always ? 'ok' : 'warn')}</dl>`;
+      h += `<p class="${NOTE}">Le chauffage de marée varie comme e² : à e = 5·10⁻⁴ il atteindrait ~4 W/m² (volcanisme intense), à 3·10⁻³ ~150 W/m² (Io ≈ 2,4). Les marées amortissent e en ~16 000 ans ; sans résonance avec les autres lunes, e reste bas.${r.greenhouseNeeded > 0 ? ` Il manque ${r.greenhouseNeeded.toFixed(1)} K d'effet de serre pour que le minimum reste ≥ 278 K.` : r.T[0] < 280 ? ` Marge faible côté froid : minimum ${r.T[0].toFixed(1)} K pour un seuil de 278 K.` : ''}</p>`;
     }
-    if (a.suggestions.length) h += `<h3>Pour ajuster</h3><ul class="sugg">${a.suggestions.map((t) => `<li>${t}</li>`).join('')}</ul>`;
-    if (a.notes?.length) h += a.notes.map((t) => `<p class="note">${t}</p>`).join('');
-    h += `<p class="note">Estimations de conception (analogies Terre/Jupiter/Io), pas un modèle climatique 3D.</p>`;
+    if (a.suggestions.length) h += `<h3 class="${H3}">Pour ajuster</h3><ul class="${SUGGESTIONS}">${a.suggestions.map((t) => `<li>${t}</li>`).join('')}</ul>`;
+    if (a.notes?.length) h += a.notes.map((t) => `<p class="${NOTE}">${t}</p>`).join('');
+    h += `<p class="${NOTE}">Estimations de conception (analogies Terre/Jupiter/Io), pas un modèle climatique 3D.</p>`;
     return h;
   }
 
@@ -829,9 +827,9 @@ export class UI {
   liturgieHtml() {
     const ec = this.eclipsesProches('Kebet'), cm = moisConfederal(this.target, jourKebet());
     const items = ec.map((e) => `<li><button type="button" data-t="${e.t}"><b>${e.type}</b><span>Zirkan masque l'étoile ${fmtDuree(e.duration, { minutes: true })}</span><small>${this.fmtT(e.t)} · dans ${fmtDuree(e.t - this.target)}</small></button></li>`).join('');
-    return this.begin('Liturgie solaire', true, 'canon') + `<p class="note">Temples solaires immenses, ouverts sur le ciel pour capter Omraon : disques d'or, lumière en nappes, le sommet du blanc-et-doré (doc 13, Quotidien sensoriel — Kebet).</p>`
-      + (ec.length ? `<ul class="evts">${items}</ul><button type="button" class="wide-btn" data-eclipse-vivre>☀ Vivre la prochaine éclipse depuis les temples</button>` : '<p class="note">Aucune éclipse proche.</p>') + '</details>'
-      + this.begin('Calendrier confédéral', false, 'conception') + `<dl>${row('Aujourd\'hui', `${cm.mois} (mois ${cm.rang} sur 13)`)}${row('Jour du mois', `${cm.jour} sur ${cm.nbJours}`)}</dl><p class="note">Le lore donne 13 mois aux noms tyts fossilisés (doc 03) mais pas leur durée : l'année est ici partagée en 13 mois égaux, l'An 0 commençant au premier jour d'Aset. Pas de fêtes définies : « fête de l'Arrivée », cycle solaire (pistes du lore).</p></details>`;
+    return this.begin('Liturgie solaire', true, 'canon') + `<p class="${NOTE}">Temples solaires immenses, ouverts sur le ciel pour capter Omraon : disques d'or, lumière en nappes, le sommet du blanc-et-doré (doc 13, Quotidien sensoriel — Kebet).</p>`
+      + (ec.length ? `<ul class="evts">${items}</ul><button type="button" class="wide-btn" data-eclipse-vivre>☀ Vivre la prochaine éclipse depuis les temples</button>` : '<p class="${NOTE}">Aucune éclipse proche.</p>') + '</details>'
+      + this.begin('Calendrier confédéral', false, 'conception') + `<dl class="${DL}">${row('Aujourd\'hui', `${cm.mois} (mois ${cm.rang} sur 13)`)}${row('Jour du mois', `${cm.jour} sur ${cm.nbJours}`)}</dl><p class="${NOTE}">Le lore donne 13 mois aux noms tyts fossilisés (doc 03) mais pas leur durée : l'année est ici partagée en 13 mois égaux, l'An 0 commençant au premier jour d'Aset. Pas de fêtes définies : « fête de l'Arrivée », cycle solaire (pistes du lore).</p></details>`;
   }
   /** Saute au milieu de la prochaine éclipse de Kebet, ouvre la vue à hauteur d'yeux au site et regarde l'étoile. */
   vivreEclipse(siteId) {
@@ -858,13 +856,13 @@ export class UI {
     const tile = (...a) => this.tile(...a), width = BELT.aMax - BELT.aMin;
     const tiles = tile(`${BELT.aMin}–${BELT.aMax} UA`, 'Étendue') + tile(`${f(width * AU_KM / 1e6, 0)} M km`, 'Largeur', `${f(width, 2)} UA`) + tile(nf(sim.pN), 'Traceurs simulés', 'sans masse, sans collisions entre eux') + tile(`${f(aZ, 2)} UA`, 'Zirkan voisine', `limite instable ≈ ${f(aZ - 0.33, 2)} UA (conception)`);
     let h = entete({ couleur: '#c8c8d0', titre: BELT.name, sous: 'Ceinture d\'astéroïdes' }) + accroche(BELT.role) + tuiles(tiles);
-    h += this.begin('Noms', false, 'canon') + `<dl>${row('Nom tyt sacré', BELT.names.tyt)}${row('Courant', BELT.names.tytCourant)}${row('Sens', `« ${BELT.names.sens} »`)}</dl></details>`;
+    h += this.begin('Noms', false, 'canon') + `<dl class="${DL}">${row('Nom tyt sacré', BELT.names.tyt)}${row('Courant', BELT.names.tytCourant)}${row('Sens', `« ${BELT.names.sens} »`)}</dl></details>`;
     const res = [[2, 1], [5, 2], [3, 1]].map(([p, q]) => ({ p, q, a: aZ * (q / p) ** (2 / 3) }));
-    h += this.begin('Résonances avec Zirkan', true, 'calcule') + `<dl>${res.map((r) => row(`${r.p}:${r.q}`, `${f(r.a, 3)} UA`, r.a >= BELT.aMin && r.a <= BELT.aMax ? 'warn' : '')).join('')}</dl><p class="note">En orange : dans la ceinture, où ces résonances creusent des lacunes (comme les lacunes de Kirkwood autour de Jupiter).</p></details>`;
+    h += this.begin('Résonances avec Zirkan', true, 'calcule') + `<dl class="${DL}">${res.map((r) => row(`${r.p}:${r.q}`, `${f(r.a, 3)} UA`, r.a >= BELT.aMin && r.a <= BELT.aMax ? 'warn' : '')).join('')}</dl><p class="${NOTE}">En orange : dans la ceinture, où ces résonances creusent des lacunes (comme les lacunes de Kirkwood autour de Jupiter).</p></details>`;
     const sites = SITES.filter((x) => x.body === 'Nunzir');
     if (sites.length) h += this.begin('Sites', true, 'conception') + `<ul class="evts">${sites.map((x) => `<li><button type="button" data-site-open="${esc(x.id)}"><b>${esc(x.name)}</b><small>${nf(x.population)} humains${x.tyts ? ' · ' + nf(x.tyts) + ' Tyts' : ''}</small></button></li>`).join('')}</ul></details>`;
     h += this.loreHtml(BELT.name);
-    return h + '<p class="note">Les traceurs sont des points sans masse : ils figurent la densité de la ceinture, ils ne se heurtent pas entre eux.</p>';
+    return h + `<p class="${NOTE}">Les traceurs sont des points sans masse : ils figurent la densité de la ceinture, ils ne se heurtent pas entre eux.</p>`;
   }
 
   // ---------- Comparateur de lieux ----------
@@ -883,7 +881,7 @@ export class UI {
     const nf = (n) => n.toLocaleString('fr-FR'), L = liaison(recs[0].pos, recs[1].pos);
     const haut = [{ title: 'Population', rows: [['Humains', nf(sites[0].population)], ['Tyts', nf(sites[0].tyts || 0)]] }], hb = [{ title: 'Population', rows: [['Humains', nf(sites[1].population)], ['Tyts', nf(sites[1].tyts || 0)]] }];
     const tab = fusionner([...haut, ...rep[0].sections], [...hb, ...rep[1].sections]);
-    const lien = `<h3>Entre les deux (à cet instant)</h3><dl>${row('Distance', `${f(L.km / 1e6, 1)} M km`)}${row('Message à la lumière', fmtSecondes(L.lumiereS))}${row('Trajet en hyperpropulsion (8 g, hypothèse)', fmtSecondes(L.volS))}</dl>`;
+    const lien = `<h3 class="${H3}">Entre les deux (à cet instant)</h3><dl class="${DL}">${row('Distance', `${f(L.km / 1e6, 1)} M km`)}${row('Message à la lumière', fmtSecondes(L.lumiereS))}${row('Trajet en hyperpropulsion (8 g, hypothèse)', fmtSecondes(L.volS))}</dl>`;
     out.innerHTML = `<table class="cmp"><caption class="sr-only">Comparaison de ${esc(sites[0].name)} et ${esc(sites[1].name)}</caption><thead><tr><td></td><th scope="col">${esc(sites[0].name)}</th><th scope="col">${esc(sites[1].name)}</th></tr></thead>`
       + tab.map((s) => `<tbody><tr class="cmp-h"><th colspan="3" scope="colgroup">${esc(s.titre)}</th></tr>${s.lignes.map(([k, a, b, d]) => `<tr${d ? ' class="diff"' : ''}><th scope="row">${esc(k)}</th><td>${a}</td><td>${b}</td></tr>`).join('')}</tbody>`).join('') + `</table>${lien}`;
   }
@@ -1037,7 +1035,7 @@ export class UI {
       const detail = e.duration != null ? `${e.who} ← ${e.by}, ${fmtDuree(e.duration, { minutes: true })}` : e.by ? `${e.who} – ${e.by}` : e.who;
       return `<li><button type="button" data-t="${e.t}"><b>${e.type}</b><span>${detail}</span><small>${this.fmtT(e.t)} · dans ${fmtDuree(e.t - this.target)}</small></button></li>`;
     }).join('');
-    return `${this.begin('Prochains événements', true, 'calcule')}<ul class="evts">${items}</ul><p class="note">Cliquer saute à la date.</p></details>`;
+    return `${this.begin('Prochains événements', true, 'calcule')}<ul class="evts">${items}</ul><p class="${NOTE}">Cliquer saute à la date.</p></details>`;
   }
 
   /** Ouvre une section repliable de la fiche ; l'état ouvert/fermé choisi par l'utilisateur survit aux rafraîchissements. */
@@ -1076,8 +1074,8 @@ export class UI {
     h += entete({ couleur: d.color || '#9fb4d8', titre: d.name, sous: kind, puce: hab ? { niveau: hab.level, label: hab.label } : null }) + accroche(d.role) + tuiles(tiles);
     h += liensFiches([...(this.selectedSite ? [{ href: `/sites/${this.selectedSite}`, texte: 'Fiche du site ›' }] : []), { href: `/astres/${d.id}`, texte: `Fiche de ${d.name} ›` }]);
     h += this.temperaturesHtml(b.idx);
-    h += this.begin('Noms', false, d.provisional ? 'provisoire' : 'canon') + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
-    h += this.begin('Physique', true, 'conception') + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
+    h += this.begin('Noms', false, d.provisional ? 'provisoire' : 'canon') + `<dl class="${DL}">${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
+    h += this.begin('Physique', true, 'conception') + `<dl class="${DL}">${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
     h += this.dayRows(o, b);
     if (o.protDays && b.type === 'planet' && o.flat > 1e-4) h += row('Aplatissement', f(o.flat, 4));
     if (b.type !== 'star') h += row('Inclinaison de l\'axe', `${f(b.tilt / DEG, 1)}°`);
@@ -1085,10 +1083,10 @@ export class UI {
     h += '</dl></details>';
     if (b.type === 'star') {
       const hz = this.hz;
-      h += this.begin('Zone habitable (Kopparapu 2013)', true, 'calcule') + `<dl>${row('Conservative', `${f(hz.conservative[0], 2)} – ${f(hz.conservative[1], 2)} UA`)}${row('Optimiste', `${f(hz.optimistic[0], 2)} – ${f(hz.optimistic[1], 2)} UA`)}${row('Ceinture Nunzir', `${BELT.aMin} – ${BELT.aMax} UA`)}</dl><p class="note">${BELT.role}</p></details>`;
+      h += this.begin('Zone habitable (Kopparapu 2013)', true, 'calcule') + `<dl class="${DL}">${row('Conservative', `${f(hz.conservative[0], 2)} – ${f(hz.conservative[1], 2)} UA`)}${row('Optimiste', `${f(hz.optimistic[0], 2)} – ${f(hz.optimistic[1], 2)} UA`)}${row('Ceinture Nunzir', `${BELT.aMin} – ${BELT.aMax} UA`)}</dl><p class="${NOTE}">${BELT.role}</p></details>`;
     } else if (o.el) {
       const e = o.el, par = sim.bodies[b.parent];
-      h += this.begin('Orbite (en direct)', true, 'calcule') + '<dl>';
+      h += this.begin('Orbite (en direct)', true, 'calcule') + `<dl class="${DL}">`;
       if (b.type === 'planet') {
         h += row('Demi-grand axe', `${f(e.a, 4)} UA`) + row('Distance actuelle', `${f(dStar(b.idx), 4)} UA`) + row('Périhélie / aphélie', `${f(e.rp, 3)} / ${f(e.ra, 3)} UA`);
         h += row('Période', fmtDur(e.period)) + row('Excentricité', f(e.e, 4)) + row('Inclinaison (écliptique)', `${f(e.i / DEG, 2)}°`) + row('Longitude du périhélie ϖ', `${f(((e.varpi / DEG) % 360 + 360) % 360, 3)}°`);
@@ -1101,22 +1099,22 @@ export class UI {
       // dynamique
       if (b.type === 'planet') {
         const pa = par.def.orbit, rh = hillRadius(e.a, e.e, sim.mEff[b.idx], star.mass);
-        h += this.begin('Dynamique', false, 'calcule') + `<dl>${row('Rayon de Hill', `${f(rh, 4)} UA (${f(rh * AU_KM / 1e6, 2)} M km)`)}</dl></details>`;
+        h += this.begin('Dynamique', false, 'calcule') + `<dl class="${DL}">${row('Rayon de Hill', `${f(rh, 4)} UA (${f(rh * AU_KM / 1e6, 2)} M km)`)}</dl></details>`;
         void pa;
       } else {
         const pi = par.idx, pe = o && w.bodies[pi].el;
         const rh = hillRadius(pe.a, pe.e, sim.mEff[pi], star.mass), lim = stableSatelliteLimit(rh, pe.e, o.el.e);
         const rho = bulk(b.mass, b.radiusKm).rho, rhoP = bulk(par.mass, par.radiusKm).rho;
         const roche = rocheLimitKm(par.radiusKm, rhoP, rho), ratio = (o.el.a / rh);
-        h += this.begin('Dynamique', false, 'calcule') + `<dl>${row('a / rayon de Hill', `${f(ratio, 3)} (limite ${f(lim / rh, 2)})`, o.el.a < lim ? 'ok' : 'warn')}${row('Limite de Roche', `${f(roche, 0)} km`, o.el.a * AU_KM > roche ? 'ok' : 'warn')}</dl></details>`;
+        h += this.begin('Dynamique', false, 'calcule') + `<dl class="${DL}">${row('a / rayon de Hill', `${f(ratio, 3)} (limite ${f(lim / rh, 2)})`, o.el.a < lim ? 'ok' : 'warn')}${row('Limite de Roche', `${f(roche, 0)} km`, o.el.a * AU_KM > roche ? 'ok' : 'warn')}</dl></details>`;
       }
       // thermique
       const di = b.type === 'planet' ? dStar(b.idx) : dStar(b.parent);
       const Teq = equilibriumTemp(star.def, di, d.albedo ?? 0.3), S = insolation(this.L, di);
       const [hi, ho] = this.hz.conservative, [oi, oo] = this.hz.optimistic;
       const zone = di >= hi && di <= ho ? ['dans la zone habitable', 'ok'] : di >= oi && di <= oo ? ['zone habitable optimiste', 'ok'] : di < oi ? ['trop proche', 'warn'] : ['trop loin', 'warn'];
-      h += this.begin('Thermique', false, 'calcule') + `<dl>${row('Éclairement', `${f(S, 3)} × Terre`)}${row('T équilibre (A=' + (d.albedo ?? 0.3) + ')', `${f(Teq, 0)} K (${f(Teq - 273.15, 0)} °C)`)}${row('Position', zone[0], zone[1])}</dl>`;
-      if (d.id === 'kebet') h += `<p class="note">Kebet reçoit l'éclairement d'une planète en bordure de zone habitable ; la rotation synchrone et l'effet de serre de son atmosphère décident du reste.</p>`;
+      h += this.begin('Thermique', false, 'calcule') + `<dl class="${DL}">${row('Éclairement', `${f(S, 3)} × Terre`)}${row('T équilibre (A=' + (d.albedo ?? 0.3) + ')', `${f(Teq, 0)} K (${f(Teq - 273.15, 0)} °C)`)}${row('Position', zone[0], zone[1])}</dl>`;
+      if (d.id === 'kebet') h += `<p class="${NOTE}">Kebet reçoit l'éclairement d'une planète en bordure de zone habitable ; la rotation synchrone et l'effet de serre de son atmosphère décident du reste.</p>`;
       h += '</details>';
     }
     h += this.loreHtml(b.def.name, null, !!this.selectedSite);

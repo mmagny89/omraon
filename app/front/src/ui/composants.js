@@ -8,6 +8,23 @@ const SECTION = 'group sec my-2 overflow-hidden rounded-[10px] border border-lig
 const RESUME = 'flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3 text-xs font-semibold uppercase tracking-[.08em] text-accent hover:bg-accent/10 group-open:border-b group-open:border-ligne [&::-webkit-details-marker]:hidden';
 const CHEVRON = '<svg aria-hidden="true" viewBox="0 0 10 10" class="size-6 shrink-0 -rotate-90 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-0 motion-reduce:transition-none"><path d="M1 3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
+// Contenu des fiches : listes de valeurs, titres de bloc, notes, verdicts, critères (remplace #info dl/dt/dd/h3/.note/.hab/.crit/.sugg/table.sum).
+export const DL = 'm-0 grid grid-cols-[minmax(0,.9fr)_minmax(0,1.1fr)] gap-x-3 gap-y-0.5';
+export const DT = 'text-doux';
+export const DD = 'm-0 text-right tabular-nums';
+export const H3 = 'mb-1 mt-3.5 text-[11px] uppercase tracking-widest text-accent';
+export const NOTE = 'text-xs text-doux';
+const NIVEAU = { ok: 'border-ok text-ok', warn: 'border-alerte text-alerte', bad: 'border-danger text-danger' };
+const PASTILLE = { ok: 'bg-ok', warn: 'bg-alerte', bad: 'bg-danger' };
+export const SOMMAIRE = 'w-full border-collapse text-[13px] [&_td]:border-t [&_td]:border-ligne [&_td]:px-1 [&_td]:py-[3px] [&_td:last-child]:text-right';
+export const SUGGESTIONS = 'my-1.5 pl-[18px] text-[#cfd8ec] [&>li]:my-1';
+
+/** Verdict d'habitabilité (cadre coloré). */
+export const verdict = (niveau, label) => `<div class="mb-0.5 mt-2.5 rounded-lg border px-2.5 py-2 font-semibold ${NIVEAU[niveau] ?? 'border-ligne'}">${label}</div>`;
+
+/** Liste de critères : pastille d'état, libellé, valeur, note facultative (une grille de trois colonnes). */
+export const criteres = (lignes) => `<ul class="m-0 grid list-none grid-cols-[10px_1fr_auto] items-baseline gap-x-2 gap-y-0.5 p-0">${lignes.map((c) => `<li class="contents"><span class="size-2 self-center rounded-full ${PASTILLE[c.status] ?? 'bg-doux'}"></span><span>${c.label}</span><span class="text-right tabular-nums">${c.value}</span>${c.note ? `<small class="col-[2/-1] mb-[3px] text-doux">${c.note}</small>` : ''}</li>`).join('')}</ul>`;
+
 /** Grille de tuiles (2 colonnes). */
 export const tuiles = (contenu) => `<div class="mb-2.5 grid grid-cols-2 gap-1.5">${contenu}</div>`;
 
@@ -20,7 +37,7 @@ export const entete = ({ couleur = null, site = false, titre, sous, puce = null 
   `<header class="flex items-center gap-2.5">${site
     ? '<span class="size-[11px] shrink-0 rotate-45 rounded-[3px] bg-accent"></span>'
     : `<span class="size-3.5 shrink-0 rounded-full shadow-[0_0_10px_currentColor]" style="background:${couleur}"></span>`}`
-  + `<div class="min-w-0 flex-1"><h2>${titre}</h2><div class="text-doux">${sous}</div></div>`
+  + `<div class="min-w-0 flex-1"><h2 class="mb-0.5 text-xl font-bold">${titre}</h2><div class="text-doux">${sous}</div></div>`
   + `${puce ? `<span class="max-w-[48%] shrink-0 rounded-full border px-[9px] py-[3px] text-center text-[11.5px] font-semibold leading-tight ${PUCE[puce.niveau] ?? 'border-ligne'}">${puce.label}</span>` : ''}</header>`;
 
 /** Phrase d'accroche sous l'en-tête. */
