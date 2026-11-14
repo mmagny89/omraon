@@ -4,21 +4,21 @@
 {% block title %}{{ d.name }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Astres', url: path('fiches_astres')}, {texte: d.name}]) }}
-{{ c.entete(d.name, d.role ?? null, [{texte: a.type, ton: 'accent'}], c.illustration('astre', id, 'Illustration de ' ~ d.name, 'size-24 sm:size-36')) }}
+{{ c.entete(d.name, d.role ?? null, [{texte: a.type, ton: 'accent'}], c.illustration('astre', id, 'Illustration de ' ~ d.name, 'size-24 sm:size-36'), [], a.modification) }}
 
 <div class="grid gap-6 lg:grid-cols-[1fr_16rem]">
-  <div class="space-y-6">
+  <div class="space-y-8">
     {% if d.fonction is defined %}
-    <section aria-labelledby="fonction" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="fonction" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Rôle dans le système</h2>
+    <section aria-labelledby="fonction" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('fonction', 'Rôle dans le système', ['canon']) }}
       <p class="leading-relaxed">{{ d.fonction }}</p>
       {% if d.lien is defined and d.lien %}<p class="mt-3 leading-relaxed text-doux">{{ d.lien }}</p>{% endif %}
     </section>
     {% endif %}
 
     {% if a.temperatures is defined %}{% set t = a.temperatures %}
-    <section aria-labelledby="temp" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="temp" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Températures</h2>
+    <section aria-labelledby="temp" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('temp', 'Températures', ['calcule']) }}
       <div class="grid gap-3 sm:grid-cols-3">
         {{ c.tuile(c.celsius(t.jour), t.mode == 'solide' ? 'Face éclairée' : (t.mode == 'etoile' ? 'Photosphère' : 'À 1 bar'), (t.jour|number_format(0, ',', ' ')) ~ ' K') }}
         {% if t.mode != 'etoile' %}{{ c.tuile(c.celsius(t.nuit), t.mode == 'solide' ? 'Face sombre' : 'Autre face', (t.nuit|number_format(0, ',', ' ')) ~ ' K') }}{% endif %}
@@ -42,19 +42,19 @@
     </section>
     {% endif %}
 
-    <section aria-labelledby="donnees" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="donnees" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Données</h2>
-      <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
-        {% for k, v in a.calculs %}<dt class="text-doux">{{ k }}</dt><dd class="tabular-nums">{{ v }}</dd>{% endfor %}
-        {% if a.bord is defined %}<dt class="text-doux">Bord du système</dt><dd>{{ a.bord }} UA <span class="text-doux">(provisoire)</span></dd>{% endif %}
+    <section aria-labelledby="donnees" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('donnees', 'Données', ['suggere','calcule']) }}
+      <dl class="grid gap-x-6 gap-y-3.5 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+        {% for k, v in a.calculs %}<dt class="text-doux">{{ k }}</dt><dd class="flex flex-wrap items-center gap-x-2.5 gap-y-1 tabular-nums">{{ v }} {{ c.statut(a.statuts[k]) }}</dd>{% endfor %}
+        {% if a.bord is defined %}<dt class="text-doux">Bord du système</dt><dd class="flex flex-wrap items-center gap-2.5">{{ a.bord }} UA {{ c.statut('provisoire') }}</dd>{% endif %}
         {% if a.parent %}<dt class="text-doux">Planète mère</dt><dd><a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: a.parent.id}) }}">{{ a.parent.name }}</a></dd>{% endif %}
       </dl>
     </section>
 
     {% if d.names is defined %}
-    <section aria-labelledby="noms" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="noms" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Noms</h2>
-      <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+    <section aria-labelledby="noms" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('noms', 'Noms', ['canon']) }}
+      <dl class="grid gap-x-6 gap-y-3.5 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
         <dt class="text-doux">Nom tyt sacré</dt><dd>{{ d.names.tyt }}</dd>
         {% if d.names.tytCourant and d.names.tytCourant != d.names.tyt %}<dt class="text-doux">Courant</dt><dd>{{ d.names.tytCourant }}</dd>{% endif %}
         {% if d.names.sens %}<dt class="text-doux">Sens</dt><dd>« {{ d.names.sens }} »</dd>{% endif %}
@@ -64,20 +64,20 @@
     </section>{% endif %}
 
     {% if a.sites %}
-    <section aria-labelledby="sites" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="sites" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Sites ({{ a.sites|length }})</h2>
+    <section aria-labelledby="sites" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('sites', 'Sites (' ~ a.sites|length ~ ')', ['suggere']) }}
       <ul class="divide-y divide-ligne">{% for s in a.sites %}<li><a class="flex min-h-11 items-center justify-between gap-3 py-2 hover:text-accent" href="{{ path('fiches_site', {id: s.id}) }}"><span>{{ s.name }}</span><span class="text-sm tabular-nums text-doux">{{ (s.population + s.tyts)|number_format(0, ',', ' ') }} hab.</span></a></li>{% endfor %}</ul>
     </section>{% endif %}
 
     {% if a.personnages %}
-    <section aria-labelledby="persos" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="persos" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Personnages</h2>
+    <section aria-labelledby="persos" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('persos', 'Personnages', ['canon']) }}
       <ul class="divide-y divide-ligne">{% for p in a.personnages %}<li><a class="flex min-h-11 flex-col justify-center py-2 hover:text-accent" href="{{ path('fiches_personnage', {id: p.id}) }}"><span>{{ p.nom }}</span><span class="text-sm text-doux">{{ p.role }}</span></a></li>{% endfor %}</ul>
     </section>{% endif %}
 
     {% if a.vestiges %}
-    <section aria-labelledby="vestiges" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="vestiges" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Vestiges des Anciens</h2>
+    <section aria-labelledby="vestiges" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('vestiges', 'Vestiges des Anciens', ['canon']) }}
       <ul class="space-y-4">{% for v in a.vestiges %}<li><p class="flex flex-wrap items-center gap-2 font-semibold">{{ v.titre }} {{ c.badge(v.niveau, v.niveau == 'canon' ? 'ok' : (v.niveau == 'iceberg' ? 'accent' : 'neutre')) }}</p><p class="mt-1 text-doux">{{ v.texte }}</p></li>{% endfor %}</ul>
     </section>{% endif %}
     {% if is_granted('ROLE_ADMIN') %}{% include '_illustration_admin.html.twig' with {type: 'astre', cle: id, televersee: televersee} only %}{% endif %}

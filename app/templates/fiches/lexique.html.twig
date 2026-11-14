@@ -12,10 +12,10 @@
       <li class="shrink-0"><a class="flex min-h-11 items-center rounded-lg border border-ligne px-3 text-sm hover:border-accent hover:text-accent" href="#calendrier">Calendrier</a></li>
     </ul>
   </nav>
-  <div id="liste-lexique" class="space-y-6">
+  <div id="liste-lexique" class="space-y-8">
     {% for cat, entrees in groupes %}
-    <section data-groupe id="cat-{{ loop.index }}" aria-labelledby="t-{{ loop.index }}" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="t-{{ loop.index }}" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">{{ cat }}</h2>
+    <section data-groupe id="cat-{{ loop.index }}" aria-labelledby="t-{{ loop.index }}" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('t-' ~ loop.index, cat, ['canon']) }}
       <dl class="divide-y divide-ligne">
         {% for e in entrees %}
         <div data-filtrable class="grid gap-1 py-2 sm:grid-cols-[minmax(9rem,14rem)_1fr] sm:gap-x-6">
@@ -26,8 +26,8 @@
       </dl>
     </section>
     {% endfor %}
-    <section id="calendrier" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Calendrier confédéral</h2>
+    <section id="calendrier" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('calendrier-titre', 'Calendrier confédéral', ['canon']) }}
       <ol class="grid grid-cols-2 gap-2 sm:grid-cols-4">{% for m in mois %}<li class="rounded-lg border border-ligne px-3 py-2 text-sm"><span class="text-doux">{{ loop.index }}.</span> {{ m }}</li>{% endfor %}</ol>
     </section>
   </div>

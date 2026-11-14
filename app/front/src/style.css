@@ -298,6 +298,9 @@ body.ui-hidden #tour { display: none; }
 .pill { font-style: normal; font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 1px 7px; margin-right: 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); }
 .pill.canon { color: #8fd0ff; border-color: rgba(143, 208, 255, .5); }
 .pill.conception { color: var(--accent); border-color: rgba(255, 191, 107, .5); }
+.pill.simule { color: #c4a8ff; border-color: rgba(196, 168, 255, .5); }
+.pill.modifie { color: #ff9bd2; border-color: rgba(255, 155, 210, .5); }
+.pill.calcule { color: #7fe0d0; border-color: rgba(127, 224, 208, .45); }
 .pill.provisoire { color: var(--warn); border-color: rgba(255, 154, 107, .5); }
 
 /* Comparateur de lieux */

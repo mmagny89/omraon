@@ -12,6 +12,16 @@ use Symfony\Component\Routing\Attribute\Route;
 /** Données du système pour la vue : réservé aux comptes connectés (access_control, ^/ → ROLE_LECTEUR). */
 final class DonneesApiController extends AbstractController
 {
+    /** Sections modifiées par un admin : la vue en tire la pastille « modifié ». */
+    #[Route('/api/donnees/modifications', name: 'api_donnees_modifications', methods: ['GET'], priority: 10)]
+    public function modifications(DonneesService $donnees): JsonResponse
+    {
+        $reponse = new JsonResponse($donnees->modifications() ?: new \stdClass(), 200, ['X-Content-Type-Options' => 'nosniff']);
+        $reponse->headers->set('Cache-Control', 'private, no-store');
+
+        return $reponse;
+    }
+
     #[Route('/api/donnees/{jeu}', name: 'api_donnees', requirements: ['jeu' => DonneesService::JEUX_REGEX], methods: ['GET'])]
     public function jeu(string $jeu, DonneesService $donnees): JsonResponse
     {

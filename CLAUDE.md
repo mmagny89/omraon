@@ -42,6 +42,10 @@ Toute commande Docker passe par la **clé de service** (`php`, `database`), jama
 - Les classes s'écrivent en toutes lettres (Tailwind lit les fichiers comme du texte) : jamais `'bg-' + couleur`. Panneaux de la vue : composants dans `front/src/ui/composants.js` ; la vue reçoit sa feuille par `<!--VUE_CSS-->` remplacé dans `FrontController`.
 - Migration des panneaux **partielle**, composant par composant : tuiles, en-tête de fiche, sections repliables, séparateur, rubriques d'outils de site, listes de valeurs (`dl`), titres de bloc, notes, verdict et critères d'habitabilité, tableau de synthèse, suggestions. Reste dans `style.css`, par choix : tout ce qui dépend d'un état piloté en JavaScript ou de pseudo-éléments (liste des corps et son repli, frise, marqueurs de sites et de vaisseaux, HUD du sol), et les listes d'éléments dynamiques de certains panneaux. Les formulaires des panneaux d'options (réglages, population, réseau, économie, éphémérides, ciel, trajet, comparaison) sont migrés. On migre un composant à la fois en retirant sa règle.
 
+## Pastilles de provenance
+
+Six statuts, mêmes noms dans la vue (`front/src/ui/statut.js`, clé `conception` affichée « suggéré ») et dans les pages (`templates/_c.html.twig`, macro `statut`) : **canon** (documents du roman), **suggéré** (proposition de la simulation, `docs/hypotheses.md`), **calculé** (déduit des deux précédents), **simulé** (population, économie, réseau), **modifié** (section changée par un admin, détectée par `DonneesService::modifications()` ; la vue la lit sur `/api/donnees/modifications`), **provisoire**. Toute nouvelle information affichée porte sa pastille ; la légende est en pied de page.
+
 ## Règles du projet
 
 - **Canon contre conception.** Les documents du roman (00–13) fixent les ordres de grandeur, les noms, les propulsions, la chronologie. Toute autre valeur est une proposition de

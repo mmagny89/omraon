@@ -107,7 +107,7 @@ final class FichesTest extends WebTestCase
         try {
             $this->client->request('GET', '/sites/kalpra-mines');
             self::assertResponseIsSuccessful();
-            self::assertSelectorTextContains('main', 'conception');
+            self::assertSelectorTextContains('main', 'suggéré');
             $this->client->request('GET', '/personnages/mai');
             self::assertResponseIsSuccessful();
             self::assertSelectorTextContains('main', 'disparu');
@@ -116,5 +116,34 @@ final class FichesTest extends WebTestCase
         }
         self::assertSame([], $alertes, 'aucune alerte PHP au rendu');
         self::assertStringNotContainsString('Array', (string) $this->client->getResponse()->getContent());
+    }
+
+    public function testPastillesDeProvenance(): void
+    {
+        $this->client->request('GET', '/astres/kebet');
+        self::assertSelectorTextContains('main', 'calculé');
+        self::assertSelectorTextContains('main', 'suggéré');
+        self::assertSelectorNotExists('[title^="Section"]', 'rien de modifié au départ');
+        $this->client->request('GET', '/astres/omraon');
+        self::assertSelectorTextContains('main', 'canon');
+        $this->client->request('GET', '/lexique');
+        self::assertSelectorTextContains('main', 'canon');
+        self::assertSelectorTextContains('footer', 'Légende des pastilles');
+    }
+
+    public function testPastilleModifieApresEditionAdmin(): void
+    {
+        $svc = static::getContainer()->get(\App\Service\DonneesService::class);
+        $this->client->request('GET', '/api/donnees/modifications');
+        self::assertSame('{}', (string) $this->client->getResponse()->getContent());
+        $sys = json_decode(json_encode($svc->section('systeme', 'PLANETS')), true);
+        $svc->enregistrer('systeme', 'PLANETS', json_encode($sys), 'admin@example.test');
+        $this->client->request('GET', '/astres/kebet');
+        self::assertSelectorExists('[title*="PLANETS"][title*="admin@example.test"]');
+        $this->client->request('GET', '/astres/omraon');
+        self::assertSelectorNotExists('[title*="PLANETS"]', 'l\'étoile n\'est pas dans PLANETS');
+        $this->client->request('GET', '/api/donnees/modifications');
+        $m = json_decode((string) $this->client->getResponse()->getContent(), true);
+        self::assertSame('admin@example.test', $m['systeme']['PLANETS']['par']);
     }
 }

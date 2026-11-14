@@ -52,6 +52,16 @@ final readonly class FichesService
         $liste = $this->astres();
         $i = (int) array_search($id, array_column($liste, 'id'), true);
         $a['precedent'] = $liste[$i - 1] ?? null;
+        $sys = $this->donnees->jeu('systeme');
+        $section = $id === $sys->STAR->id ? 'STAR' : ($id === 'ceinture-principale' ? 'BELT' : ($id === 'ceinture-froide' ? 'COLD_BELT' : 'PLANETS'));
+        $a['modification'] = $this->modification('systeme', $section);
+        // Provenance de chaque ligne : les paramètres du canon que le roman ne chiffre pas sont suggérés, le reste est calculé.
+        $a['statuts'] = array_fill_keys(array_keys($a['calculs']), 'calcule');
+        foreach (['Demi-grand axe', 'Excentricité', 'Masse', 'Rayon', 'Température', 'Âge', 'Rotation', 'De', 'À'] as $k) {
+            if (isset($a['statuts'][$k])) {
+                $a['statuts'][$k] = 'suggere';
+            }
+        }
         $a['suivant'] = $liste[$i + 1] ?? null;
         if (isset($a['temperatures']) && $a['temperatures']['mode'] === 'solide') {
             $pct = static fn (float $k): float => round(max(0.0, min(100.0, ($k - 273.15 + 250) / 10)), 1);
@@ -59,6 +69,23 @@ final readonly class FichesService
         }
 
         return $a;
+    }
+
+    /**
+     * Pastille « modifié » : la section du jeu qui porte cette fiche a-t-elle été modifiée par un admin ?
+     *
+     * @return array{par: string, le: \DateTimeImmutable, section: string}|null
+     */
+    public function modification(string $jeu, string ...$sections): ?array
+    {
+        foreach ($sections as $section) {
+            $d = $this->donnees->surcharge($jeu, $section);
+            if ($d !== null) {
+                return ['par' => $d->getModifiePar(), 'le' => $d->getModifieLe(), 'section' => $section];
+            }
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed>|null */
@@ -131,7 +158,7 @@ final readonly class FichesService
                 $perso = array_values(array_filter($this->personnages(), static fn ($p) => ($p->origine->site ?? null) === $id));
                 $vest = array_values(array_filter($this->vestiges(), static fn ($v) => ($v->site ?? null) === $id));
 
-                return ['site' => $s, 'personnages' => $perso, 'vestiges' => $vest, 'corps' => $this->idAstre($s->body), 'scene' => $this->ambiance($s) !== null];
+                return ['site' => $s, 'personnages' => $perso, 'vestiges' => $vest, 'corps' => $this->idAstre($s->body), 'scene' => $this->ambiance($s) !== null, 'modification' => $this->modification('sites', 'SITES')];
             }
         }
 
@@ -162,7 +189,7 @@ final readonly class FichesService
                     }
                 }
 
-                return ['perso' => $p, 'site' => $site, 'corps' => $this->idAstre($p->origine->corps ?? '')];
+                return ['perso' => $p, 'site' => $site, 'corps' => $this->idAstre($p->origine->corps ?? ''), 'modification' => $this->modification('lore', 'PERSONNAGES')];
             }
         }
 
@@ -196,7 +223,7 @@ final readonly class FichesService
             if ($s->id === $siteId) {
                 $a = $this->ambiance($s);
 
-                return $a === null ? null : ['site' => $s] + $a;
+                return $a === null ? null : ['site' => $s, 'modification' => $this->modification('ambiances', 'AMBIANCES', 'AMBIANCES_SITES', 'SITE_EXTRA')] + $a;
             }
         }
 

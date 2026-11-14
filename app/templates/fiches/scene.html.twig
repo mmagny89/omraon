@@ -4,19 +4,19 @@
 {% block title %}{{ s.site.name }} — scène — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Scènes', url: path('fiches_scenes')}, {texte: s.site.name}]) }}
-{{ c.entete(a.titre ?? s.site.name, null, [{texte: a.canon ? 'canon' : 'non canon', ton: a.canon ? 'ok' : 'alerte'}, {texte: s.site.body}], c.illustration('site', s.site.id, 'Illustration : ' ~ s.site.name, 'size-24 sm:size-36')) }}
+{{ c.entete(a.titre ?? s.site.name, null, [{texte: s.site.body, ton: 'accent'}], c.illustration('site', s.site.id, 'Illustration : ' ~ s.site.name, 'size-24 sm:size-36'), [a.canon ? 'canon' : 'suggere'], s.modification) }}
 <div class="grid gap-4 md:grid-cols-2">
   {% for cle, titre in {voir: 'Voir', entendre: 'Entendre', sentir: 'Sentir', toucher: 'Toucher', corps: 'Corps'} %}
     {% if attribute(a, cle) is defined and attribute(a, cle) %}
-    <section class="rounded-xl border border-ligne bg-carte p-5" aria-labelledby="s-{{ cle }}">
-      <h2 id="s-{{ cle }}" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">{{ titre }}</h2>
+    <section class="rounded-xl border border-ligne bg-carte p-6" aria-labelledby="s-{{ cle }}">
+      {{ c.titre('s-' ~ cle, titre, [a.canon ? 'canon' : 'suggere']) }}
       <ul class="list-disc space-y-2 pl-5 marker:text-accent">{% for l in attribute(a, cle) %}<li>{{ l }}</li>{% endfor %}</ul>
     </section>
     {% endif %}
   {% endfor %}
   {% if s.extra %}
   <section class="rounded-xl border border-ligne bg-carte p-5 md:col-span-2" aria-labelledby="s-extra">
-    <h2 id="s-extra" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Précisions sur ce lieu</h2>
+    {{ c.titre('s-extra', 'Précisions sur ce lieu', ['suggere']) }}
     <ul class="list-disc space-y-2 pl-5 marker:text-accent">{% for l in s.extra %}<li>{{ l }}</li>{% endfor %}</ul>
   </section>
   {% endif %}

@@ -72,6 +72,23 @@ final class DonneesService
         return $this->jeu($jeu)->{$section} ?? null;
     }
 
+    /**
+     * Sections dont la valeur par défaut a été modifiée par un admin : { jeu: { section: { par, le } } }.
+     *
+     * @return array<string, array<string, array{par: string, le: string}>>
+     */
+    public function modifications(): array
+    {
+        $out = [];
+        foreach (array_keys(self::JEUX) as $jeu) {
+            foreach ($this->repo->parJeu($jeu) as $section => $d) {
+                $out[$jeu][$section] = ['par' => $d->getModifiePar(), 'le' => $d->getModifieLe()->format('c')];
+            }
+        }
+
+        return $out;
+    }
+
     public function estModifiee(string $jeu, string $section): bool
     {
         return isset($this->repo->parJeu($jeu)[$section]);

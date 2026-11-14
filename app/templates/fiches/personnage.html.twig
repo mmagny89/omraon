@@ -4,18 +4,18 @@
 {% block title %}{{ p.nom }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Personnages', url: path('fiches_personnages')}, {texte: p.nom}]) }}
-{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}]|merge(p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : []), c.illustration('personnage', p.id, 'Illustration : ' ~ p.nom, 'size-24 sm:size-36')) }}
-<div class="max-w-3xl space-y-6">
-  <section aria-labelledby="resume" class="rounded-xl border border-ligne bg-carte p-5">
-    <h2 id="resume" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Portrait</h2>
+{{ c.entete(p.nom, p.role, [{texte: p.espece, ton: 'accent'}]|merge(p.vivant is defined and not p.vivant ? [{texte: 'disparu', ton: 'alerte'}] : []), c.illustration('personnage', p.id, 'Illustration : ' ~ p.nom, 'size-24 sm:size-36'), [], f.modification) }}
+<div class="max-w-3xl space-y-8">
+  <section aria-labelledby="resume" class="rounded-xl border border-ligne bg-carte p-6">
+    {{ c.titre('resume', 'Portrait', ['canon']) }}
     {% if p.portrait is defined %}<div class="space-y-3 leading-relaxed">{% for para in p.portrait %}<p>{{ para }}</p>{% endfor %}</div>{% else %}<p>{{ p.resume }}</p>{% endif %}
   </section>
-  <section aria-labelledby="orig" class="rounded-xl border border-ligne bg-carte p-5">
-    <h2 id="orig" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Fiche</h2>
-    <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+  <section aria-labelledby="orig" class="rounded-xl border border-ligne bg-carte p-6">
+    {{ c.titre('orig', 'Fiche', ['canon']) }}
+    <dl class="grid gap-x-6 gap-y-3.5 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
       {% if p.fiche is defined %}{% for k, v in p.fiche %}<dt class="text-doux">{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}{% elseif p.age is defined %}<dt class="text-doux">Âge</dt><dd>{{ p.age }} ans</dd>{% endif %}
       <dt class="text-doux">Origine</dt>
-      <dd>{% if f.corps %}<a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: f.corps}) }}">{{ p.origine.corps }}</a>{% else %}{{ p.origine.corps }}{% endif %}{% if f.site %} — <a class="text-accent hover:underline" href="{{ path('fiches_site', {id: f.site.id}) }}">{{ f.site.name }}</a>{% endif %} {{ c.badge(p.origine.statut, p.origine.statut == 'canon' ? 'ok' : 'alerte') }}</dd>
+      <dd>{% if f.corps %}<a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: f.corps}) }}">{{ p.origine.corps }}</a>{% else %}{{ p.origine.corps }}{% endif %}{% if f.site %} — <a class="text-accent hover:underline" href="{{ path('fiches_site', {id: f.site.id}) }}">{{ f.site.name }}</a>{% endif %} {{ c.statut(p.origine.statut == 'canon' ? 'canon' : 'provisoire') }}</dd>
     </dl>
   </section>
   {% if is_granted('ROLE_ADMIN') %}{% include '_illustration_admin.html.twig' with {type: 'personnage', cle: p.id, televersee: televersee} only %}{% endif %}

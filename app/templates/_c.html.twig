@@ -1,13 +1,17 @@
 {# Composants d'affichage : aucune logique métier, seulement des classes. #}
-{% macro badge(texte, ton = 'neutre') %}
+{% macro badge(texte, ton = 'neutre', titre = null) %}
   {%- set tons = {
     neutre: 'border-ligne text-doux',
     accent: 'border-accent/50 bg-accent/10 text-accent',
     ok: 'border-ok/50 bg-ok/10 text-ok',
     alerte: 'border-alerte/50 bg-alerte/10 text-alerte',
     danger: 'border-danger/50 bg-danger/10 text-danger',
+    canon: 'border-sky-400/50 bg-sky-400/10 text-sky-300',
+    calcule: 'border-teal-400/50 bg-teal-400/10 text-teal-300',
+    simule: 'border-violet-400/50 bg-violet-400/10 text-violet-300',
+    modifie: 'border-pink-400/50 bg-pink-400/10 text-pink-300',
   } -%}
-  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium {{ tons[ton] ?? tons.neutre }}">{{ texte }}</span>
+  <span{% if titre %} title="{{ titre }}"{% endif %} class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium {{ tons[ton] ?? tons.neutre }}">{{ texte }}</span>
 {% endmacro %}
 
 {% macro tuile(valeur, libelle, sous = null) %}
@@ -44,15 +48,58 @@
   <img src="{{ path('illustration', {type: type, cle: cle}) }}" alt="{{ alt }}" width="128" height="128" loading="lazy" decoding="async" class="{{ classe }} shrink-0 rounded-xl bg-fond object-cover ring-1 ring-ligne">
 {% endmacro %}
 
-{% macro entete(titre, sousTitre = null, badges = [], image = null) %}
+{% macro entete(titre, sousTitre = null, badges = [], image = null, statuts = [], modification = null) %}
   <header class="mb-6 flex items-start gap-4 sm:gap-5">
     {% if image %}{{ image }}{% endif %}
     <div class="min-w-0">
       <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{{ titre }}</h1>
-      {% if badges %}<div class="mt-2 flex flex-wrap gap-2">{% for b in badges %}{{ _self.badge(b.texte, b.ton ?? 'neutre') }}{% endfor %}</div>{% endif %}
+      {% if badges or statuts or modification %}<div class="mt-3 flex flex-wrap gap-2">{% for b in badges %}{{ _self.badge(b.texte, b.ton ?? 'neutre') }}{% endfor %}{% for st in statuts %}{{ _self.statut(st) }}{% endfor %}{{ _self.modification(modification) }}</div>{% endif %}
       {% if sousTitre %}<p class="mt-3 max-w-3xl text-base text-doux">{{ sousTitre }}</p>{% endif %}
     </div>
   </header>
 {% endmacro %}
 
 {% macro celsius(kelvin) %}{{ (kelvin - 273.15)|number_format(0, ',', ' ') }} °C{% endmacro %}
+
+{# Pastilles de provenance : ce que vaut une information (voir la légende en pied de page). #}
+{% macro statut(code, aide = null) %}
+  {%- set defs = {
+    canon: {texte: 'canon', aide: 'Fixé par les documents du roman.'},
+    suggere: {texte: 'suggéré', aide: 'Proposition de la simulation : le roman ne fixe pas cette valeur (listée dans docs/hypotheses.md).'},
+    calcule: {texte: 'calculé', aide: 'Déduit par calcul à partir des valeurs du canon et des valeurs suggérées.'},
+    simule: {texte: 'simulé', aide: 'Résultat d\'une simulation (population, économie, réseau) : dépend de ses réglages.'},
+    modifie: {texte: 'modifié', aide: 'Valeur par défaut modifiée par un administrateur : elle diffère du canon d\'origine.'},
+    provisoire: {texte: 'provisoire', aide: 'À confirmer : le roman n\'a pas tranché.'},
+  } -%}
+  {%- set tons = {canon: 'canon', suggere: 'accent', calcule: 'calcule', simule: 'simule', modifie: 'modifie', provisoire: 'alerte'} -%}
+  {{- _self.badge(defs[code].texte, tons[code], aide ?? defs[code].aide) -}}
+{% endmacro %}
+
+{% macro modification(m) %}
+  {%- if m -%}{{ _self.statut('modifie', 'Section « ' ~ m.section ~ ' » modifiée par ' ~ m.par ~ ' le ' ~ m.le|date('d/m/Y à H:i') ~ '.') }}{%- endif -%}
+{% endmacro %}
+
+{% macro titre(id, texte, statuts = []) %}
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+    <h2 id="{{ id }}" class="text-sm font-semibold uppercase tracking-wider text-accent">{{ texte }}</h2>
+    {% if statuts %}<div class="flex flex-wrap gap-1.5">{% for st in statuts %}{{ _self.statut(st) }}{% endfor %}</div>{% endif %}
+  </div>
+{% endmacro %}
+
+{% macro legende() %}
+  <details class="mx-auto max-w-6xl text-sm">
+    <summary class="inline-flex min-h-11 cursor-pointer items-center text-doux hover:text-accent">Légende des pastilles</summary>
+    <ul class="mt-2 grid gap-3 pb-2 text-left sm:grid-cols-2 lg:grid-cols-3">
+      {% for code in ['canon', 'suggere', 'calcule', 'simule', 'modifie', 'provisoire'] %}
+        <li class="flex items-start gap-3">{{ _self.statut(code) }}<span class="text-doux">{{ {
+          canon: 'Fixé par les documents du roman.',
+          suggere: 'Proposition de la simulation, non fixée par le roman.',
+          calcule: 'Déduit par calcul des valeurs de base.',
+          simule: 'Résultat d\'une simulation, selon ses réglages.',
+          modifie: 'Valeur par défaut changée par un administrateur.',
+          provisoire: 'À confirmer, le roman n\'a pas tranché.',
+        }[code] }}</span></li>
+      {% endfor %}
+    </ul>
+  </details>
+{% endmacro %}

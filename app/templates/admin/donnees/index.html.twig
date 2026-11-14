@@ -4,10 +4,10 @@
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Valeurs par défaut'}]) }}
 {{ c.entete('Valeurs par défaut', 'Une section modifiée remplace le canon pour tous les comptes. Les lecteurs simulent à partir de ces valeurs sans les changer.') }}
-<div class="space-y-6">
+<div class="space-y-8">
 {% for jeu in jeux %}
-  <section class="rounded-xl border border-ligne bg-carte p-5" aria-labelledby="j-{{ jeu.cle }}">
-    <h2 id="j-{{ jeu.cle }}" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">{{ jeu.libelle }}</h2>
+  <section class="rounded-xl border border-ligne bg-carte p-6" aria-labelledby="j-{{ jeu.cle }}">
+    <h2 id="j-{{ jeu.cle }}" class="mb-5 text-sm font-semibold uppercase tracking-wider text-accent">{{ jeu.libelle }}</h2>
     <ul class="divide-y divide-ligne">
     {% for s in jeu.sections %}
       <li class="flex flex-wrap items-center justify-between gap-3 py-2">

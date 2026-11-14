@@ -4,17 +4,17 @@
 {% block title %}{{ s.name }} — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 {{ c.fil([{texte: 'Accueil', url: path('app_accueil')}, {texte: 'Sites', url: path('fiches_sites')}, {texte: s.name}]) }}
-{{ c.entete(s.name, s.role, [{texte: s.body, ton: 'accent'}, {texte: s.type}, {texte: s.habitat}]|merge(s.invented is defined and s.invented ? [{texte: 'conception'}] : []), c.illustration('site', s.id, 'Illustration : ' ~ s.name, 'size-24 sm:size-36')) }}
+{{ c.entete(s.name, s.role, [{texte: s.body, ton: 'accent'}, {texte: s.type}, {texte: s.habitat}], c.illustration('site', s.id, 'Illustration : ' ~ s.name, 'size-24 sm:size-36'), [s.invented is defined and s.invented ? 'suggere' : 'canon'], f.modification) }}
 <div class="grid gap-6 lg:grid-cols-[1fr_16rem]">
-  <div class="space-y-6">
+  <div class="space-y-8">
     <div class="grid gap-3 sm:grid-cols-3">
       {{ c.tuile(s.population|number_format(0, ',', ' '), 'Humains') }}
       {{ c.tuile(s.tyts|number_format(0, ',', ' '), 'Tyts') }}
       {{ c.tuile((s.population + s.tyts)|number_format(0, ',', ' '), 'Habitants') }}
     </div>
-    <section aria-labelledby="loc" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="loc" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Situation</h2>
-      <dl class="grid gap-x-6 gap-y-2 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
+    <section aria-labelledby="loc" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('loc', 'Situation', ['suggere']) }}
+      <dl class="grid gap-x-6 gap-y-3.5 sm:grid-cols-[minmax(9rem,14rem)_1fr]">
         <dt class="text-doux">Astre</dt><dd>{% if f.corps %}<a class="text-accent hover:underline" href="{{ path('fiches_astre', {id: f.corps}) }}">{{ s.body }}</a>{% else %}{{ s.body }}{% endif %}</dd>
         {% if s.lat is defined %}<dt class="text-doux">Position</dt><dd>lat {{ s.lat }}°, lon {{ s.lon }}°</dd>{% endif %}
         {% if s.fixe is defined %}<dt class="text-doux">Maintien</dt><dd>Station tenue en place au-dessus de lat {{ s.fixe.lat }}°, lon {{ s.fixe.lon }}°</dd>{% endif %}
@@ -23,13 +23,13 @@
       </dl>
     </section>
     {% if f.personnages %}
-    <section aria-labelledby="persos" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="persos" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Personnages</h2>
+    <section aria-labelledby="persos" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('persos', 'Personnages', ['canon']) }}
       <ul class="divide-y divide-ligne">{% for p in f.personnages %}<li><a class="flex min-h-11 flex-col justify-center py-2 hover:text-accent" href="{{ path('fiches_personnage', {id: p.id}) }}"><span>{{ p.nom }}</span><span class="text-sm text-doux">{{ p.role }}</span></a></li>{% endfor %}</ul>
     </section>{% endif %}
     {% if f.vestiges %}
-    <section aria-labelledby="vest" class="rounded-xl border border-ligne bg-carte p-5">
-      <h2 id="vest" class="mb-3 text-sm font-semibold uppercase tracking-wider text-accent">Vestiges</h2>
+    <section aria-labelledby="vest" class="rounded-xl border border-ligne bg-carte p-6">
+      {{ c.titre('vest', 'Vestiges', ['canon']) }}
       <ul class="space-y-4">{% for v in f.vestiges %}<li><p class="flex flex-wrap items-center gap-2 font-semibold">{{ v.titre }} {{ c.badge(v.niveau, v.niveau == 'canon' ? 'ok' : 'accent') }}</p><p class="mt-1 text-doux">{{ v.texte }}</p></li>{% endfor %}</ul>
     </section>{% endif %}
     {% if is_granted('ROLE_ADMIN') %}{% include '_illustration_admin.html.twig' with {type: 'site', cle: s.id, televersee: televersee} only %}{% endif %}

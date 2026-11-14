@@ -74,11 +74,23 @@ export class UI {
     initEconomie({ root: $('#options'), getPos: () => this.sitePositions(), getTime: () => this.target, getPopParams: () => this.readPop(), appliquerMisere: (y, niveau, duree) => { $('#pop-my').value = Math.round((y + AN_PRESENT) * 100) / 100; $('#pop-ml').value = Math.round(niveau * 1000) / 1000; $('#pop-md').value = Math.round(duree * 100) / 100; $('#pop-ml').dispatchEvent(new Event('input', { bubbles: true })); }, setFlux: (d, m) => this.world.setFlux(d, m), rejouer: (t0, j) => this.rejouerEco(t0, j), setMarkers: (m) => this.world.siteEls?.forEach((r, id) => (m?.has(id) ? r.el.style.setProperty('--c', m.get(id)) : r.el.style.removeProperty('--c'))) });
     this.buildPop();
     this.bind();
+    this.chargerModifications();
+    this.pastillesOptions();
     world.onSelect = (i) => this.select(i, true);
     this.select(0, false);
   }
 
   // Liste hiérarchique : chaque planète forme un groupe — ses villes et stations, puis ses lunes (avec leurs propres sites).
+  /** Pastilles de provenance sur les panneaux d'options (le contenu de la fiche porte les siennes, voir begin()). */
+  pastillesOptions() {
+    for (const [id, statut] of [['pop', 'simule'], ['reseau', 'simule'], ['eco', 'simule'], ['ephem', 'calcule']]) {
+      const sm = document.querySelector(`#${id} > summary`), st = STATUTS[statut];
+      if (!sm || sm.querySelector('.pill')) continue;
+      const e = document.createElement('em'); e.className = `pill ${statut}`; e.textContent = st.label; e.dataset.tip = st.tip; e.style.marginLeft = '8px';
+      sm.append(e);
+    }
+  }
+
   buildList() {
     const list = $('#list'); list.innerHTML = '';
     const bodies = this.sim.bodies;
@@ -588,6 +600,18 @@ export class UI {
     const out = $('#tr-out'); if (out.dataset.h !== h) { out.innerHTML = h; out.dataset.h = h; }
   }
 
+  /** Texte de l'infobulle « modifié » si la section a été changée par un admin, sinon null. */
+  modifie(jeu, section) {
+    const m = this.modifs?.[jeu]?.[section];
+    return m ? `Section « ${section} » modifiée par ${esc(m.par)} le ${new Date(m.le).toLocaleDateString('fr-FR')}.` : null;
+  }
+
+  /** Sections modifiées par un admin (pastille « modifié ») : chargées une fois, affichées au rafraîchissement suivant. */
+  chargerModifications() {
+    fetch('/api/donnees/modifications', { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then((r) => (r.ok ? r.json() : {})).then((m) => { this.modifs = m; }).catch(() => {});
+  }
+
   /** Face éclairée et face sombre d'un astre (modèle de physics/thermique.js). */
   temperaturesHtml(idx) {
     const t = facesCorps(this.sim, (i) => this.world.bodies[i].el, idx), c = (k) => `${f(k - 273.15, 0)} °C (${f(k, 0)} K)`;
@@ -608,7 +632,7 @@ export class UI {
     const type = { surface: 'Base au sol', orbit: site.fixe ? 'Station tenue en place' : 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
     const yy = Math.floor(this.target / DAYS_PER_YEAR), pm = this.pop && yy !== 0 ? this.pop.at(yy) : null, p0 = this.pop?.at(0);
     const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
-    let h = entete({ site: true, titre: site.name, sous: `${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}` }) + accroche(site.role) + tuiles(`${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}`);
+    let h = entete({ site: true, titre: site.name, sous: `${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}`, modifie: this.modifie('sites', 'SITES') }) + accroche(site.role) + tuiles(`${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}`);
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
     if (rec?.st) h += this.temperatureSiteHtml(site, rec.st);
     h += this.loreHtml(site.body, site.id);
@@ -855,7 +879,7 @@ export class UI {
     const sim = this.sim, zi = sim.bodies.find((b) => b.def.id === 'zirkan'), aZ = this.world.bodies[zi.idx].el?.a ?? zi.def.orbit.a, nf = (n) => n.toLocaleString('fr-FR');
     const tile = (...a) => this.tile(...a), width = BELT.aMax - BELT.aMin;
     const tiles = tile(`${BELT.aMin}–${BELT.aMax} UA`, 'Étendue') + tile(`${f(width * AU_KM / 1e6, 0)} M km`, 'Largeur', `${f(width, 2)} UA`) + tile(nf(sim.pN), 'Traceurs simulés', 'sans masse, sans collisions entre eux') + tile(`${f(aZ, 2)} UA`, 'Zirkan voisine', `limite instable ≈ ${f(aZ - 0.33, 2)} UA (conception)`);
-    let h = entete({ couleur: '#c8c8d0', titre: BELT.name, sous: 'Ceinture d\'astéroïdes' }) + accroche(BELT.role) + tuiles(tiles);
+    let h = entete({ couleur: '#c8c8d0', titre: BELT.name, sous: 'Ceinture d\'astéroïdes', modifie: this.modifie('systeme', 'BELT') }) + accroche(BELT.role) + tuiles(tiles);
     h += this.begin('Noms', false, 'canon') + `<dl class="${DL}">${row('Nom tyt sacré', BELT.names.tyt)}${row('Courant', BELT.names.tytCourant)}${row('Sens', `« ${BELT.names.sens} »`)}</dl></details>`;
     const res = [[2, 1], [5, 2], [3, 1]].map(([p, q]) => ({ p, q, a: aZ * (q / p) ** (2 / 3) }));
     h += this.begin('Résonances avec Zirkan', true, 'calcule') + `<dl class="${DL}">${res.map((r) => row(`${r.p}:${r.q}`, `${f(r.a, 3)} UA`, r.a >= BELT.aMin && r.a <= BELT.aMax ? 'warn' : '')).join('')}</dl><p class="${NOTE}">En orange : dans la ceinture, où ces résonances creusent des lacunes (comme les lacunes de Kirkwood autour de Jupiter).</p></details>`;
@@ -1071,7 +1095,7 @@ export class UI {
         + tile(sid ? this.jourCourt(sid) : '—', 'Jour', sid ? `${fmtTerre(sid)} Terre` : '', sid ? tipJauge({ titre: 'Jour sidéral', texte: `${this.jourCourt(sid)} de Kebet · ${fmtTerre(sid)} Terre`, v: sid, min: 0.1, max: 100, log: true, marques: [{ v: jourKebet(), label: 'Kebet' }], note: 'Jours terrestres, échelle logarithmique. Un jour de Kebet vaut 24 h de Kebet.' }) : '')
         + tile(`${f(b.radiusKm, 0)} km`, 'Rayon', '', tipR)
         + tile(`${f(tEq, 0)} °C`, 'T équilibre', '', tipJauge({ titre: 'Température d\'équilibre', texte: `${f(tEq, 0)} °C · ${f(tEq + 273.15, 0)} K`, v: tEq, min: -250, max: 500, bandes: [{ de: 0, a: 100, cls: 'ok', label: 'eau liquide à 1 bar' }], marques: [{ v: 15, label: 'Terre (moy.)' }], note: 'Sans effet de serre ni chaleur interne.' }));
-    h += entete({ couleur: d.color || '#9fb4d8', titre: d.name, sous: kind, puce: hab ? { niveau: hab.level, label: hab.label } : null }) + accroche(d.role) + tuiles(tiles);
+    h += entete({ couleur: d.color || '#9fb4d8', titre: d.name, sous: kind, puce: hab ? { niveau: hab.level, label: hab.label } : null, modifie: this.modifie('systeme', b.type === 'star' ? 'STAR' : 'PLANETS') }) + accroche(d.role) + tuiles(tiles);
     h += liensFiches([...(this.selectedSite ? [{ href: `/sites/${this.selectedSite}`, texte: 'Fiche du site ›' }] : []), { href: `/astres/${d.id}`, texte: `Fiche de ${d.name} ›` }]);
     h += this.temperaturesHtml(b.idx);
     h += this.begin('Noms', false, d.provisional ? 'provisoire' : 'canon') + `<dl class="${DL}">${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;

@@ -6,7 +6,7 @@
 {{ c.entete('Chronologie', 'Ordres de grandeur d\'auteur, pas des dates à citer. An 0 : début de l\'Ère confédérale ; le présent du roman est l\'An 300.') }}
 <div class="grid gap-8 lg:grid-cols-2">
   <section aria-labelledby="eres">
-    <h2 id="eres" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Ères</h2>
+    {{ c.titre('eres', 'Ères', ['canon']) }}
     <ol class="space-y-3">
       {% for e in eres %}
       <li class="rounded-xl border border-ligne bg-carte p-4">
@@ -17,7 +17,7 @@
     </ol>
   </section>
   <section aria-labelledby="evts">
-    <h2 id="evts" class="mb-4 text-sm font-semibold uppercase tracking-wider text-accent">Événements</h2>
+    {{ c.titre('evts', 'Événements', ['canon']) }}
     <ol class="relative space-y-6 border-l border-ligne pl-6">
       {% for e in evenements %}
       <li class="relative">
