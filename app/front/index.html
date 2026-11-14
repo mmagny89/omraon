@@ -56,12 +56,12 @@
   <div id="site-tools" hidden>
     <button type="button" id="ground-btn" class="wide-btn">👁 Vue à hauteur d'yeux (horizon)</button>
     <details id="sky-box" class="group"><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🌌</span>Ciel vu d'ici<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary>
-      <div class="sky-ctl"><label>Centre <select id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option><option value="free">Libre (glisser)</option></select></label>
-      <label>Champ <select id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option><option value="custom" hidden>—</option></select></label></div>
+      <div class="flex flex-wrap gap-3 py-1"><label class="flex items-center gap-1.5 text-doux">Centre <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="sky-center"><option value="star">Étoile</option><option value="parent">Planète parente</option><option value="north">Nord</option><option value="free">Libre (glisser)</option></select></label>
+      <label class="flex items-center gap-1.5 text-doux">Champ <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="sky-fov"><option value="360">360°</option><option value="180" selected>180°</option><option value="90">90°</option><option value="40">40°</option><option value="custom" hidden>—</option></select></label></div>
       <canvas id="sky" role="img" aria-label="Ciel vu du site sélectionné"></canvas><div id="sky-info"></div><div class="text-[11px] text-doux">Glisser : tourner et incliner · molette ou pincement : champ · double-clic : recentrer sur l'étoile</div>
     </details>
     <details id="scene-box" class="group"><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🎬</span>Fiche de scène<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><div id="scene-out"></div><div class="actions"><button type="button" id="scene-copy">Copier le texte</button></div></details>
-  </div><details id="transfer" class="group" hidden><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🚀</span>Trajet vers un autre site<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><select id="tr-dest" aria-label="Destination"></select><select id="tr-prop" aria-label="Propulsion"></select><label for="tr-acc" class="acc">Accélération (g, hypothèse)</label><input id="tr-acc" type="number" min="0.001" step="any" value="8" inputmode="decimal"><button type="button" id="tr-launch">▶ Lancer le voyage du Mai</button><div id="tr-out"></div></details><div id="info-live"></div></aside>
+  </div><details id="transfer" class="group" hidden><summary class="flex min-h-11 cursor-pointer list-none items-center gap-2.5 rounded-[10px] border border-accent/35 bg-accent/10 px-3 py-2 my-2 font-semibold text-texte hover:border-accent hover:bg-accent/15 [&::-webkit-details-marker]:hidden"><span aria-hidden="true">🚀</span>Trajet vers un autre site<svg aria-hidden="true" viewBox="0 0 10 10" class="ml-auto size-6 shrink-0 rounded-full bg-accent/15 p-[7px] text-accent transition-transform group-open:rotate-90 motion-reduce:transition-none"><path d="M3 1l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></summary><select id="tr-dest" class="my-1 w-full min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" aria-label="Destination"></select><select id="tr-prop" class="my-1 w-full min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" aria-label="Propulsion"></select><label for="tr-acc" class="mt-1.5 block text-doux">Accélération (g, hypothèse)</label><input id="tr-acc" class="w-full min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" type="number" min="0.001" step="any" value="8" inputmode="decimal"><button type="button" id="tr-launch">▶ Lancer le voyage du Mai</button><div id="tr-out"></div></details><div id="info-live"></div></aside>
 
   <footer id="bar">
     <div class="row">
@@ -100,8 +100,8 @@
     <details id="compare">
       <summary>Comparer deux lieux</summary>
       <div class="grid">
-        <label for="cmp-a">Lieu A</label><select id="cmp-a" class="wide"></select>
-        <label for="cmp-b">Lieu B</label><select id="cmp-b" class="wide"></select>
+        <label for="cmp-a">Lieu A</label><select id="cmp-a" class="w-full min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11"></select>
+        <label for="cmp-b">Lieu B</label><select id="cmp-b" class="w-full min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11"></select>
       </div>
       <div id="cmp-out"></div>
     </details>
@@ -125,40 +125,40 @@
     </details>
     <details id="settings">
       <summary>Paramètres &amp; diagnostics</summary>
-      <div class="grid">
-        <label><input type="checkbox" id="t-orbits" checked> Orbites</label>
-        <label><input type="checkbox" id="t-labels" checked> Noms</label>
-        <label><input type="checkbox" id="t-belt" checked> Ceinture (Nunzir)</label>
-        <label><input type="checkbox" id="t-edge" checked> Confins (35 UA)</label>
-        <label><input type="checkbox" id="t-gr" checked> Relativité générale (1PN)</label>
-        <label><input type="checkbox" id="t-trojans" checked> Troyens de Zirkan et de Roushan (ajout)</label>
-        <div class="wide fld"><label for="n-ast">Astéroïdes :</label><output id="n-out" for="n-ast">4000</output><input type="range" id="n-ast" min="500" max="20000" step="500" value="4000"></div>
-        <div class="wide diag" id="diag"></div>
-        <button type="button" id="reset" class="wide">Réinitialiser la simulation</button>
+      <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="t-orbits" checked> Orbites</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="t-labels" checked> Noms</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="t-belt" checked> Ceinture (Nunzir)</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="t-edge" checked> Confins (35 UA)</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="t-gr" checked> Relativité générale (1PN)</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="t-trojans" checked> Troyens de Zirkan et de Roushan (ajout)</label>
+        <div class="col-span-full flex min-h-11 items-center gap-2"><label class="flex min-h-0 items-center gap-2" for="n-ast">Astéroïdes :</label><output id="n-out" for="n-ast">4000</output><input type="range" id="n-ast" class="flex-1 accent-accent" min="500" max="20000" step="500" value="4000"></div>
+        <div class="col-span-full diag" id="diag"></div>
+        <button type="button" id="reset" class="col-span-full">Réinitialiser la simulation</button>
       </div>
     </details>
     <details id="pop"><summary>Population et dégel</summary>
-      <div class="grid">
-        <label>Passagers de l'arche <input id="pop-n0" type="number" min="1000" step="500" value="10000" inputmode="numeric"></label>
-        <label>Humains au présent <input id="pop-h" type="number" min="5000" step="10000" value="500000" inputmode="numeric"></label>
-        <label>Tyts à l'arrivée <input id="pop-t0" type="number" min="100" step="500" value="4000" inputmode="numeric"></label>
-        <label>Nombre de Tyts <select id="pop-mode"><option value="gestion">Géré (production / réduction)</option><option value="nature">Subi (croissance sous contrainte)</option></select></label>
-        <label>Ratio Tyts / humains visé <input id="pop-ratio" type="number" min="0.1" step="0.1" value="0.7" inputmode="decimal"></label>
-        <label>Croissance subie (%/an) <input id="pop-growth" type="number" min="0" step="0.1" value="0.8" inputmode="decimal"></label>
-        <label>Demi-vie du savoir de contrôle (ans) <input id="pop-know" type="number" min="20" step="10" value="220" inputmode="numeric"></label>
-        <label>Capacité de contrôle requise <input id="pop-ctl" type="number" min="0.1" step="0.05" value="1.04" inputmode="decimal"></label>
-        <label>Demi-vie du désespoir (ans) <input id="pop-dh" type="number" min="20" step="20" value="460" inputmode="numeric"></label>
-        <label>Vérité rapportée à l'An <input id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
-        <label>… force (0–1) <input id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
-        <label>Crise de misère à l'An <input id="pop-my" type="number" step="0.1" placeholder="aucune" inputmode="decimal"></label>
-        <label>… niveau (0–1) <input id="pop-ml" type="number" min="0" max="1" step="0.05" value="0" inputmode="decimal"></label>
-        <label>… durée (ans) <input id="pop-md" type="number" min="0.1" step="0.1" value="1" inputmode="decimal"></label>
-        <label>Monde natal tyt avant le génocide <input id="pop-nat" type="number" min="1000" step="1000000" value="30000000" inputmode="numeric"></label>
-        <label>Prisonniers de guerre épargnés <input id="pop-pow" type="number" min="0" step="100" value="2000" inputmode="numeric"></label>
-        <label>Tyts partis sur Terre <input id="pop-earth" type="number" min="0" step="100" value="1500" inputmode="numeric"></label>
-        <label>Hybrides : conceptions par an (1 M d'humains × 1 M de Tyts) <input id="pop-hc" type="number" min="0" step="5" value="30" inputmode="numeric"></label>
-        <label>Hybrides : mères mortes en couche (%) <input id="pop-hm" type="number" min="0" max="100" step="1" value="15" inputmode="numeric"></label>
-        <button type="button" id="pop-reset" class="wide">Valeurs calées sur les documents</button>
+      <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Passagers de l'arche <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-n0" type="number" min="1000" step="500" value="10000" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Humains au présent <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-h" type="number" min="5000" step="10000" value="500000" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Tyts à l'arrivée <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-t0" type="number" min="100" step="500" value="4000" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Nombre de Tyts <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-mode"><option value="gestion">Géré (production / réduction)</option><option value="nature">Subi (croissance sous contrainte)</option></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Ratio Tyts / humains visé <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-ratio" type="number" min="0.1" step="0.1" value="0.7" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Croissance subie (%/an) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-growth" type="number" min="0" step="0.1" value="0.8" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Demi-vie du savoir de contrôle (ans) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-know" type="number" min="20" step="10" value="220" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Capacité de contrôle requise <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-ctl" type="number" min="0.1" step="0.05" value="1.04" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Demi-vie du désespoir (ans) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-dh" type="number" min="20" step="20" value="460" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Vérité rapportée à l'An <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-ty" type="number" step="1" placeholder="jamais" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">… force (0–1) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-ts" type="number" min="0" max="1" step="0.1" value="0.6" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Crise de misère à l'An <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-my" type="number" step="0.1" placeholder="aucune" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">… niveau (0–1) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-ml" type="number" min="0" max="1" step="0.05" value="0" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">… durée (ans) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-md" type="number" min="0.1" step="0.1" value="1" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Monde natal tyt avant le génocide <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-nat" type="number" min="1000" step="1000000" value="30000000" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Prisonniers de guerre épargnés <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-pow" type="number" min="0" step="100" value="2000" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Tyts partis sur Terre <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-earth" type="number" min="0" step="100" value="1500" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Hybrides : conceptions par an (1 M d'humains × 1 M de Tyts) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-hc" type="number" min="0" step="5" value="30" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 justify-between text-doux">Hybrides : mères mortes en couche (%) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11 w-24" id="pop-hm" type="number" min="0" max="100" step="1" value="15" inputmode="numeric"></label>
+        <button type="button" id="pop-reset" class="col-span-full">Valeurs calées sur les documents</button>
       </div>
       <p id="pop-hv" class="note" aria-live="off">Survolez une courbe pour lire les chiffres d'une année.</p>
       <figure class="pop-fig"><figcaption><b>Effectifs et contrôle</b><span>Nombre de personnes (échelle logarithmique, à gauche) · contrôle des humains sur les Tyts (0 à 100 %) · abscisse : année de l'Ère confédérale · barre blanche : date de la frise</span></figcaption>
@@ -176,44 +176,44 @@
       <div id="pop-sum" class="note"></div><table id="pop-at"></table>
     </details>
     <details id="reseau"><summary>Réseau de communication</summary>
-      <div class="grid">
-        <label>Origine <select id="net-origin"></select></label>
-        <label>Mode <select id="net-mode"><option value="diffusion">Diffusion sur le réseau (piratage)</option><option value="bouche">Bouche-à-oreille (vaisseaux)</option></select></label>
-        <label>Topologie <select id="net-topo"><option value="direct">Direct</option><option value="controle">Via le Consortium (contrôlé)</option><option value="pirate">Réseau pirate chiffré</option></select></label>
-        <label>Horizon <select id="net-h"><option data-jk="1" value="1">1 jour</option><option data-jk="7" value="7" selected>7 jours</option><option data-jk="30" value="30">30 jours</option><option value="365">1 an</option></select></label>
-        <label>Routage (min/saut) <input id="net-hop" type="number" min="0" step="any" value="2" inputmode="decimal"></label>
-        <label>Réaction du Consortium (min) <input id="net-det" type="number" min="0" step="any" value="360" inputmode="decimal"></label>
-        <button type="button" id="net-go" class="wide">Lancer la diffusion</button>
-        <button type="button" id="net-stop" class="wide" hidden>Arrêter et effacer les couleurs</button>
+      <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Origine <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="net-origin"></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Mode <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="net-mode"><option value="diffusion">Diffusion sur le réseau (piratage)</option><option value="bouche">Bouche-à-oreille (vaisseaux)</option></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Topologie <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="net-topo"><option value="direct">Direct</option><option value="controle">Via le Consortium (contrôlé)</option><option value="pirate">Réseau pirate chiffré</option></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Horizon <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="net-h"><option data-jk="1" value="1">1 jour</option><option data-jk="7" value="7" selected>7 jours</option><option data-jk="30" value="30">30 jours</option><option value="365">1 an</option></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Routage (min/saut) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="net-hop" type="number" min="0" step="any" value="2" inputmode="decimal"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Réaction du Consortium (min) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="net-det" type="number" min="0" step="any" value="360" inputmode="decimal"></label>
+        <button type="button" id="net-go" class="col-span-full">Lancer la diffusion</button>
+        <button type="button" id="net-stop" class="col-span-full" hidden>Arrêter et effacer les couleurs</button>
       </div>
       <canvas id="net-chart" role="img" aria-label="Part de la population informée en fonction du temps"></canvas>
       <div id="net-sum" class="note"></div><div id="net-tab-wrap"><table id="net-tab"></table></div>
     </details>
     <details id="eco"><summary>Économie et commerce</summary>
       <p class="note">Modèle simple, tout est de la conception : prix par rareté, transporteurs qui arbitrent, péage de Naksun, douane de Kebet, contrebande. La monnaie (crédit) porte un nom provisoire. Les positions sont celles du jour affiché.</p>
-      <div class="grid">
-        <label>Horizon <select id="eco-h"><option data-jk="30" value="30">30 jours</option><option data-jk="90" value="90" selected>90 jours</option><option data-jk="180" value="180">180 jours</option><option data-jk="365" value="365">1 an</option></select></label>
-        <label>Choc <select id="eco-choc"></select></label>
-        <label>Événement daté <select id="eco-ev"></select></label>
-        <label>… dès le jour <input id="eco-ev-de" type="number" min="0" step="1" value="30" inputmode="numeric"></label>
-        <label>… pendant (jours) <input id="eco-ev-du" type="number" min="1" step="1" value="30" inputmode="numeric"></label>
-        <label><input type="checkbox" id="eco-hasard"> Hasard (fouilles, pirates)</label>
-        <label>… graine <input id="eco-graine" type="number" min="0" step="1" value="1" inputmode="numeric"></label>
-        <button type="button" id="eco-go" class="wide">Simuler</button>
-        <button type="button" id="eco-stop" class="wide" hidden>Interrompre</button>
+      <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Horizon <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-h"><option data-jk="30" value="30">30 jours</option><option data-jk="90" value="90" selected>90 jours</option><option data-jk="180" value="180">180 jours</option><option data-jk="365" value="365">1 an</option></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Choc <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-choc"></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Événement daté <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-ev"></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">… dès le jour <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-ev-de" type="number" min="0" step="1" value="30" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">… pendant (jours) <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-ev-du" type="number" min="1" step="1" value="30" inputmode="numeric"></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="eco-hasard"> Hasard (fouilles, pirates)</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">… graine <input class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-graine" type="number" min="0" step="1" value="1" inputmode="numeric"></label>
+        <button type="button" id="eco-go" class="col-span-full">Simuler</button>
+        <button type="button" id="eco-stop" class="col-span-full" hidden>Interrompre</button>
       </div>
       <p id="eco-prog" class="note" role="status" aria-live="polite"></p>
       <div id="eco-res" hidden>
         <div id="eco-sum" class="note"></div>
         <div id="eco-cmp" hidden><h3>Écart avec la référence</h3><div class="eco-wrap"><table id="eco-cmp-t" class="eco-tab"></table></div></div>
-        <div id="eco-couple" hidden><h3>Effet sur le dégel du contrôle</h3><p id="eco-couple-t" class="note"></p><div class="eco-wrap"><table id="eco-couple-tab" class="eco-tab"></table></div><button type="button" id="eco-appliquer" class="wide">Appliquer au panneau Population</button></div>
-        <div class="grid">
-          <label>Marchandise <select id="eco-bien"></select></label>
-          <label><input type="checkbox" id="eco-marq"> Colorier les sites (prix à la fin)</label>
+        <div id="eco-couple" hidden><h3>Effet sur le dégel du contrôle</h3><p id="eco-couple-t" class="note"></p><div class="eco-wrap"><table id="eco-couple-tab" class="eco-tab"></table></div><button type="button" id="eco-appliquer" class="col-span-full">Appliquer au panneau Population</button></div>
+        <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+          <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Marchandise <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-bien"></select></label>
+          <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="eco-marq"> Colorier les sites (prix à la fin)</label>
         </div>
-        <div class="grid">
-          <label>Sur la carte <select id="eco-vue"><option value="tout">Convois et routes</option><option value="convois">Convois seuls</option><option value="routes">Routes seules</option><option value="aucun">Rien</option></select></label>
-          <button type="button" id="eco-rejouer" class="wide">▶ Rejouer sur la carte</button>
+        <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+          <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11 text-doux">Sur la carte <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eco-vue"><option value="tout">Convois et routes</option><option value="convois">Convois seuls</option><option value="routes">Routes seules</option><option value="aucun">Rien</option></select></label>
+          <button type="button" id="eco-rejouer" class="col-span-full">▶ Rejouer sur la carte</button>
         </div>
         <ul id="eco-carte-leg" class="pop-lg"></ul>
         <figure class="pop-fig"><figcaption><b>Évolution des prix</b><span>En multiple du prix de base (échelle logarithmique) ; abscisse : jours de la simulation ; les six sites les plus peuplés qui sont un marché pour cette marchandise</span></figcaption>
@@ -227,14 +227,14 @@
       </div>
     </details>
     <details id="ephem"><summary>Éphémérides</summary>
-      <div class="grid">
-        <label>Horizon <select id="eph-h"><option data-jk="30" value="30">30 jours</option><option value="365.25" selected>1 an</option><option value="1826">5 ans</option></select></label>
-        <label>Corps <select id="eph-body"></select></label>
-        <label><input type="checkbox" id="eph-ecl" checked> Éclipses de l'étoile</label>
-        <label><input type="checkbox" id="eph-sun" checked> Lever / coucher (site choisi)</label>
-        <label><input type="checkbox" id="eph-ali"> Alignements</label>
-        <label><input type="checkbox" id="eph-aps"> Périhélies / aphélies</label>
-        <button type="button" id="eph-go" class="wide">Calculer</button>
+      <div class="grid grid-cols-2 gap-x-3.5 gap-y-1.5 pb-1.5 max-[860px]:grid-cols-1">
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11">Horizon <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eph-h"><option data-jk="30" value="30">30 jours</option><option value="365.25" selected>1 an</option><option value="1826">5 ans</option></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11">Corps <select class="min-h-9 min-w-0 max-w-full rounded-md border border-ligne bg-white/[.06] px-2 py-1 text-texte max-[860px]:min-h-11" id="eph-body"></select></label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="eph-ecl" checked> Éclipses de l'étoile</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="eph-sun" checked> Lever / coucher (site choisi)</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="eph-ali"> Alignements</label>
+        <label class="flex min-h-9 items-center gap-2 max-[860px]:min-h-11"><input class="size-5 shrink-0 accent-accent" type="checkbox" id="eph-aps"> Périhélies / aphélies</label>
+        <button type="button" id="eph-go" class="col-span-full">Calculer</button>
       </div>
       <div id="eph-note" class="note"></div><ol id="eph-list"></ol>
     </details>
