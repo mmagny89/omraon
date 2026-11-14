@@ -18,7 +18,7 @@ contradiction se signale. `.claude/` est une **copie** de la bibliothèque `~/De
 
 ## Où vit quoi
 
-- `app/src/`, `app/templates/`, `app/config/`, `app/migrations/`, `app/tests/` — Symfony : `User` (`ROLE_LECTEUR`, `ROLE_ADMIN` ⊃ lecteur), connexion, gestion des comptes (`/admin/utilisateurs`), valeurs par défaut (`/admin/donnees`), pages de détail (`FichesController`, `FichesService` : `/astres`, `/sites`, `/personnages`, `/scenes`, `/lexique`, `/chronologie`). Toute la logique des pages est dans `FichesService`, les gabarits Twig n'affichent que ; `AN_PRESENT` y double `data/chronologie.js`.
+- `app/src/`, `app/templates/`, `app/config/`, `app/migrations/`, `app/tests/` — Symfony : `User` (`ROLE_LECTEUR`, `ROLE_ADMIN` ⊃ lecteur), connexion, gestion des comptes (`/admin/utilisateurs`), valeurs par défaut (`/admin/donnees`), pages de détail (`FichesController`, `FichesService` : `/astres`, `/sites`, `/personnages`, `/scenes`, `/lexique`, `/chronologie`). Toute la logique des pages est dans `FichesService`, les gabarits Twig n'affichent que ; `AN_PRESENT` y double `data/chronologie.js`. Les températures des astres sont calculées par `physics/thermique.js` et son miroir `Service/Thermique.php` : tout changement du modèle passe par les deux, puis `node outils/generer-thermique.mjs` (fixture comparée par les deux suites).
 - `app/donnees/canon/` — valeurs par défaut du canon (JSON). `app/front/` — la vue : `src/data/` (chargeurs), `src/physics/` (sans DOM, testé par `tests/*.test.js`), `src/render/` (Three.js), `src/ui/`.
 - `docs/hypotheses.md` — canon et propositions de conception. Racine, `docker/`, `.github/`, `outils/` — infrastructure et exploitation.
 

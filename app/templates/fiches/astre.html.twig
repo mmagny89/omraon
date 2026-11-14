@@ -11,6 +11,14 @@
     {% if a.parent %}<dt>Planète mère</dt><dd><a href="{{ path('fiches_astre', {id: a.parent.id}) }}">{{ a.parent.name }}</a></dd>{% endif %}
   </dl>
 </div>
+{% if a.temperatures is defined %}{% set t = a.temperatures %}
+<div class="carte" style="margin-top:1rem"><h2 style="margin-top:0">Températures</h2><dl class="fiche">
+  <dt>Face éclairée</dt><dd>{{ (t.jour - 273.15)|number_format(0, ',', ' ') }} °C ({{ t.jour|number_format(0, ',', ' ') }} K)</dd>
+  <dt>Face sombre</dt><dd>{{ (t.nuit - 273.15)|number_format(0, ',', ' ') }} °C ({{ t.nuit|number_format(0, ',', ' ') }} K)</dd>
+  {% if t.mode == 'solide' %}<dt>Moyenne</dt><dd>{{ (t.moyenne - 273.15)|number_format(0, ',', ' ') }} °C ({{ t.moyenne|number_format(0, ',', ' ') }} K)</dd>
+  {% if t.jourSolaire %}<dt>Jour solaire</dt><dd>{{ t.jourSolaire|number_format(1, ',', ' ') }} jours terrestres</dd>{% endif %}{% endif %}
+</dl>
+<p style="color:var(--doux);margin:.75rem 0 0">{% if t.mode == 'etoile' %}Photosphère : l'étoile n'a pas de face sombre.{% elseif t.mode == 'geante' %}Pas de surface : température à 1 bar, identique sur les deux faces.{% else %}Point subsolaire et point antisolaire. Estimation de conception : albédo, atmosphère, durée de la nuit.{% endif %}</p></div>{% endif %}
 {% if d.names is defined %}
 <div class="carte" style="margin-top:1rem"><h2 style="margin-top:0">Noms</h2><dl class="fiche">
   <dt>Nom tyt sacré</dt><dd>{{ d.names.tyt }}</dd>

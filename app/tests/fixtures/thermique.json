@@ -1,0 +1,86 @@
+{
+  "omraon": {
+    "mode": "etoile",
+    "jour": 5900,
+    "nuit": 5900,
+    "moyenne": 5900
+  },
+  "kalpra": {
+    "mode": "solide",
+    "jour": 722.51,
+    "nuit": 124.47,
+    "moyenne": 510.89
+  },
+  "sethis": {
+    "mode": "solide",
+    "jour": 475.71,
+    "nuit": 330.92,
+    "moyenne": 383.49
+  },
+  "naksun": {
+    "mode": "solide",
+    "jour": 445.7,
+    "nuit": 260.91,
+    "moyenne": 315.16
+  },
+  "zirkan": {
+    "mode": "geante",
+    "jour": 272.6,
+    "nuit": 272.6,
+    "moyenne": 272.6
+  },
+  "roushan": {
+    "mode": "geante",
+    "jour": 123.56,
+    "nuit": 123.56,
+    "moyenne": 123.56
+  },
+  "sedbou": {
+    "mode": "solide",
+    "jour": 574.67,
+    "nuit": 241.6,
+    "moyenne": 406.35
+  },
+  "mahat": {
+    "mode": "solide",
+    "jour": 471.94,
+    "nuit": 170.19,
+    "moyenne": 333.71
+  },
+  "iasha": {
+    "mode": "solide",
+    "jour": 278.88,
+    "nuit": 72.69,
+    "moyenne": 197.2
+  },
+  "kebet": {
+    "mode": "solide",
+    "jour": 289.15,
+    "nuit": 281.49,
+    "moyenne": 284.24
+  },
+  "astir": {
+    "mode": "solide",
+    "jour": 288.57,
+    "nuit": 64.97,
+    "moyenne": 204.05
+  },
+  "nunka": {
+    "mode": "solide",
+    "jour": 89.51,
+    "nuit": 32.49,
+    "moyenne": 63.29
+  },
+  "roukir": {
+    "mode": "solide",
+    "jour": 119.81,
+    "nuit": 21.61,
+    "moyenne": 84.72
+  },
+  "shukal": {
+    "mode": "solide",
+    "jour": 117.92,
+    "nuit": 16.01,
+    "moyenne": 83.38
+  }
+}

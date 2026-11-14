@@ -6,6 +6,7 @@ import { assess, distanceForTemp } from '../physics/habitability.js';
 import { SITES } from '../data/sites.js';
 import { EVENTS, ERAS, eraAt, fmtAn, AN_PRESENT, systemAgeGyr, LUMINOSITY_GROWTH_PER_GYR } from '../data/chronologie.js';
 import { siteReport } from '../physics/habitat.js';
+import { facesCorps, temperatureSite } from '../physics/thermique.js';
 import { transfer, PROPULSION } from '../physics/transfers.js';
 import { computeSky } from '../physics/sky.js';
 import { drawSky } from '../render/skyView.js';
@@ -586,6 +587,21 @@ export class UI {
     const out = $('#tr-out'); if (out.dataset.h !== h) { out.innerHTML = h; out.dataset.h = h; }
   }
 
+  /** Face éclairée et face sombre d'un astre (modèle de physics/thermique.js). */
+  temperaturesHtml(idx) {
+    const t = facesCorps(this.sim, (i) => this.world.bodies[i].el, idx), c = (k) => `${f(k - 273.15, 0)} °C (${f(k, 0)} K)`;
+    const note = { etoile: 'Température de la photosphère : l\'étoile n\'a pas de face sombre.', geante: 'Pas de surface : température à 1 bar, identique sur les deux faces.', solide: '' }[t.mode];
+    const jour = t.mode === 'solide' && Number.isFinite(t.jourSolaireJ) ? `jour solaire de ${f(t.jourSolaireJ, 1)} j` : '';
+    return this.begin('Températures', true, 'calcule') + `<dl>${row('Face éclairée', c(t.jour))}${row('Face sombre', c(t.nuit))}${t.mode === 'solide' ? row('Moyenne', c(t.moyenne)) : ''}</dl>${note ? `<p class="note">${note}</p>` : `<p class="note">Point subsolaire et point antisolaire${jour ? ` (${jour})` : ''}. Estimation de conception : albédo, atmosphère et durée de la nuit.</p>`}</details>`;
+  }
+
+  /** Températures d'un site, recalculées à chaque rafraîchissement : dehors maintenant, dans l'habitat, faces de son corps. */
+  temperatureSiteHtml(site, st) {
+    const el = (i) => this.world.bodies[i].el, r = temperatureSite(this.sim, el, site, st), c = (k) => `${f(k - 273.15, 0)} °C`;
+    let h = `<div class="tiles">${this.tile(c(r.dehors), 'Dehors, maintenant', r.regime)}${this.tile(c(r.dedans), 'Dans l\'habitat', 'régulé')}</div>`;
+    return h;
+  }
+
   siteHtml() {
     const site = this.currentSite(), rec = this.world.siteEls?.get(site.id);
     const type = { surface: 'Base au sol', orbit: site.fixe ? 'Station tenue en place' : 'Station orbitale', floating: 'Cité flottante', heliocentric: 'Repaire en orbite autour de l\'étoile' }[site.type];
@@ -593,6 +609,7 @@ export class UI {
     const nf = (n) => n.toLocaleString('fr-FR'), tl = (...a) => this.tile(...a);
     let h = `<header class="hero"><span class="swatch site"></span><div><h2>${site.name}</h2><div class="sub">${type}${site.body !== 'Nunzir' ? ' · ' + site.body : ''}</div></div></header><p class="lead">${site.role}</p><div class="tiles">${tl(nf(site.population), 'Humains', '', popTip(site))}${tl(nf(site.tyts || 0), 'Tyts', '', popTip(site))}${tl(site.body === 'Nunzir' ? 'Ceinture' : site.body, 'Corps')}</div>`;
     h += '\u0001'; // coupure : ce qui précède va au-dessus des outils du site
+    if (rec?.st) h += this.temperatureSiteHtml(site, rec.st);
     h += this.loreHtml(site.body, site.id);
     if (site.id === 'kebet-temples') h += this.liturgieHtml();
     if (site.founded != null && p0) { // colonie récente : fondée à l'An `founded`, croît ensuite avec la population du modèle
@@ -1058,6 +1075,7 @@ export class UI {
         + tile(`${f(b.radiusKm, 0)} km`, 'Rayon', '', tipR)
         + tile(`${f(tEq, 0)} °C`, 'T équilibre', '', tipJauge({ titre: 'Température d\'équilibre', texte: `${f(tEq, 0)} °C · ${f(tEq + 273.15, 0)} K`, v: tEq, min: -250, max: 500, bandes: [{ de: 0, a: 100, cls: 'ok', label: 'eau liquide à 1 bar' }], marques: [{ v: 15, label: 'Terre (moy.)' }], note: 'Sans effet de serre ni chaleur interne.' }));
     h += `<header class="hero"><span class="swatch" style="background:${d.color || '#9fb4d8'}"></span><div><h2>${d.name}</h2><div class="sub">${kind}</div></div>${hab ? `<span class="chip ${hab.level}">${hab.label}</span>` : ''}</header><p class="lead">${d.role}</p><div class="tiles">${tiles}</div>`;
+    h += this.temperaturesHtml(b.idx);
     h += this.begin('Noms', false, d.provisional ? 'provisoire' : 'canon') + `<dl>${row('Nom tyt sacré', names.tyt || '—')}${names.tytCourant && names.tytCourant !== names.tyt ? row('Courant', names.tytCourant) : ''}${names.sens ? row('Sens', `« ${names.sens} »`) : ''}</dl></details>`;
     h += this.begin('Physique', true, 'conception') + `<dl>${row('Masse', fmtMass(b.mass))}${row('Rayon', `${f(b.radiusKm, 0)} km`)}${row('Densité', `${f(bk.rho, 2)} g/cm³`)}${row('Gravité de surface', `${f(bk.gSurf, 2)} m/s² (${f(bk.gSurf / 9.80665, 2)} g)`)}${row('Vitesse de libération', `${f(bk.vEsc, 2)} km/s`)}`;
     h += this.dayRows(o, b);

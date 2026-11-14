@@ -17,7 +17,7 @@ final readonly class FichesService
     private const R_TERRE_KM = 6371.0;
     private const M_JUPITER_EN_TERRES = 317.83;
 
-    public function __construct(private DonneesService $donnees)
+    public function __construct(private DonneesService $donnees, private Thermique $thermique)
     {
     }
 
@@ -51,7 +51,7 @@ final readonly class FichesService
                 'Masse' => $this->n($s->massMsun, 2).' M☉', 'Rayon' => $this->n($s->radiusRsun, 2).' R☉',
                 'Température' => $s->teff.' K', 'Âge' => $this->n($s->ageGyr, 1).' Gyr',
                 'Rotation' => $this->n($s->rotation->periodH / 24, 1).' jours',
-            ], 'bord' => $sys->SYSTEM_EDGE_AU, 'parent' => null] + $lien($s->name);
+            ], 'bord' => $sys->SYSTEM_EDGE_AU, 'parent' => null, 'temperatures' => $this->thermique->faces($s, $s)] + $lien($s->name);
         }
         if ($id === 'ceinture-principale' || $id === 'ceinture-froide') {
             $b = $id === 'ceinture-froide' ? $sys->COLD_BELT : $sys->BELT;
@@ -72,7 +72,7 @@ final readonly class FichesService
                     'Période orbitale' => $this->n($anProp, 2).' ans ('.$this->n($anProp * 365.25, 0).' j)',
                     'Masse' => $this->n($mTerres, 2).' M⊕'.(isset($p->massJup) ? ' ('.$this->n($p->massJup, 2).' M♃)' : ''), 'Rayon' => $this->n($p->radiusKm / self::R_TERRE_KM, 2).' R⊕ ('.$this->n($p->radiusKm, 0).' km)',
                     'Gravité de surface' => $this->n($g / 9.80665, 2).' g',
-                ], 'parent' => null, 'lunes' => $p->moons ?? []] + $lien($p->name);
+                ], 'parent' => null, 'lunes' => $p->moons ?? [], 'temperatures' => $this->thermique->faces($sys->STAR, $p)] + $lien($p->name);
             }
             foreach ($p->moons ?? [] as $m) {
                 if ($m->id === $id) {
@@ -86,7 +86,7 @@ final readonly class FichesService
                         'Période orbitale' => $this->n($jours, 2).' jours',
                         'Rayon' => $this->n($m->radiusKm, 0).' km', 'Densité' => $this->n($densite, 0).' kg/m³',
                         'Gravité de surface' => $this->n(self::G * $masse / ($m->radiusKm * 1000) ** 2, 3).' m/s²',
-                    ], 'parent' => $p] + $lien($m->name);
+                    ], 'parent' => $p, 'temperatures' => $this->thermique->faces($sys->STAR, $m, $p)] + $lien($m->name);
                 }
             }
         }
