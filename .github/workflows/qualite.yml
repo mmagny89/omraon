@@ -66,6 +66,11 @@ jobs:
   front:
     name: Front — tests de la physique, HTML, liens, Three.js
     runs-on: ubuntu-latest
+    # Le défaut du workflow est `app` (Symfony) ; le front, lui, se contrôle depuis la racine du dépôt : package.json, tests/ et les
+    # chemins app/front/… y sont relatifs. Sans cela, `npx html-validate app/front/index.html` cherchait app/app/front/index.html.
+    defaults:
+      run:
+        working-directory: .
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/node
@@ -77,18 +82,10 @@ jobs:
         run: |
           npm run --silent vendor
           git diff --exit-code -- app/front/vendor
-      # Diagnostic temporaire (erreur « No files matching patterns » sur la validation HTML) : à retirer une fois la cause trouvée.
-      - name: Diagnostic de la validation HTML
-        run: |
-          echo "commit testé : $(git rev-parse HEAD) (ref ${GITHUB_REF}, événement ${GITHUB_EVENT_NAME})"
-          pwd
-          ls -la app/front || echo "app/front ABSENT"
-          git ls-files app/front | head -5
-          git check-ignore -v app/front/index.html || echo "app/front/index.html non ignoré"
       - name: Validation HTML
         run: npx --yes html-validate@9 "app/front/index.html"
-      - name: Liens internes
-        run: ./.github/scripts/check-links.sh app/front
+      # Pas de porte « liens internes » : la vue n'est plus un site de fichiers, ses liens visent des routes Symfony (/astres, /sites, déconnexion…)
+      # que PHPUnit vérifie (tests/Functional/FichesTest.php) ; un contrôle par fichier les déclarerait tous morts.
       - name: node --test
         run: npm test
 

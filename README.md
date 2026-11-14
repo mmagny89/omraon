@@ -90,7 +90,7 @@ Hors simulation : monde natal tyt, hangar-musée, Terre.
 ## Intégration continue et outillage
 
 - **Workflow `Qualité et déploiement`** (`.github/workflows/qualite.yml`, même forme que les autres dépôts de l'agence) : une porte = un job — *Cohérence du dépôt* (`composer validate`, lints Symfony),
-  *Front* (syntaxe, `npm audit`, Three.js conforme au lockfile, validation HTML, liens, tests Node de la physique), *Audit des dépendances* (`composer audit`), *Style*, *Analyse statique* (PHPStan),
+  *Front* (syntaxe, `npm audit`, Three.js conforme au lockfile, validation HTML, tests Node de la physique), *Audit des dépendances* (`composer audit`), *Style*, *Analyse statique* (PHPStan),
   *Tests* (PHPUnit sur une base PostgreSQL, feuilles Tailwind compilées d'abord), *Migrations*, *L'image se construit et le site répond* — puis l'agrégateur **`Portes qualité`** (seul contrôle à exiger)
   et les déploiements de pré-production et de production, gardés par `vars.DEPLOIEMENT_STAGING` / `vars.DEPLOIEMENT_PROD` (éteints par défaut).
 - **Workflow `Release`** : un tag `vX.Y.Z` crée la release à partir de la section du `CHANGELOG.md` (`outils/extraire-changelog.sh`).
