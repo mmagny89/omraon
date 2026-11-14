@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
-{% block title %}Comptes — Omraon{% endblock %}
+{% block title %}Comptes — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 <div class="barre">
   <h1>Comptes</h1>
-  <div class="actions"><a class="btn sec" href="{{ path('app_accueil') }}">Vue du système</a><a class="btn" href="{{ path('admin_utilisateur_nouveau') }}">Nouveau compte</a><a class="btn sec" href="{{ path('app_logout') }}">Déconnexion</a></div>
+  <div class="actions"><a class="btn sec" href="{{ path('app_accueil') }}">Vue du système</a><a class="btn" href="{{ path('admin_utilisateur_nouveau') }}">Nouveau compte</a><a class="btn sec" href="{{ path('admin_donnees') }}">Valeurs par défaut</a><a class="btn sec" href="{{ path('app_logout') }}">Déconnexion</a></div>
 </div>
 <div class="carte table-wrap">
   <table>

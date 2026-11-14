@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+{% block title %}Valeurs par défaut — À l'ombre d'Omraon{% endblock %}
+{% block body %}
+<div class="barre">
+  <h1>Valeurs par défaut</h1>
+  <div class="actions"><a class="btn sec" href="{{ path('app_accueil') }}">Vue du système</a><a class="btn sec" href="{{ path('admin_utilisateurs') }}">Comptes</a><a class="btn sec" href="{{ path('app_logout') }}">Déconnexion</a></div>
+</div>
+<p style="color:var(--doux)">Une section modifiée remplace le canon pour tous les comptes. Les lecteurs simulent à partir de ces valeurs sans les changer.</p>
+{% for jeu in jeux %}
+<div class="carte table-wrap" style="margin-bottom:1rem">
+  <h2 style="font-size:1.1rem;margin:0 0 .5rem">{{ jeu.libelle }}</h2>
+  <table>
+    <thead><tr><th>Section</th><th>État</th><th></th></tr></thead>
+    <tbody>
+    {% for s in jeu.sections %}
+      <tr>
+        <td><code>{{ s.nom }}</code></td>
+        <td>{% if s.surcharge %}Modifiée par {{ s.surcharge.modifiePar }} le {{ s.surcharge.modifieLe|date('d/m/Y H:i') }}{% else %}Canon{% endif %}</td>
+        <td><div class="actions">
+          <a class="btn sec" href="{{ path('admin_donnees_modifier', {jeu: jeu.cle, section: s.nom}) }}">Modifier</a>
+          {% if s.surcharge %}
+          <form method="post" action="{{ path('admin_donnees_reinitialiser', {jeu: jeu.cle, section: s.nom}) }}" onsubmit="return confirm('Remettre cette section au canon ?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('reinit' ~ jeu.cle ~ s.nom) }}"><button class="sec" type="submit">Réinitialiser</button>
+          </form>{% endif %}
+        </div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% endblock %}

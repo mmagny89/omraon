@@ -1,4 +1,4 @@
-# Système d'Omraon — simulation & visualisation
+# À l'ombre d'Omraon — simulation & visualisation
 
 [![Qualité et déploiement](https://github.com/mmagny89/omraon/actions/workflows/qualite.yml/badge.svg?branch=main)](https://github.com/mmagny89/omraon/actions/workflows/qualite.yml)
 [![Release](https://github.com/mmagny89/omraon/actions/workflows/release.yml/badge.svg)](https://github.com/mmagny89/omraon/actions/workflows/release.yml)

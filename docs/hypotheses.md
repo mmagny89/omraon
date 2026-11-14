@@ -18,21 +18,21 @@
 ## Propositions de conception
 | Sujet | Choix | Fichier |
 |---|---|---|
-| Étoile | G0V, 1,10 M☉, 1,10 R☉, 5900 K (L = 1,32 L☉), **âge 5,8 Gyr** (valeur de conception pour respecter le canon « plus vieille que le Soleil » ; durée de vie ≈ 7,9 Gyr, il reste ≈ 2,1 Gyr), rotation ≈ 15 j, +13 % de luminosité par Gyr | `data/omraon.js`, `data/chronologie.js` |
-| Orbites | Kalpra 0,32 UA, Sethis 0,52, Naksun 0,75, ceinture 1,05–1,55, Zirkan 1,9 (zone habitable), Roushan **12** (essai du 2026-11-13, était 30 puis 20 ; fourchette crédible 10–15 UA, voir `modifications-lore.md` n° 29) ; ceinture froide 17–34 UA ; troyens de Roushan ; comètes (n° 30–33) | `data/omraon.js` |
-| Kebet | 345 000 km de Zirkan (jour 1,28 j), 1,1 bar, **+90 K d'effet de serre** (relevé de +56 K quand l'étoile est passée de F6V à G0V : Zirkan, à 1,9 UA, est au bord extérieur de la zone habitable), e ≈ 10⁻⁴ | `data/omraon.js` |
-| Zirkan, Roushan | champ magnétique 0,0005 et 0,03 × Jupiter ; Roushan T(1 bar) = 1,63 × T équilibre | `data/omraon.js` |
-| Sethis | atmosphère ténue 0,05 bar (vent, poussière) | `data/omraon.js` |
-| Shukal | planète-colonie des confins : nom provisoire, 0,06 M⊕, orbite de 9,5 M km autour de Roushan | `data/omraon.js` |
-| Sites | 22 emplacements, populations et Tyts alignés sur le modèle de population (`invented: true`) | `data/sites.js` |
+| Étoile | G0V, 1,10 M☉, 1,10 R☉, 5900 K (L = 1,32 L☉), **âge 5,8 Gyr** (valeur de conception pour respecter le canon « plus vieille que le Soleil » ; durée de vie ≈ 7,9 Gyr, il reste ≈ 2,1 Gyr), rotation ≈ 15 j, +13 % de luminosité par Gyr | `donnees/canon/systeme.json`, `data/chronologie.js` |
+| Orbites | Kalpra 0,32 UA, Sethis 0,52, Naksun 0,75, ceinture 1,05–1,55, Zirkan 1,9 (zone habitable), Roushan **12** (essai du 2026-11-13, était 30 puis 20 ; fourchette crédible 10–15 UA, voir `modifications-lore.md` n° 29) ; ceinture froide 17–34 UA ; troyens de Roushan ; comètes (n° 30–33) | `donnees/canon/systeme.json` |
+| Kebet | 345 000 km de Zirkan (jour 1,28 j), 1,1 bar, **+90 K d'effet de serre** (relevé de +56 K quand l'étoile est passée de F6V à G0V : Zirkan, à 1,9 UA, est au bord extérieur de la zone habitable), e ≈ 10⁻⁴ | `donnees/canon/systeme.json` |
+| Zirkan, Roushan | champ magnétique 0,0005 et 0,03 × Jupiter ; Roushan T(1 bar) = 1,63 × T équilibre | `donnees/canon/systeme.json` |
+| Sethis | atmosphère ténue 0,05 bar (vent, poussière) | `donnees/canon/systeme.json` |
+| Shukal | planète-colonie des confins : nom provisoire, 0,06 M⊕, orbite de 9,5 M km autour de Roushan | `donnees/canon/systeme.json` |
+| Sites | 22 emplacements, populations et Tyts alignés sur le modèle de population (`invented: true`) | `donnees/canon/sites.json` |
 | Accélération des vaisseaux | 8 g (≈ 35 UA en 6 jours), repos moteur d'un jour | `physics/transfers.js`, `physics/flight.js` |
 | Réseau | taux de diffusion locale, répression, graines, filtre du Consortium (~65 %) | `physics/network.js` |
 | Population et dégel | demi-vie du savoir 220 ans dès −300, désespoir 95 % → demi-vie 460 ans, ratio Tyts 0,7 (voir `modifications-lore.md`), contrôle requis 1,04, coefficients d'éveil, hybrides humain/Tyt | `physics/population.js` |
 | Habitabilité | seuils vert/orange/rouge, gravité 0,6–1,5 g, dose visée 0,2 mSv/j, etc. | `physics/habitability.js`, `physics/habitat.js` |
-| Économie | marchandises, prix par rareté (`(cible/stock)^0,7`, ×0,2 à ×5), transporteurs qui maximisent le profit par jour (cargaisons mixtes), grand livre fermé, misère du système couplée à la population (#23), population et Tyts vivants (#40), douane de Kebet par groupe (#38), frais d'exploitation et prix bornés (#39), carburant pris aux raffineries de Roushan, distances figées à la date des positions (voir `modifications-lore.md` #18–22) | `data/economie.js`, `physics/economie.js` |
+| Économie | marchandises, prix par rareté (`(cible/stock)^0,7`, ×0,2 à ×5), transporteurs qui maximisent le profit par jour (cargaisons mixtes), grand livre fermé, misère du système couplée à la population (#23), population et Tyts vivants (#40), douane de Kebet par groupe (#38), frais d'exploitation et prix bornés (#39), carburant pris aux raffineries de Roushan, distances figées à la date des positions (voir `modifications-lore.md` #18–22) | `donnees/canon/economie.json`, `physics/economie.js` |
 | Ressources | stocks et extractions estimés par corps ; aucun ne s'épuise (voir `ressources.md`) | `docs/ressources.md` |
 | Hasard économique | mode à graine : un convoi saisi ou pillé perd toute sa cargaison, sinon rien (même probabilité que la part perdue en moyenne) | `graine` dans `physics/economie.js` |
-| Port de Kebet | tenu en place au-dessus de la capitale (aucune orbite ne le permet : voir `modifications-lore.md` #25) | `data/sites.js`, `physics/sites.js` |
+| Port de Kebet | tenu en place au-dessus de la capitale (aucune orbite ne le permet : voir `modifications-lore.md` #25) | `donnees/canon/sites.json`, `physics/sites.js` |
 | Troyens de Zirkan | 400 astéroïdes, activés par défaut (non canon) | `physics/simulation.js` |
 
 ## Questions ouvertes du document, tranchées provisoirement
@@ -43,11 +43,11 @@
 
 ## Rendu (conception, sans effet sur la physique)
 
-- Halos atmosphériques : Zirkan et Roushan (épaisseur 7 % du rayon), Sethis (voile de poussière ténu, cohérent avec 0,05 bar), Kebet. Couleurs et intensités : `data/omraon.js`, champ `atmosphere`.
+- Halos atmosphériques : Zirkan et Roushan (épaisseur 7 % du rayon), Sethis (voile de poussière ténu, cohérent avec 0,05 bar), Kebet. Couleurs et intensités : `donnees/canon/systeme.json`, champ `atmosphere`.
 - Relief : carte de relief générée par le même bruit que la texture, sans lien avec une topographie canonique ; terminateur adouci par un éclairage enveloppant (`render/world.js`).
 - Lumière de la planète sur ses lunes (face nuit) : albédo × phase × (R/d)², **exagérée ×6** pour être visible (`PLANETSHINE_BOOST`, `render/world.js`). L'ombre d'éclipse (la planète masque l'étoile) n'a aucun facteur d'exagération : elle reprend le calcul des éphémérides.
 - Infobulles : repères de comparaison (Mars, Terre, Jupiter, Soleil) et bande « eau liquide » à 1 bar, purement indicatifs (`ui/tooltips.js`).
-- **Anneaux** (conception, rendu seulement ; le roman n'en mentionne aucun) : Roushan, anneaux de glace de 1,3 à 2,3 rayons avec deux divisions (1,85–1,92 R et 2,12–2,14 R), Nunka à 11 R largement au-delà ; Zirkan, anneau poussiéreux et ténu de 1,2 à 2,0 R, bien à l'intérieur de Kebet (4,7 R) et de la limite de Roche. Les anneaux n'ont pas de masse ni d'effet sur la physique. Paramètres : champ `rings` dans `data/omraon.js`. Ombres croisées planète/anneau calculées dans les shaders (`render/world.js`). Dessinés aussi dans le ciel vu d'un site (`render/skyView.js`, même profil que le rendu 3D) : de profil depuis Kebet, qui orbite à 0,3° de l'équateur de Zirkan, l'anneau n'est qu'une ligne fine.
+- **Anneaux** (conception, rendu seulement ; le roman n'en mentionne aucun) : Roushan, anneaux de glace de 1,3 à 2,3 rayons avec deux divisions (1,85–1,92 R et 2,12–2,14 R), Nunka à 11 R largement au-delà ; Zirkan, anneau poussiéreux et ténu de 1,2 à 2,0 R, bien à l'intérieur de Kebet (4,7 R) et de la limite de Roche. Les anneaux n'ont pas de masse ni d'effet sur la physique. Paramètres : champ `rings` dans `donnees/canon/systeme.json`. Ombres croisées planète/anneau calculées dans les shaders (`render/world.js`). Dessinés aussi dans le ciel vu d'un site (`render/skyView.js`, même profil que le rendu 3D) : de profil depuis Kebet, qui orbite à 0,3° de l'équateur de Zirkan, l'anneau n'est qu'une ligne fine.
 - **Lumières de Kebet** (rendu seulement) : un foyer par site au sol (rayon ∝ √population) et des hameaux semés autour, sur les terres de la texture ; les hameaux, leur nombre et leur étalement sont inventés, et les tailles exagérées pour être lisibles à l'échelle de la planète (`makeLightsTexture`, `render/textures.js`). Visibles côté nuit et pendant une éclipse de Zirkan.
 - **Vue à hauteur d'yeux** : partage avec la vue 3D le terminateur adouci, les lumières nocturnes (gatées par la face nuit, donc plus de lueur de jour vue d'une station), l'ombre d'éclipse et l'anneau des astres visibles ; vu de profil depuis Kebet, l'anneau de Zirkan n'y est qu'un trait très ténu (`render/eclairage.js`, `render/ground.js`).
 

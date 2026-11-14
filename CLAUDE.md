@@ -1,6 +1,6 @@
 # omraon — système d'Omraon
 
-Simulation N-corps et vue 3D du système d'Omraon (roman). **Symfony 8 + FrankenPHP + PostgreSQL** pour les comptes, les rôles et (phases suivantes) les données et les fiches ;
+**À l'ombre d'Omraon** (nom du projet) : simulation N-corps et vue 3D du système d'Omraon (roman). **Symfony 8 + FrankenPHP + PostgreSQL** pour les comptes, les rôles et (phases suivantes) les données et les fiches ;
 la vue du système reste du JavaScript en modules ES (Three.js dans `app/front/vendor/`), sans bundler. **Accès uniquement avec un compte** : pas d'inscription, c'est l'admin qui crée les comptes.
 
 ## Règle qui prime sur tout
@@ -14,12 +14,12 @@ contradiction se signale. `.claude/` est une **copie** de la bibliothèque `~/De
   (tests Node de la physique, Three.js épinglé pour Dependabot et `npm audit`), pas de l'application PHP. `.dockerignore` les exclut de l'image.
 - Le front vit dans `app/front/` et **jamais dans `app/public/`** : il n'est servi que par `FrontController`, derrière le pare-feu. Y mettre un fichier dans `public/` le
   rendrait lisible sans compte (un test le vérifie).
-- Les données du système sont encore dans `app/front/src/data/*.js` (phase 1) ; elles passent en base, servies par API authentifiée, aux phases 2-3.
+- **Données** : le canon d'origine est `app/donnees/canon/{systeme,sites,economie}.json` (versionné, lu par les tests Node). Une section modifiée par un admin (`/admin/donnees`) est stockée en base (`Donnee`) et remplace le canon pour tous ; « réinitialiser » supprime la surcharge. Le front les lit par `GET /api/donnees/<jeu>` via `src/data/charger.js` (`await` de niveau module). Pour changer une valeur de canon : éditer le JSON, pas les modules `src/data/*.js`. Lore, glossaire, ambiances, chronologie : encore dans `src/data/*.js` (phase 3).
 
 ## Où vit quoi
 
 - `app/src/`, `app/templates/`, `app/config/`, `app/migrations/`, `app/tests/` — Symfony : `User` (`ROLE_LECTEUR`, `ROLE_ADMIN` ⊃ lecteur), connexion, gestion des comptes (`/admin/utilisateurs`).
-- `app/front/` — la vue : `src/data/`, `src/physics/` (sans DOM, testé par `tests/*.test.js`), `src/render/` (Three.js), `src/ui/`.
+- `app/donnees/canon/` — valeurs par défaut du canon (JSON). `app/front/` — la vue : `src/data/` (chargeurs), `src/physics/` (sans DOM, testé par `tests/*.test.js`), `src/render/` (Three.js), `src/ui/`.
 - `docs/hypotheses.md` — canon et propositions de conception. Racine, `docker/`, `.github/`, `outils/` — infrastructure et exploitation.
 
 ## Commandes

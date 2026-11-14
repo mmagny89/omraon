@@ -1,6 +1,6 @@
 # Ressources du système : estimations et questions ouvertes
 
-Tout ce document est de la **conception** (ordres de grandeur, jamais de canon) : le roman nomme des fonctions (mines, glace de Nunka, raffineries, jardins de Kebet), aucun tonnage. Les masses et rayons viennent de `data/omraon.js` ; les extractions actuelles, de `data/economie.js` (`PROFILS`).
+Tout ce document est de la **conception** (ordres de grandeur, jamais de canon) : le roman nomme des fonctions (mines, glace de Nunka, raffineries, jardins de Kebet), aucun tonnage. Les masses et rayons viennent de `donnees/canon/systeme.json` ; les extractions actuelles, de `donnees/canon/economie.json` (`PROFILS`).
 
 ## Ce que le système extrait aujourd'hui
 

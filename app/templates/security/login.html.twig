@@ -1,8 +1,8 @@
 {% extends 'base.html.twig' %}
-{% block title %}Connexion — Omraon{% endblock %}
+{% block title %}Connexion — À l'ombre d'Omraon{% endblock %}
 {% block body %}
 <div class="carte" style="max-width:26rem;margin:10vh auto 0">
-  <h1>Système d'Omraon</h1>
+  <h1>À l'ombre d'Omraon</h1>
   <p style="color:var(--doux)">Accès réservé. Les comptes sont créés par l'administrateur.</p>
   <form method="post">
     {% if erreur %}<p class="erreur" role="alert">{{ erreur.messageKey|trans(erreur.messageData, 'security') }}</p>{% endif %}
